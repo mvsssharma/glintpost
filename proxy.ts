@@ -6,6 +6,7 @@ const publicPaths = [
   "/signup",
   "/forgot-password",
   "/reset-password",
+  "/verify-email",
   "/api/auth",
   "/api/widget",
   "/api/track",
@@ -27,6 +28,11 @@ export default auth((req) => {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Authenticated but email not verified → redirect to verify-email
+  if (!req.auth.emailVerified && pathname !== "/verify-email") {
+    return NextResponse.redirect(new URL("/verify-email", req.url));
   }
 
   // Authenticated but no org → redirect to onboarding (unless already there)

@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
 
+const PASSWORD_RESET_PREFIX = "password-reset:";
+
 export interface PasswordResetState {
   error?: string;
   success?: string;
@@ -33,16 +35,17 @@ export async function requestPasswordReset(
       return { success: successMessage };
     }
 
-    // Delete any existing tokens for this email
+    // Delete any existing password-reset tokens for this email
+    const identifier = `${PASSWORD_RESET_PREFIX}${email}`;
     await prisma.verificationToken.deleteMany({
-      where: { identifier: email },
+      where: { identifier },
     });
 
     // Create a new token (expires in 1 hour)
     const token = randomBytes(32).toString("hex");
     await prisma.verificationToken.create({
       data: {
-        identifier: email,
+        identifier,
         token,
         expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
       },
@@ -96,8 +99,9 @@ export async function resetPassword(
 
   try {
     // Find and validate token
+    const identifier = `${PASSWORD_RESET_PREFIX}${email}`;
     const storedToken = await prisma.verificationToken.findUnique({
-      where: { identifier_token: { identifier: email, token } },
+      where: { identifier_token: { identifier, token } },
     });
 
     if (!storedToken) {
@@ -107,7 +111,7 @@ export async function resetPassword(
     if (storedToken.expires < new Date()) {
       // Clean up expired token
       await prisma.verificationToken.delete({
-        where: { identifier_token: { identifier: email, token } },
+        where: { identifier_token: { identifier, token } },
       });
       return { error: "Reset link has expired. Please request a new one." };
     }
@@ -121,7 +125,7 @@ export async function resetPassword(
 
     // Delete the used token
     await prisma.verificationToken.delete({
-      where: { identifier_token: { identifier: email, token } },
+      where: { identifier_token: { identifier, token } },
     });
   } catch {
     return { error: "Something went wrong. Please try again." };

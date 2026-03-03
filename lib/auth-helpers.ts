@@ -14,11 +14,24 @@ export async function requireAuth() {
 }
 
 /**
+ * Require an authenticated user with a verified email.
+ * Redirects to /login if not authenticated, /verify-email if not verified.
+ */
+export async function requireVerified() {
+  const session = await requireAuth();
+  if (!session.emailVerified) {
+    redirect("/verify-email");
+  }
+  return session;
+}
+
+/**
  * Require an authenticated user with an organization.
- * Redirects to /login if not authenticated, /onboarding if no org.
+ * Redirects to /login if not authenticated, /verify-email if not verified,
+ * /onboarding if no org.
  */
 export async function requireOrg() {
-  const session = await requireAuth();
+  const session = await requireVerified();
   if (!session.orgId) {
     redirect("/onboarding");
   }

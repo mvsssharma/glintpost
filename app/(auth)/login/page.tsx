@@ -1,11 +1,15 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loginAction, type AuthState } from "@/app/actions/auth";
 import styles from "../auth.module.css";
 
-export default function LoginPage() {
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const verified = searchParams.get("verified") === "true";
+
   const [state, formAction, isPending] = useActionState<AuthState, FormData>(
     loginAction,
     {},
@@ -15,6 +19,17 @@ export default function LoginPage() {
     <div className={styles.card}>
       <h2 className={styles.cardTitle}>Sign in</h2>
       <form action={formAction} className={styles.form}>
+        {verified && (
+          <div style={{
+            background: "hsl(142 71% 45% / 0.1)",
+            color: "hsl(142 71% 45%)",
+            padding: "0.75rem 1rem",
+            borderRadius: "var(--radius-md)",
+            fontSize: "0.875rem",
+          }}>
+            Email verified successfully! You can now sign in.
+          </div>
+        )}
         {state.error && <div className={styles.error}>{state.error}</div>}
         <div className={styles.fieldGroup}>
           <label htmlFor="email" className={styles.label}>
@@ -65,5 +80,13 @@ export default function LoginPage() {
         <Link href="/signup">Create one</Link>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

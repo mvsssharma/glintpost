@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
+import { sendVerificationEmail } from "@/app/actions/email-verification";
 
 export interface AuthState {
   error?: string;
@@ -43,6 +44,13 @@ export async function signupAction(
     });
   } catch {
     return { error: "Something went wrong. Please try again." };
+  }
+
+  // Send verification email (don't block signup if this fails)
+  try {
+    await sendVerificationEmail(email);
+  } catch {
+    console.error("[Glintpost] Failed to send verification email during signup");
   }
 
   // Sign in immediately after signup

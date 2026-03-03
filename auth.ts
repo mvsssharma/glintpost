@@ -47,13 +47,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user?.id) {
         token.id = user.id;
       }
-      // Attach orgId to token
+      // Attach orgId and emailVerified to token
       if (token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { orgId: true },
+          select: { orgId: true, emailVerified: true },
         });
         token.orgId = dbUser?.orgId ?? null;
+        token.emailVerified = dbUser?.emailVerified ?? null;
       }
       return token;
     },
@@ -62,6 +63,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string;
         (session as SessionWithOrg).orgId = token.orgId as string | null;
       }
+      session.emailVerified = token.emailVerified as Date | null;
       return session;
     },
   },
@@ -69,5 +71,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
 interface SessionWithOrg {
   orgId: string | null;
+  emailVerified: Date | null;
   user: { id: string; email: string; name?: string | null };
 }
