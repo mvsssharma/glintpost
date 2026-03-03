@@ -9,13 +9,19 @@ export default async function PostsPage() {
   const { org } = await requireOrg();
   const db = getOrgPrisma(org.id);
 
-  const posts = await db.post.findMany({
+  const posts = (await db.post.findMany({
     orderBy: { createdAt: "desc" },
     include: {
       translations: { where: { locale: "en" }, take: 1 },
       _count: { select: { engagements: true } },
     },
-  });
+  })) as Array<{
+    id: string;
+    status: string;
+    createdAt: Date;
+    translations: Array<{ title: string; content: string }>;
+    _count: { engagements: number };
+  }>;
 
   return (
     <div className={styles.container}>

@@ -35,13 +35,13 @@ function WidgetContent() {
 
     fetch(`/api/widget/posts?apiKey=${apiKey}`)
       .then((res) => res.json())
-      .then((data) => {
+      .then((data: Post[]) => {
         if (Array.isArray(data)) {
           setPosts(data);
         }
         setLoading(false);
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         console.error(err);
         setLoading(false);
       });

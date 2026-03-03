@@ -17,14 +17,19 @@ export async function GET(req: NextRequest) {
   try {
     const db = getOrgPrisma(org.id);
 
-    const posts = await db.post.findMany({
+    const posts = (await db.post.findMany({
       where: { status: "PUBLISHED" },
       orderBy: { publishedAt: "desc" },
       take: 20,
       include: {
         translations: { where: { locale: "en" }, take: 1 },
       },
-    });
+    })) as Array<{
+      id: string;
+      publishedAt: Date | null;
+      createdAt: Date;
+      translations: Array<{ title: string; content: string }>;
+    }>;
 
     const result = posts.map((post) => ({
       id: post.id,
