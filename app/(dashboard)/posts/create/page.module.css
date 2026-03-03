@@ -1,0 +1,40 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 800px;
+}
+
+.header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.form {
+  background: hsl(var(--bg-surface));
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid hsl(var(--border-light));
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formGroup label {
+  font-weight: 500;
+  color: hsl(var(--text-main));
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}

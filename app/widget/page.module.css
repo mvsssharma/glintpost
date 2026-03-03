@@ -1,0 +1,127 @@
+.widget {
+  background: hsl(var(--bg-main));
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding: 1.5rem;
+  background: hsl(var(--bg-surface));
+  border-bottom: 1px solid hsl(var(--border-light));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  color: hsl(var(--text-main));
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: hsl(var(--text-muted));
+  transition: color var(--transition-fast);
+}
+
+.closeBtn:hover {
+  color: hsl(var(--text-main));
+}
+
+.feed {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.postCard {
+  background: hsl(var(--bg-surface));
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid hsl(var(--border-light));
+  animation: slideUpFade 0.3s ease-out;
+}
+
+.date {
+  font-size: 0.75rem;
+  color: hsl(var(--primary));
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: hsl(var(--text-main));
+}
+
+.content {
+  font-size: 0.875rem;
+  color: hsl(var(--text-muted));
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.content img {
+  max-width: 100%;
+  border-radius: var(--radius-md);
+  margin-top: 0.5rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  border-top: 1px solid hsl(var(--border-light));
+  padding-top: 1rem;
+}
+
+.reactionBtn {
+  background: hsl(var(--bg-main));
+  border: 1px solid hsl(var(--border-light));
+  border-radius: var(--radius-full);
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.reactionBtn:not(:disabled):hover {
+  background: hsl(var(--bg-surface-hover));
+  transform: scale(1.05);
+}
+
+.reactionBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.activeReaction {
+  background: hsl(var(--primary) / 0.1);
+  border-color: hsl(var(--primary));
+  opacity: 1 !important;
+}
+
+.loading,
+.empty {
+  padding: 2rem;
+  text-align: center;
+  color: hsl(var(--text-muted));
+  font-size: 0.875rem;
+}

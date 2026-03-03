@@ -1,0 +1,96 @@
+.authLayout {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.authContainer {
+  width: 100%;
+  max-width: 400px;
+}
+
+.brand {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.brand h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: hsl(var(--text-main));
+  margin-bottom: 0.25rem;
+}
+
+.brand p {
+  color: hsl(var(--text-muted));
+  font-size: 0.875rem;
+}
+
+.card {
+  background: hsl(var(--bg-surface));
+  border: 1px solid hsl(var(--border-light));
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  box-shadow: var(--shadow-md);
+}
+
+.cardTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: hsl(var(--text-main));
+  margin-bottom: 1.5rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: hsl(var(--text-main));
+}
+
+.error {
+  background: hsl(0 84% 60% / 0.1);
+  color: hsl(0 84% 40%);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  color: hsl(var(--text-muted));
+}
+
+.footer a {
+  color: hsl(var(--primary));
+  font-weight: 500;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+.submitBtn {
+  margin-top: 0.5rem;
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}

@@ -1,0 +1,61 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 800px;
+}
+
+.header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.header p {
+  color: hsl(var(--text-muted));
+}
+
+.card {
+  background: hsl(var(--bg-surface));
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid hsl(var(--border-light));
+  box-shadow: var(--shadow-sm);
+}
+
+.card h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.card p {
+  color: hsl(var(--text-muted));
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.codeBlock {
+  background: hsl(var(--bg-main));
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid hsl(var(--border-light));
+  overflow-x: auto;
+}
+
+.codeBlock pre {
+  margin: 0;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.875rem;
+  color: hsl(var(--text-main));
+}
+
+.card :global(code),
+.codeBlock :global(code) {
+  background: hsl(var(--bg-main));
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.875rem;
+  border: 1px solid hsl(var(--border-light));
+}

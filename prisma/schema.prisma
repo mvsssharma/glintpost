@@ -1,0 +1,197 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// === AUTH (Auth.js Prisma Adapter) ===
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  image         String?
+
+  orgId String?       @unique
+  org   Organization? @relation(fields: [orgId], references: [id])
+
+  accounts Account[]
+  sessions Session[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// === CORE DOMAIN ===
+
+model Organization {
+  id      String  @id @default(cuid())
+  name    String
+  slug    String  @unique
+  logoUrl String?
+  apiKey  String  @unique @default(cuid())
+
+  user        User?
+  settings    OrgSettings?
+  posts       Post[]
+  engagements EngagementEvent[]
+
+  // Billing (Razorpay)
+  razorpayCustomerId     String?       @unique
+  razorpaySubscriptionId String?
+  razorpayPlanId         String?
+  currentPeriodEnd       DateTime?
+  trialEndsAt            DateTime?
+  billingStatus          BillingStatus @default(TRIALING)
+
+  onboardingComplete Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrgSettings {
+  id    String       @id @default(cuid())
+  orgId String       @unique
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  primaryColor     String   @default("#10b981")
+  supportedLocales String[] @default(["en"])
+  defaultLocale    String   @default("en")
+
+  // Storage tracking
+  storageUsedBytes BigInt @default(0)
+  storageCapBytes  BigInt @default(52428800) // 50MB default
+
+  // AI provider config (Vercel AI SDK BYOK)
+  aiProvider String? // "openai" | "anthropic" | "google"
+  aiApiKey   String? // Encrypted at app layer
+  aiModel    String? // e.g. "gpt-4o-mini", "claude-sonnet-4-20250514", "gemini-2.0-flash"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id    String       @id @default(cuid())
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  status      PostStatus @default(DRAFT)
+  publishedAt DateTime?
+
+  // JSON: { operator: "AND"|"OR", rules: [{ param, op, value }] }
+  targetingRules Json?
+
+  translations PostTranslation[]
+  engagements  EngagementEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orgId, status])
+  @@index([orgId, publishedAt])
+}
+
+model PostTranslation {
+  id     String @id @default(cuid())
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  locale  String
+  title   String
+  content String // Rich text HTML
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([postId, locale])
+  @@index([postId])
+}
+
+model EngagementEvent {
+  id    String       @id @default(cuid())
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  postId String?
+  post   Post?   @relation(fields: [postId], references: [id], onDelete: SetNull)
+
+  type EngagementType
+
+  visitorId String?
+  plan      String?
+  role      String?
+  region    String?
+  platform  String?
+  version   String?
+  company   String?
+  locale    String?
+
+  createdAt DateTime @default(now())
+
+  @@index([orgId, type])
+  @@index([orgId, postId])
+  @@index([orgId, createdAt])
+  @@index([postId, type])
+}
+
+// === ENUMS ===
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum EngagementType {
+  VIEW
+  LIKE
+  DISLIKE
+}
+
+enum BillingStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INACTIVE
+}
