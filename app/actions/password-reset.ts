@@ -58,7 +58,7 @@ export async function requestPasswordReset(
       const { Resend } = await import("resend");
       const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
-        from: "Glintpost <noreply@glintpost.com>",
+        from: "Glintpost <noreply@send.glintpost.com>",
         to: email,
         subject: "Reset your password",
         html: `<p>Click <a href="${resetUrl}">here</a> to reset your password. This link expires in 1 hour.</p>`,
