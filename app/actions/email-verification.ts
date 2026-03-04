@@ -61,7 +61,7 @@ export async function sendVerificationEmail(
     if (process.env.RESEND_API_KEY) {
       const { Resend } = await import("resend");
       const resend = new Resend(process.env.RESEND_API_KEY);
-      await resend.emails.send({
+      const { data, error } = await resend.emails.send({
         from: "Glintpost <noreply@send.glintpost.com>",
         to: email,
         subject: "Verify your email address",
@@ -73,8 +73,16 @@ export async function sendVerificationEmail(
           <p>If you didn't create an account, you can safely ignore this email.</p>
         `,
       });
+      if (error) {
+        console.error("[Glintpost] Resend error:", error);
+        return { error: "Failed to send verification email. Please try again." };
+      }
     } else {
       console.log(`\n[Glintpost] Email verification link for ${email}:\n${verifyUrl}\n`);
+      return {
+        success:
+          "In development: no email was sent. Check your server console for the verification link.",
+      };
     }
   } catch {
     return { error: "Failed to send verification email. Please try again." };

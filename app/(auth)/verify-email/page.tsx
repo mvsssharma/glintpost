@@ -50,8 +50,8 @@ function VerifyEmailContent() {
           fontSize: "0.875rem",
           marginBottom: "1.5rem",
         }}>
-          We sent a verification link to your email address.
-          Please check your inbox and click the link to verify your account.
+          Check your inbox for a verification link. If you don&apos;t see it, click
+          the button below to send another.
         </p>
       )}
 

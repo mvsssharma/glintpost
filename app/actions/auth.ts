@@ -94,5 +94,15 @@ export async function loginAction(
     throw error;
   }
 
+  // If user's email is not verified, send a verification email and redirect to verify-email
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { emailVerified: true },
+  });
+  if (user && !user.emailVerified) {
+    await sendVerificationEmail(email);
+    redirect("/verify-email");
+  }
+
   redirect("/");
 }
