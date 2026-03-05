@@ -6,7 +6,7 @@ export default function DashboardLoading() {
     <div className={styles.dashboardLoader}>
       <Image
         src="/Glintpost.svg"
-        alt="Glintpost"
+        alt="GlintPost"
         width={48}
         height={48}
         className={styles.logo}

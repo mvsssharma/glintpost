@@ -50,7 +50,7 @@ export async function signupAction(
   try {
     await sendVerificationEmail(email);
   } catch {
-    console.error("[Glintpost] Failed to send verification email during signup");
+    console.error("[GlintPost] Failed to send verification email during signup");
   }
 
   // Sign in immediately after signup

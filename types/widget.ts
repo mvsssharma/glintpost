@@ -1,4 +1,4 @@
-export interface GlintpostConfig {
+export interface GlintPostConfig {
   visitorId?: string;
   plan?: string;
   role?: string;

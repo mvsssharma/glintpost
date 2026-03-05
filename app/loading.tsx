@@ -6,7 +6,7 @@ export default function Loading() {
     <div className={styles.loader}>
       <Image
         src="/Glintpost.svg"
-        alt="Glintpost"
+        alt="GlintPost"
         width={64}
         height={64}
         className={styles.logo}

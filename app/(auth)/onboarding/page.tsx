@@ -62,7 +62,7 @@ export default function OnboardingPage() {
         <>
           <h2 className={styles.stepTitle}>Name your organization</h2>
           <p className={styles.stepDescription}>
-            This is how your product will be identified in Glintpost.
+            This is how your product will be identified in GlintPost.
           </p>
           <div className={styles.fieldGroup}>
             <label htmlFor="orgName" className={styles.label}>

@@ -12,12 +12,12 @@ export default function AuthLayout({
         <div className={styles.brand}>
           <Image
             src="/Glintpost.svg"
-            alt="Glintpost"
+            alt="GlintPost"
             width={48}
             height={48}
             className={styles.brandLogo}
           />
-          <h1>Glintpost</h1>
+          <h1>GlintPost</h1>
           <p>Product communication, simplified.</p>
         </div>
         {children}

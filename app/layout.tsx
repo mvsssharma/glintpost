@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Glintpost | Product Communication Widget",
+  title: "GlintPost | Product Communication Widget",
   description: "Open-source product changelog and communication tool",
   icons: {
     icon: "/Glintpost.svg",

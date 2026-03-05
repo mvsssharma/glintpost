@@ -11,7 +11,7 @@ export default async function IntegrationPage() {
       <header className={styles.header}>
         <h2>Widget Integration</h2>
         <p>
-          Embed the Glintpost widget into your app to share releases with your
+          Embed the GlintPost widget into your app to share releases with your
           users.
         </p>
       </header>
@@ -37,7 +37,7 @@ export default async function IntegrationPage() {
         </p>
         <div className={styles.codeBlock}>
           <pre>
-            <code>{`<!-- Glintpost Widget -->
+            <code>{`<!-- GlintPost Widget -->
 <script
   src="${appUrl}/widget.js"
   data-api-key="${org.apiKey}"
@@ -51,13 +51,13 @@ export default async function IntegrationPage() {
         <h3>2. Advanced Targeting (Optional)</h3>
         <p>
           To filter which posts users see or pass user-specific datalayer
-          variables, define a global <code>window.GlintpostConfig</code> object
+          variables, define a global <code>window.GlintPostConfig</code> object
           before the script loads.
         </p>
         <div className={styles.codeBlock}>
           <pre>
             <code>{`<script>
-  window.GlintpostConfig = {
+  window.GlintPostConfig = {
     visitorId: "user_123",
     datalayer: {
       plan: "pro",

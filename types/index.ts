@@ -11,7 +11,7 @@ export type {
 } from "@prisma/client";
 
 export type { TargetingRule, TargetingRuleSet, TargetingOperator, TargetingRuleOp } from "./targeting";
-export type { GlintpostConfig, WidgetMessage, WidgetMessageType } from "./widget";
+export type { GlintPostConfig, WidgetMessage, WidgetMessageType } from "./widget";
 
 /** Organization with settings included */
 export interface OrgContext {

@@ -58,14 +58,14 @@ export async function requestPasswordReset(
       const { Resend } = await import("resend");
       const resend = new Resend(process.env.RESEND_API_KEY);
       const { error } = await resend.emails.send({
-        from: "Glintpost <noreply@send.glintpost.com>",
+        from: "GlintPost <noreply@send.glintpost.com>",
         to: email,
         subject: "Reset your password",
         html: `<p>Click <a href="${resetUrl}">here</a> to reset your password. This link expires in 1 hour.</p>`,
       });
-      if (error) console.error("[Glintpost] Resend error:", error);
+      if (error) console.error("[GlintPost] Resend error:", error);
     } else {
-      console.log(`\n[Glintpost] Password reset link for ${email}:\n${resetUrl}\n`);
+      console.log(`\n[GlintPost] Password reset link for ${email}:\n${resetUrl}\n`);
     }
   } catch {
     // Swallow errors to avoid leaking info

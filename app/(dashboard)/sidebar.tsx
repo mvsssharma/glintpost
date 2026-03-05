@@ -35,11 +35,11 @@ export function Sidebar({ orgName }: { orgName: string }) {
         <div className={styles.brandRow}>
           <Image
             src="/Glintpost.svg"
-            alt="Glintpost"
+            alt="GlintPost"
             width={24}
             height={24}
           />
-          <h2>Glintpost</h2>
+          <h2>GlintPost</h2>
         </div>
         <span>{orgName}</span>
       </div>

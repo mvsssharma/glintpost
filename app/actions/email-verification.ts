@@ -62,11 +62,11 @@ export async function sendVerificationEmail(
       const { Resend } = await import("resend");
       const resend = new Resend(process.env.RESEND_API_KEY);
       const { error } = await resend.emails.send({
-        from: "Glintpost <noreply@send.glintpost.com>",
+        from: "GlintPost <noreply@send.glintpost.com>",
         to: email,
         subject: "Verify your email address",
         html: `
-          <h2>Welcome to Glintpost!</h2>
+          <h2>Welcome to GlintPost!</h2>
           <p>Click the link below to verify your email address:</p>
           <p><a href="${verifyUrl}">Verify my email</a></p>
           <p>This link expires in 24 hours.</p>
@@ -74,11 +74,11 @@ export async function sendVerificationEmail(
         `,
       });
       if (error) {
-        console.error("[Glintpost] Resend error:", error);
+        console.error("[GlintPost] Resend error:", error);
         return { error: "Failed to send verification email. Please try again." };
       }
     } else {
-      console.log(`\n[Glintpost] Email verification link for ${email}:\n${verifyUrl}\n`);
+      console.log(`\n[GlintPost] Email verification link for ${email}:\n${verifyUrl}\n`);
       return {
         success:
           "In development: no email was sent. Check your server console for the verification link.",

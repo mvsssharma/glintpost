@@ -1,6 +1,6 @@
 (function () {
-  if (window.GlintpostInitialized) return;
-  window.GlintpostInitialized = true;
+  if (window.GlintPostInitialized) return;
+  window.GlintPostInitialized = true;
 
   var scriptTag =
     document.currentScript ||
@@ -9,12 +9,12 @@
 
   if (!apiKey) {
     console.error(
-      "Glintpost Widget: Missing data-api-key attribute on the script tag."
+      "GlintPost Widget: Missing data-api-key attribute on the script tag."
     );
     return;
   }
 
-  var clientConfig = window.GlintpostConfig || {};
+  var clientConfig = window.GlintPostConfig || {};
   var queryParams = new URLSearchParams({
     apiKey: apiKey,
     visitorId: clientConfig.visitorId || "",

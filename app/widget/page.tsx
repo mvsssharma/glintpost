@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import styles from "./page.module.css";
 
@@ -24,12 +24,65 @@ function WidgetContent() {
     Record<string, "LIKE" | "DISLIKE">
   >({});
 
+  const trackEvent = useCallback(
+    async (
+      type: "LIKE" | "DISLIKE" | "VIEW",
+      postId: string | null
+    ) => {
+      // trackEvent body unchanged
+      if (!postId && type !== "VIEW") return;
+      if (postId && interactedPosts[postId]) return;
+
+      const newInteractions = { ...interactedPosts };
+      if (postId && type !== "VIEW") {
+        newInteractions[postId] = type as "LIKE" | "DISLIKE";
+        setInteractedPosts(newInteractions);
+        localStorage.setItem(
+          "glintpost_interactions",
+          JSON.stringify(newInteractions)
+        );
+      }
+
+      let datalayer: Record<string, string> | undefined;
+      if (datalayerParam) {
+        try {
+          datalayer = JSON.parse(datalayerParam);
+        } catch { }
+      }
+
+      try {
+        await fetch(`/api/track?apiKey=${apiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type,
+            postId,
+            visitorId,
+            datalayer,
+          }),
+        });
+      } catch {
+        if (postId && type !== "VIEW") {
+          const reverted = { ...interactedPosts };
+          delete reverted[postId];
+          setInteractedPosts(reverted);
+          localStorage.setItem(
+            "glintpost_interactions",
+            JSON.stringify(reverted)
+          );
+        }
+      }
+    },
+    [apiKey, datalayerParam, interactedPosts, visitorId]
+  );
+
   useEffect(() => {
     const stored = localStorage.getItem("glintpost_interactions");
     if (stored) {
       try {
-        setInteractedPosts(JSON.parse(stored));
-      } catch {}
+        const parsed = JSON.parse(stored);
+        setTimeout(() => setInteractedPosts(parsed), 0);
+      } catch { }
     }
 
     if (!apiKey) return;
@@ -45,7 +98,7 @@ function WidgetContent() {
           );
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     fetch(`/api/widget/posts?apiKey=${apiKey}`)
       .then((res) => res.json())
@@ -69,55 +122,7 @@ function WidgetContent() {
     };
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [apiKey]);
-
-  const trackEvent = async (
-    type: "LIKE" | "DISLIKE" | "VIEW",
-    postId: string | null
-  ) => {
-    if (!postId && type !== "VIEW") return;
-    if (postId && interactedPosts[postId]) return;
-
-    const newInteractions = { ...interactedPosts };
-    if (postId && type !== "VIEW") {
-      newInteractions[postId] = type as "LIKE" | "DISLIKE";
-      setInteractedPosts(newInteractions);
-      localStorage.setItem(
-        "glintpost_interactions",
-        JSON.stringify(newInteractions)
-      );
-    }
-
-    let datalayer: Record<string, string> | undefined;
-    if (datalayerParam) {
-      try {
-        datalayer = JSON.parse(datalayerParam);
-      } catch {}
-    }
-
-    try {
-      await fetch(`/api/track?apiKey=${apiKey}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type,
-          postId,
-          visitorId,
-          datalayer,
-        }),
-      });
-    } catch {
-      if (postId && type !== "VIEW") {
-        const reverted = { ...interactedPosts };
-        delete reverted[postId];
-        setInteractedPosts(reverted);
-        localStorage.setItem(
-          "glintpost_interactions",
-          JSON.stringify(reverted)
-        );
-      }
-    }
-  };
+  }, [apiKey, trackEvent]); // Added closed effect bracket here
 
   const closeWidget = () => {
     window.parent.postMessage({ type: "GLINTPOST_WIDGET_CLOSE" }, "*");
