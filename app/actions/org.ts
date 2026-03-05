@@ -81,3 +81,70 @@ export async function createOrganization(
 
   redirect("/");
 }
+
+export interface SettingsState {
+  error?: string;
+  success?: string;
+}
+
+/** Update organization and its settings (name, primaryColor, supportedLocales). */
+export async function updateOrgSettings(
+  _prevState: SettingsState,
+  formData: FormData,
+): Promise<SettingsState> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "Not authenticated" };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { orgId: true },
+  });
+  if (!user?.orgId) {
+    return { error: "No organization found" };
+  }
+
+  const name = (formData.get("name") as string)?.trim();
+  const primaryColor =
+    (formData.get("primaryColor") as string) || DEFAULT_PRIMARY_COLOR;
+  const localesRaw = formData.get("locales") as string;
+  const supportedLocales = localesRaw
+    ? localesRaw.split(",").filter(Boolean)
+    : ["en"];
+
+  if (!name || name.length < 2) {
+    return { error: "Organization name must be at least 2 characters" };
+  }
+
+  if (supportedLocales.length === 0 || !supportedLocales.includes("en")) {
+    return { error: "English must be included in supported languages" };
+  }
+
+  try {
+    await prisma.$transaction([
+      prisma.organization.update({
+        where: { id: user.orgId },
+        data: { name },
+      }),
+      prisma.orgSettings.upsert({
+        where: { orgId: user.orgId },
+        create: {
+          orgId: user.orgId,
+          primaryColor,
+          supportedLocales,
+          defaultLocale: supportedLocales[0] || "en",
+        },
+        update: {
+          primaryColor,
+          supportedLocales,
+          defaultLocale: supportedLocales[0] || "en",
+        },
+      }),
+    ]);
+  } catch {
+    return { error: "Failed to update settings" };
+  }
+
+  return { success: "Settings saved." };
+}

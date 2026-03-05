@@ -94,21 +94,37 @@
 
   var iframe = document.createElement("iframe");
   iframe.className = "glintpost-iframe";
-  iframe.src = iframeUrl;
+  iframe.src = "about:blank";
   container.appendChild(iframe);
 
   document.body.appendChild(badge);
   document.body.appendChild(container);
 
   var isOpen = false;
+  var iframeLoaded = false;
+
+  function loadIframeOnce() {
+    if (iframeLoaded) return;
+    iframeLoaded = true;
+    iframe.src = iframeUrl;
+  }
+
+  function notifyOpened() {
+    if (iframe.contentWindow) {
+      iframe.contentWindow.postMessage({ type: "GLINTPOST_WIDGET_OPENED" }, "*");
+    }
+  }
+
+  iframe.addEventListener("load", function () {
+    if (isOpen) notifyOpened();
+  });
+
   badge.addEventListener("click", function () {
+    loadIframeOnce();
     isOpen = !isOpen;
     if (isOpen) {
       container.classList.add("open");
-      iframe.contentWindow.postMessage(
-        { type: "GLINTPOST_WIDGET_OPENED" },
-        "*"
-      );
+      notifyOpened();
     } else {
       container.classList.remove("open");
     }
@@ -119,6 +135,9 @@
     if (event.data && event.data.type === "GLINTPOST_WIDGET_CLOSE") {
       isOpen = false;
       container.classList.remove("open");
+    }
+    if (event.data && event.data.type === "GLINTPOST_WIDGET_CONFIG" && event.data.primaryColor) {
+      badge.style.backgroundColor = event.data.primaryColor;
     }
   });
 })();

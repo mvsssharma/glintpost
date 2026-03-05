@@ -61,7 +61,7 @@ export async function sendVerificationEmail(
     if (process.env.RESEND_API_KEY) {
       const { Resend } = await import("resend");
       const resend = new Resend(process.env.RESEND_API_KEY);
-      const { data, error } = await resend.emails.send({
+      const { error } = await resend.emails.send({
         from: "Glintpost <noreply@send.glintpost.com>",
         to: email,
         subject: "Verify your email address",

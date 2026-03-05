@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -31,7 +32,15 @@ export function Sidebar({ orgName }: { orgName: string }) {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.sidebarBrand}>
-        <h2>Glintpost</h2>
+        <div className={styles.brandRow}>
+          <Image
+            src="/Glintpost.svg"
+            alt="Glintpost"
+            width={24}
+            height={24}
+          />
+          <h2>Glintpost</h2>
+        </div>
         <span>{orgName}</span>
       </div>
       <nav className={styles.nav}>

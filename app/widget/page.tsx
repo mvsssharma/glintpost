@@ -19,6 +19,7 @@ function WidgetContent() {
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [theme, setTheme] = useState<{ primaryColor: string } | null>(null);
   const [interactedPosts, setInteractedPosts] = useState<
     Record<string, "LIKE" | "DISLIKE">
   >({});
@@ -32,6 +33,19 @@ function WidgetContent() {
     }
 
     if (!apiKey) return;
+
+    fetch(`/api/widget/config?apiKey=${apiKey}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((config: { primaryColor?: string } | null) => {
+        if (config?.primaryColor) {
+          setTheme({ primaryColor: config.primaryColor });
+          window.parent.postMessage(
+            { type: "GLINTPOST_WIDGET_CONFIG", primaryColor: config.primaryColor },
+            "*"
+          );
+        }
+      })
+      .catch(() => {});
 
     fetch(`/api/widget/posts?apiKey=${apiKey}`)
       .then((res) => res.json())
@@ -111,8 +125,12 @@ function WidgetContent() {
 
   if (loading) return <div className={styles.loading}>Loading updates...</div>;
 
+  const themeStyle = theme?.primaryColor
+    ? { ["--widget-primary" as string]: theme.primaryColor }
+    : undefined;
+
   return (
-    <div className={styles.widget}>
+    <div className={styles.widget} style={themeStyle}>
       <header className={styles.header}>
         <h2>Latest Updates</h2>
         <button onClick={closeWidget} className={styles.closeBtn}>

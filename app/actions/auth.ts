@@ -1,6 +1,6 @@
 "use server";
 
-import { signIn } from "@/auth";
+import { auth, signIn } from "@/auth";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
@@ -105,4 +105,58 @@ export async function loginAction(
   }
 
   redirect("/");
+}
+
+export interface ChangePasswordState {
+  error?: string;
+  success?: string;
+}
+
+/** Change password for the current user (credentials only). */
+export async function changePasswordAction(
+  _prevState: ChangePasswordState,
+  formData: FormData,
+): Promise<ChangePasswordState> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "Not authenticated" };
+  }
+
+  const currentPassword = formData.get("currentPassword") as string;
+  const newPassword = formData.get("newPassword") as string;
+  const confirmPassword = formData.get("confirmPassword") as string;
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return { error: "All fields are required" };
+  }
+
+  if (newPassword.length < 8) {
+    return { error: "New password must be at least 8 characters" };
+  }
+
+  if (newPassword !== confirmPassword) {
+    return { error: "New password and confirmation do not match" };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { passwordHash: true, email: true },
+  });
+
+  if (!user?.passwordHash) {
+    return { error: "Your account uses a different sign-in method. Password cannot be changed here." };
+  }
+
+  const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!valid) {
+    return { error: "Current password is incorrect" };
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { passwordHash },
+  });
+
+  return { success: "Password updated successfully." };
 }

@@ -15,6 +15,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Glintpost | Product Communication Widget",
   description: "Open-source product changelog and communication tool",
+  icons: {
+    icon: "/Glintpost.svg",
+    apple: "/Glintpost 512x512.png",
+  },
 };
 
 export default function RootLayout({

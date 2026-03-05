@@ -21,6 +21,12 @@
   border-bottom: 1px solid hsl(var(--border-light));
 }
 
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .sidebarBrand h2 {
   font-size: 1.125rem;
   font-weight: 700;
