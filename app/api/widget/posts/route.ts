@@ -23,19 +23,38 @@ export async function GET(req: NextRequest) {
       take: 20,
       include: {
         translations: { where: { locale: "en" }, take: 1 },
+        _count: {
+          select: {
+            engagements: { where: { type: "LIKE" } },
+          },
+        },
       },
     })) as Array<{
       id: string;
       publishedAt: Date | null;
       createdAt: Date;
       translations: Array<{ title: string; content: string }>;
+      _count: { engagements: number };
     }>;
+
+    // _count only supports one filter per relation, so query dislikes separately
+    const postIds = posts.map((p) => p.id);
+    const dislikeCounts = await db.engagementEvent.groupBy({
+      by: ["postId"],
+      where: { postId: { in: postIds }, type: "DISLIKE" },
+      _count: true,
+    });
+    const dislikeMap = Object.fromEntries(
+      dislikeCounts.map((d: { postId: string | null; _count: number }) => [d.postId, d._count])
+    );
 
     const result = posts.map((post) => ({
       id: post.id,
       title: post.translations[0]?.title ?? "Untitled",
       content: post.translations[0]?.content ?? "",
       createdAt: post.publishedAt ?? post.createdAt,
+      likes: post._count.engagements,
+      dislikes: (dislikeMap[post.id] as number) ?? 0,
     }));
 
     return NextResponse.json(result);

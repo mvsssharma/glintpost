@@ -1,0 +1,59 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 900px;
+}
+
+.header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.header p {
+  color: hsl(var(--text-muted));
+}
+
+.previewArea {
+  background: hsl(var(--bg-surface));
+  border: 1px solid hsl(var(--border-light));
+  border-radius: var(--radius-lg);
+  padding: 3rem;
+  min-height: 400px;
+  position: relative;
+}
+
+.mockSite {
+  max-width: 600px;
+}
+
+.mockNav {
+  height: 12px;
+  width: 120px;
+  background: hsl(var(--border-light));
+  border-radius: var(--radius-full);
+  margin-bottom: 2.5rem;
+}
+
+.mockContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mockHeading {
+  height: 20px;
+  width: 260px;
+  background: hsl(var(--border-light));
+  border-radius: var(--radius-md);
+  margin-bottom: 0.5rem;
+}
+
+.mockLine {
+  height: 10px;
+  width: 100%;
+  background: hsl(var(--border-light));
+  border-radius: var(--radius-full);
+  opacity: 0.6;
+}

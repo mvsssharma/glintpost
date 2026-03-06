@@ -100,6 +100,16 @@
   document.body.appendChild(badge);
   document.body.appendChild(container);
 
+  // Fetch account config immediately to apply the correct badge color on load
+  fetch(BASE_URL + "/api/widget/config?apiKey=" + encodeURIComponent(apiKey))
+    .then(function (res) { return res.ok ? res.json() : null; })
+    .then(function (config) {
+      if (config && config.primaryColor) {
+        badge.style.backgroundColor = config.primaryColor;
+      }
+    })
+    .catch(function () {});
+
   var isOpen = false;
   var iframeLoaded = false;
 

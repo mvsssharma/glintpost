@@ -95,6 +95,7 @@ model OrgSettings {
   org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   primaryColor     String   @default("#10b981")
+  widgetTheme      String   @default("light") // "light" | "dark"
   supportedLocales String[] @default(["en"])
   defaultLocale    String   @default("en")
 

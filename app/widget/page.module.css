@@ -37,6 +37,21 @@
   color: hsl(var(--text-main));
 }
 
+.backBtn {
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--widget-primary, hsl(var(--primary)));
+  padding: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.backBtn:hover {
+  opacity: 0.7;
+}
+
 .feed {
   padding: 1.5rem;
   display: flex;
@@ -72,14 +87,60 @@
   color: hsl(var(--text-main));
 }
 
-.content {
+/* List view: clamp content to ~3 lines */
+.contentPreview {
+  font-size: 0.875rem;
+  color: hsl(var(--text-muted));
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.contentPreview img {
+  display: none;
+}
+
+.viewMore {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--widget-primary, hsl(var(--primary)));
+  cursor: pointer;
+  margin-bottom: 1rem;
+  transition: opacity var(--transition-fast);
+}
+
+.viewMore:hover {
+  opacity: 0.7;
+}
+
+/* Detail view */
+.detail {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.detailTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: hsl(var(--text-main));
+}
+
+.detailContent {
   font-size: 0.875rem;
   color: hsl(var(--text-muted));
   line-height: 1.6;
   margin-bottom: 1rem;
 }
 
-.content img {
+.detailContent img {
   max-width: 100%;
   border-radius: var(--radius-md);
   margin-top: 0.5rem;
@@ -93,6 +154,9 @@
 }
 
 .reactionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   background: hsl(var(--bg-main));
   border: 1px solid hsl(var(--border-light));
   border-radius: var(--radius-full);
@@ -108,14 +172,24 @@
 }
 
 .reactionBtn:disabled {
-  opacity: 0.5;
   cursor: default;
+  filter: grayscale(1) opacity(0.4);
+}
+
+.activeReaction:disabled {
+  filter: none;
 }
 
 .activeReaction {
-  background: color-mix(in srgb, var(--widget-primary, hsl(var(--primary))) 10%, transparent);
+  background: color-mix(in srgb, var(--widget-primary, hsl(var(--primary))) 25%, transparent);
   border-color: var(--widget-primary, hsl(var(--primary)));
-  opacity: 1 !important;
+  border-width: 2px;
+}
+
+.count {
+  font-size: 0.75rem;
+  color: hsl(var(--text-muted));
+  font-weight: 500;
 }
 
 .loading,
@@ -124,4 +198,28 @@
   text-align: center;
   color: hsl(var(--text-muted));
   font-size: 0.875rem;
+}
+
+/* Dark theme overrides — applied via data-theme="dark" on the widget root */
+.dark {
+  --bg-main: 224 71% 4%;
+  --bg-surface: 224 71% 8%;
+  --bg-surface-hover: 224 71% 12%;
+  --text-main: 220 10% 98%;
+  --text-muted: 220 9% 65%;
+  --border-light: 224 71% 16%;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+  color-scheme: dark;
+}
+
+/* Light theme — force light even if user's OS is dark */
+.light {
+  --bg-main: 220 10% 98%;
+  --bg-surface: 0 0% 100%;
+  --bg-surface-hover: 220 14% 96%;
+  --text-main: 224 71% 10%;
+  --text-muted: 220 9% 46%;
+  --border-light: 220 13% 91%;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  color-scheme: light;
 }

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { generateSlug } from "@/lib/utils";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 export interface OnboardingState {
   error?: string;
@@ -108,6 +109,8 @@ export async function updateOrgSettings(
   const name = (formData.get("name") as string)?.trim();
   const primaryColor =
     (formData.get("primaryColor") as string) || DEFAULT_PRIMARY_COLOR;
+  const widgetTheme =
+    (formData.get("widgetTheme") as string) === "dark" ? "dark" : "light";
   const localesRaw = formData.get("locales") as string;
   const supportedLocales = localesRaw
     ? localesRaw.split(",").filter(Boolean)
@@ -132,19 +135,23 @@ export async function updateOrgSettings(
         create: {
           orgId: user.orgId,
           primaryColor,
+          widgetTheme,
           supportedLocales,
           defaultLocale: supportedLocales[0] || "en",
         },
         update: {
           primaryColor,
+          widgetTheme,
           supportedLocales,
           defaultLocale: supportedLocales[0] || "en",
         },
       }),
     ]);
-  } catch {
+  } catch (err) {
+    console.error("Failed to update settings:", err);
     return { error: "Failed to update settings" };
   }
 
+  revalidatePath("/settings");
   return { success: "Settings saved." };
 }

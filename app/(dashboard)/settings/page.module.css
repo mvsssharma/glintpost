@@ -73,6 +73,32 @@
   box-shadow: var(--shadow-md);
 }
 
+.themeToggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.themeOption {
+  flex: 1;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid hsl(var(--border-light));
+  background: hsl(var(--bg-main));
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: hsl(var(--text-main));
+  transition: all var(--transition-fast);
+}
+
+.themeOption:hover {
+  background: hsl(var(--bg-surface-hover));
+}
+
+.themeOptionActive {
+  border-color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.08);
+}
+
 .localeGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -165,6 +191,24 @@
   outline: none;
   border-color: hsl(var(--primary));
   box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+}
+
+.previewLink {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.625rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid hsl(var(--border-light));
+  background: hsl(var(--bg-main));
+  color: hsl(var(--text-main));
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.previewLink:hover {
+  background: hsl(var(--bg-surface-hover));
 }
 
 .passwordSection .fieldGroup:last-of-type {

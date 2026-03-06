@@ -9,6 +9,42 @@ interface Post {
   title: string;
   content: string;
   createdAt: string;
+  likes: number;
+  dislikes: number;
+}
+
+function ReactionButtons({
+  post,
+  interaction,
+  onLike,
+  onDislike,
+}: {
+  post: Post;
+  interaction?: "LIKE" | "DISLIKE";
+  onLike: () => void;
+  onDislike: () => void;
+}) {
+  const likeCount = post.likes + (interaction === "LIKE" ? 1 : 0);
+  const dislikeCount = post.dislikes + (interaction === "DISLIKE" ? 1 : 0);
+
+  return (
+    <div className={styles.actions}>
+      <button
+        onClick={onLike}
+        className={`${styles.reactionBtn} ${interaction === "LIKE" ? styles.activeReaction : ""}`}
+        disabled={!!interaction}
+      >
+        👍 {likeCount > 0 && <span className={styles.count}>{likeCount}</span>}
+      </button>
+      <button
+        onClick={onDislike}
+        className={`${styles.reactionBtn} ${interaction === "DISLIKE" ? styles.activeReaction : ""}`}
+        disabled={!!interaction}
+      >
+        👎 {dislikeCount > 0 && <span className={styles.count}>{dislikeCount}</span>}
+      </button>
+    </div>
+  );
 }
 
 function WidgetContent() {
@@ -19,17 +55,17 @@ function WidgetContent() {
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [theme, setTheme] = useState<{ primaryColor: string } | null>(null);
+  const [theme, setTheme] = useState<{ primaryColor: string; widgetTheme: string } | null>(null);
   const [interactedPosts, setInteractedPosts] = useState<
     Record<string, "LIKE" | "DISLIKE">
   >({});
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
   const trackEvent = useCallback(
     async (
       type: "LIKE" | "DISLIKE" | "VIEW",
       postId: string | null
     ) => {
-      // trackEvent body unchanged
       if (!postId && type !== "VIEW") return;
       if (postId && interactedPosts[postId]) return;
 
@@ -80,8 +116,7 @@ function WidgetContent() {
     const stored = localStorage.getItem("glintpost_interactions");
     if (stored) {
       try {
-        const parsed = JSON.parse(stored);
-        setTimeout(() => setInteractedPosts(parsed), 0);
+        setInteractedPosts(JSON.parse(stored));
       } catch { }
     }
 
@@ -89,9 +124,12 @@ function WidgetContent() {
 
     fetch(`/api/widget/config?apiKey=${apiKey}`)
       .then((res) => (res.ok ? res.json() : null))
-      .then((config: { primaryColor?: string } | null) => {
-        if (config?.primaryColor) {
-          setTheme({ primaryColor: config.primaryColor });
+      .then((config: { primaryColor?: string; widgetTheme?: string } | null) => {
+        if (config) {
+          setTheme({
+            primaryColor: config.primaryColor ?? "#10b981",
+            widgetTheme: config.widgetTheme ?? "light",
+          });
           window.parent.postMessage(
             { type: "GLINTPOST_WIDGET_CONFIG", primaryColor: config.primaryColor },
             "*"
@@ -114,7 +152,9 @@ function WidgetContent() {
       });
 
     window.parent.postMessage({ type: "GLINTPOST_WIDGET_LOADED" }, "*");
+  }, [apiKey]);
 
+  useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
       if (e.data?.type === "GLINTPOST_WIDGET_OPENED") {
         trackEvent("VIEW", null);
@@ -122,7 +162,7 @@ function WidgetContent() {
     };
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [apiKey, trackEvent]); // Added closed effect bracket here
+  }, [trackEvent]);
 
   const closeWidget = () => {
     window.parent.postMessage({ type: "GLINTPOST_WIDGET_CLOSE" }, "*");
@@ -134,8 +174,50 @@ function WidgetContent() {
     ? { ["--widget-primary" as string]: theme.primaryColor }
     : undefined;
 
+  const themeClass = theme?.widgetTheme === "dark" ? styles.dark : styles.light;
+
+  const selectedPost = selectedPostId
+    ? posts.find((p) => p.id === selectedPostId)
+    : null;
+
+  if (selectedPost) {
+    const interaction = interactedPosts[selectedPost.id];
+    return (
+      <div className={`${styles.widget} ${themeClass}`} style={themeStyle}>
+        <header className={styles.header}>
+          <button
+            onClick={() => setSelectedPostId(null)}
+            className={styles.backBtn}
+          >
+            &#8592; Back
+          </button>
+          <button onClick={closeWidget} className={styles.closeBtn}>
+            &times;
+          </button>
+        </header>
+
+        <div className={styles.detail}>
+          <span className={styles.date}>
+            {new Date(selectedPost.createdAt).toLocaleDateString()}
+          </span>
+          <h3 className={styles.detailTitle}>{selectedPost.title}</h3>
+          <div
+            className={styles.detailContent}
+            dangerouslySetInnerHTML={{ __html: selectedPost.content }}
+          />
+          <ReactionButtons
+            post={selectedPost}
+            interaction={interaction}
+            onLike={() => trackEvent("LIKE", selectedPost.id)}
+            onDislike={() => trackEvent("DISLIKE", selectedPost.id)}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={styles.widget} style={themeStyle}>
+    <div className={`${styles.widget} ${themeClass}`} style={themeStyle}>
       <header className={styles.header}>
         <h2>Latest Updates</h2>
         <button onClick={closeWidget} className={styles.closeBtn}>
@@ -156,25 +238,21 @@ function WidgetContent() {
                 </span>
                 <h3 className={styles.title}>{post.title}</h3>
                 <div
-                  className={styles.content}
+                  className={styles.contentPreview}
                   dangerouslySetInnerHTML={{ __html: post.content }}
                 />
-                <div className={styles.actions}>
-                  <button
-                    onClick={() => trackEvent("LIKE", post.id)}
-                    className={`${styles.reactionBtn} ${interaction === "LIKE" ? styles.activeReaction : ""}`}
-                    disabled={!!interaction}
-                  >
-                    👍
-                  </button>
-                  <button
-                    onClick={() => trackEvent("DISLIKE", post.id)}
-                    className={`${styles.reactionBtn} ${interaction === "DISLIKE" ? styles.activeReaction : ""}`}
-                    disabled={!!interaction}
-                  >
-                    👎
-                  </button>
-                </div>
+                <button
+                  className={styles.viewMore}
+                  onClick={() => setSelectedPostId(post.id)}
+                >
+                  View more
+                </button>
+                <ReactionButtons
+                  post={post}
+                  interaction={interaction}
+                  onLike={() => trackEvent("LIKE", post.id)}
+                  onDislike={() => trackEvent("DISLIKE", post.id)}
+                />
               </article>
             );
           })

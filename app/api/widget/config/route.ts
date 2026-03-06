@@ -18,8 +18,10 @@ export async function GET(req: NextRequest) {
   }
 
   const primaryColor = org.settings?.primaryColor ?? "#10b981";
+  const widgetTheme = org.settings?.widgetTheme ?? "light";
 
   return NextResponse.json({
     primaryColor,
+    widgetTheme,
   });
 }

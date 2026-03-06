@@ -38,6 +38,9 @@ export function SettingsForm({
   const [primaryColor, setPrimaryColor] = useState(
     settings?.primaryColor ?? DEFAULT_PRIMARY_COLOR
   );
+  const [widgetTheme, setWidgetTheme] = useState<"light" | "dark">(
+    (settings?.widgetTheme as "light" | "dark") ?? "light"
+  );
   const [selectedLocales, setSelectedLocales] = useState<string[]>(
     settings?.supportedLocales?.length
       ? settings.supportedLocales
@@ -71,6 +74,7 @@ export function SettingsForm({
         <form action={settingsAction}>
           <input type="hidden" name="name" value={orgName} />
           <input type="hidden" name="primaryColor" value={primaryColor} />
+          <input type="hidden" name="widgetTheme" value={widgetTheme} />
           <input
             type="hidden"
             name="locales"
@@ -115,6 +119,26 @@ export function SettingsForm({
           </div>
 
           <div className={styles.fieldGroup}>
+            <span className={styles.label}>Widget theme</span>
+            <div className={styles.themeToggle}>
+              <button
+                type="button"
+                className={`${styles.themeOption} ${widgetTheme === "light" ? styles.themeOptionActive : ""}`}
+                onClick={() => setWidgetTheme("light")}
+              >
+                ☀️ Light
+              </button>
+              <button
+                type="button"
+                className={`${styles.themeOption} ${widgetTheme === "dark" ? styles.themeOptionActive : ""}`}
+                onClick={() => setWidgetTheme("dark")}
+              >
+                🌙 Dark
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.fieldGroup}>
             <span className={styles.label}>Supported languages</span>
             <div className={styles.localeGrid}>
               {SUPPORTED_LOCALES.map((locale) => (
@@ -149,6 +173,14 @@ export function SettingsForm({
             >
               {settingsPending ? "Saving..." : "Save organization settings"}
             </button>
+            <a
+              href={`/preview?apiKey=${org.apiKey}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.previewLink}
+            >
+              Preview widget
+            </a>
           </div>
         </form>
       </section>
