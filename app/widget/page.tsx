@@ -243,7 +243,10 @@ function WidgetContent() {
                 />
                 <button
                   className={styles.viewMore}
-                  onClick={() => setSelectedPostId(post.id)}
+                  onClick={() => {
+                    trackEvent("VIEW", post.id);
+                    setSelectedPostId(post.id);
+                  }}
                 >
                   View more
                 </button>

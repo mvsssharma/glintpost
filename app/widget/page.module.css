@@ -97,6 +97,7 @@
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  overflow-wrap: break-word;
 }
 
 .contentPreview img {
@@ -138,12 +139,27 @@
   color: hsl(var(--text-muted));
   line-height: 1.6;
   margin-bottom: 1rem;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  overflow-x: hidden;
 }
 
 .detailContent img {
   max-width: 100%;
   border-radius: var(--radius-md);
   margin-top: 0.5rem;
+}
+
+.detailContent pre,
+.detailContent code {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.detailContent table {
+  max-width: 100%;
+  display: block;
+  overflow-x: auto;
 }
 
 .actions {

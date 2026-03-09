@@ -8,10 +8,12 @@ export default async function DashboardPage() {
   const { session, org } = await requireOrg();
   const db = getOrgPrisma(org.id);
 
-  const [postsCount, viewsCount, likesCount] = await Promise.all([
+  const [postsCount, widgetOpens, postViews, likesCount, dislikesCount] = await Promise.all([
     db.post.count(),
-    db.engagementEvent.count({ where: { type: "VIEW" } }),
+    db.engagementEvent.count({ where: { type: "VIEW", postId: null } }),
+    db.engagementEvent.count({ where: { type: "VIEW", postId: { not: null } } }),
     db.engagementEvent.count({ where: { type: "LIKE" } }),
+    db.engagementEvent.count({ where: { type: "DISLIKE" } }),
   ]);
 
   const displayName =
@@ -30,12 +32,20 @@ export default async function DashboardPage() {
           <div className={styles.statValue}>{postsCount}</div>
         </div>
         <div className={styles.statCard}>
-          <h3>Widget Views</h3>
-          <div className={styles.statValue}>{viewsCount}</div>
+          <h3>Widget Opens</h3>
+          <div className={styles.statValue}>{widgetOpens}</div>
+        </div>
+        <div className={styles.statCard}>
+          <h3>Post Views</h3>
+          <div className={styles.statValue}>{postViews}</div>
         </div>
         <div className={styles.statCard}>
           <h3>Likes</h3>
           <div className={styles.statValue}>{likesCount}</div>
+        </div>
+        <div className={styles.statCard}>
+          <h3>Dislikes</h3>
+          <div className={styles.statValue}>{dislikesCount}</div>
         </div>
       </div>
     </div>
