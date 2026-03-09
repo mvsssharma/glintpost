@@ -49,12 +49,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       // Attach orgId and emailVerified to token
       if (token.id) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: { orgId: true, emailVerified: true },
-        });
-        token.orgId = dbUser?.orgId ?? null;
-        token.emailVerified = dbUser?.emailVerified ?? null;
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { orgId: true, emailVerified: true },
+          });
+          token.orgId = dbUser?.orgId ?? null;
+          token.emailVerified = dbUser?.emailVerified ?? null;
+        } catch {
+          // Keep existing token values on transient DB errors
+          // so users don't get logged out unexpectedly
+        }
       }
       return token;
     },
