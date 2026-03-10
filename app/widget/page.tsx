@@ -67,7 +67,8 @@ function WidgetContent() {
       postId: string | null
     ) => {
       if (!postId && type !== "VIEW") return;
-      if (postId && interactedPosts[postId]) return;
+      // Only block duplicate LIKE/DISLIKE, always allow VIEW
+      if (type !== "VIEW" && postId && interactedPosts[postId]) return;
 
       const newInteractions = { ...interactedPosts };
       if (postId && type !== "VIEW") {
@@ -87,7 +88,7 @@ function WidgetContent() {
       }
 
       try {
-        await fetch(`/api/track?apiKey=${apiKey}`, {
+        const res = await fetch(`/api/track?apiKey=${apiKey}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -97,6 +98,16 @@ function WidgetContent() {
             datalayer,
           }),
         });
+        // Revert optimistic update on server error
+        if (!res.ok && postId && type !== "VIEW") {
+          const reverted = { ...interactedPosts };
+          delete reverted[postId];
+          setInteractedPosts(reverted);
+          localStorage.setItem(
+            "glintpost_interactions",
+            JSON.stringify(reverted)
+          );
+        }
       } catch {
         if (postId && type !== "VIEW") {
           const reverted = { ...interactedPosts };
