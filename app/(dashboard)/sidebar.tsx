@@ -7,6 +7,7 @@ import { signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   FileText,
+  Map,
   Code,
   Settings,
   CreditCard,
@@ -16,12 +17,13 @@ import styles from "./dashboard.module.css";
 
 const navItems = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
-  { href: "/posts", label: "Posts", icon: FileText },
+  { href: "/posts", label: "Changelog", icon: FileText },
+  { href: "/roadmap", label: "Roadmap", icon: Map },
   { href: "/integration", label: "Integration", icon: Code },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-export function Sidebar({ orgName }: { orgName: string }) {
+export function Sidebar({ orgName, userName }: { orgName: string; userName: string }) {
   const pathname = usePathname();
 
   function isActive(href: string) {
@@ -67,6 +69,12 @@ export function Sidebar({ orgName }: { orgName: string }) {
           <LogOut size={18} className={styles.navIcon} />
           Log out
         </button>
+        <div className={styles.userProfile}>
+          <div className={styles.avatar}>
+            {userName[0]?.toUpperCase() ?? "?"}
+          </div>
+          <span className={styles.userName}>{userName}</span>
+        </div>
       </div>
     </aside>
   );

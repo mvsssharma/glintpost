@@ -21,6 +21,13 @@
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-elevated: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 
+  /* Semantic Colors */
+  --error: 0 84% 60%;
+  --error-text: 0 84% 40%;
+  --success: 142 71% 45%;
+  --success-text: 142 71% 35%;
+  --danger: 0 70% 50%;
+
   /* Radius */
   --radius-md: 8px;
   --radius-lg: 12px;
@@ -62,7 +69,7 @@ html, body {
 body {
   color: hsl(var(--text-main));
   background: hsl(var(--bg-main));
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), 'Noto Sans', Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.5;

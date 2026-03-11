@@ -160,8 +160,8 @@
 }
 
 .error {
-  background: hsl(0 84% 60% / 0.1);
-  color: hsl(0 84% 40%);
+  background: hsl(var(--error) / 0.1);
+  color: hsl(var(--error-text));
   padding: 0.75rem 1rem;
   border-radius: var(--radius-md);
   font-size: 0.875rem;
@@ -169,8 +169,8 @@
 }
 
 .success {
-  background: hsl(142 71% 45% / 0.1);
-  color: hsl(142 71% 45%);
+  background: hsl(var(--success) / 0.1);
+  color: hsl(var(--success));
   padding: 0.75rem 1rem;
   border-radius: var(--radius-md);
   font-size: 0.875rem;

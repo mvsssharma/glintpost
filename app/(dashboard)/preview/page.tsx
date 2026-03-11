@@ -1,5 +1,7 @@
 import { requireOrg } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
+import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
+import PreviewContent from "./PreviewContent";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -24,23 +26,10 @@ export default async function PreviewPage({
         <p>This is how the GlintPost widget will appear on your site.</p>
       </header>
 
-      <div className={styles.previewArea}>
-        <div className={styles.mockSite}>
-          <div className={styles.mockNav} />
-          <div className={styles.mockContent}>
-            <div className={styles.mockHeading} />
-            <div className={styles.mockLine} />
-            <div className={styles.mockLine} style={{ width: "80%" }} />
-            <div className={styles.mockLine} style={{ width: "60%" }} />
-          </div>
-        </div>
-      </div>
-
-      {/* Widget script loads at the bottom */}
-      <script
-        src="/widget.js"
-        data-api-key={org.apiKey}
-        defer
+      <PreviewContent
+        apiKey={org.apiKey}
+        theme={org.settings?.widgetTheme ?? "light"}
+        primaryColor={org.settings?.primaryColor ?? DEFAULT_PRIMARY_COLOR}
       />
     </div>
   );

@@ -11,16 +11,11 @@ export default async function DashboardLayout({
 
   return (
     <div className={styles.layout}>
-      <Sidebar orgName={org.name} />
+      <Sidebar
+        orgName={org.name}
+        userName={session.user.name ?? session.user.email ?? ""}
+      />
       <main className={styles.main}>
-        <header className={styles.header}>
-          <span className={styles.headerTitle}>{org.name}</span>
-          <div className={styles.headerActions}>
-            <div className={styles.avatar}>
-              {(session.user.name ?? session.user.email)?.[0]?.toUpperCase()}
-            </div>
-          </div>
-        </header>
         <div className={styles.content}>{children}</div>
       </main>
     </div>
