@@ -102,6 +102,24 @@ export const AI_PROVIDERS = [
   { id: "google", label: "Google Gemini", defaultModel: "gemini-2.0-flash" },
 ] as const;
 
+export const ROADMAP_STATUSES = [
+  { value: "UNDER_REVIEW", label: "Under Review", color: "#f59e0b" },
+  { value: "PLANNED", label: "Planned", color: "#6366f1" },
+  { value: "IN_PROGRESS", label: "In Progress", color: "#0ea5e9" },
+  { value: "COMPLETED", label: "Completed", color: "#10b981" },
+  { value: "ARCHIVED", label: "Archived", color: "#6b7280" },
+] as const;
+
+export const SUGGESTION_STATUSES = [
+  { value: "PENDING", label: "Pending" },
+  { value: "MERGED", label: "Merged" },
+  { value: "CREATED", label: "Created as Item" },
+  { value: "DISMISSED", label: "Dismissed" },
+] as const;
+
+export const SIMILARITY_THRESHOLD_DUPLICATE = 0.8;
+export const SIMILARITY_THRESHOLD_RELATED = 0.6;
+
 export const AI_MODELS: Record<string, { id: string; label: string }[]> = {
   openai: [
     { id: "gpt-4o", label: "GPT-4o" },

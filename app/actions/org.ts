@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { generateSlug } from "@/lib/utils";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
+import { encrypt } from "@/lib/crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
@@ -116,6 +117,11 @@ export async function updateOrgSettings(
     ? localesRaw.split(",").filter(Boolean)
     : ["en"];
 
+  // AI settings (optional)
+  const aiProvider = (formData.get("aiProvider") as string) || null;
+  const aiModel = (formData.get("aiModel") as string) || null;
+  const aiApiKeyRaw = (formData.get("aiApiKey") as string) || "";
+
   if (!name || name.length < 2) {
     return { error: "Organization name must be at least 2 characters" };
   }
@@ -123,6 +129,24 @@ export async function updateOrgSettings(
   if (supportedLocales.length === 0 || !supportedLocales.includes("en")) {
     return { error: "English must be included in supported languages" };
   }
+
+  // Encrypt AI API key if provided
+  let aiApiKey: string | undefined;
+  if (aiApiKeyRaw) {
+    aiApiKey = await encrypt(aiApiKeyRaw);
+  }
+
+  const settingsData = {
+    primaryColor,
+    widgetTheme,
+    supportedLocales,
+    defaultLocale: supportedLocales[0] || "en",
+    ...(aiProvider !== null && { aiProvider }),
+    ...(aiModel !== null && { aiModel }),
+    ...(aiApiKey !== undefined && { aiApiKey }),
+    // Clear AI fields if provider is removed
+    ...(!aiProvider && { aiProvider: null, aiModel: null, aiApiKey: null }),
+  };
 
   try {
     await prisma.$transaction([
@@ -132,19 +156,8 @@ export async function updateOrgSettings(
       }),
       prisma.orgSettings.upsert({
         where: { orgId: user.orgId },
-        create: {
-          orgId: user.orgId,
-          primaryColor,
-          widgetTheme,
-          supportedLocales,
-          defaultLocale: supportedLocales[0] || "en",
-        },
-        update: {
-          primaryColor,
-          widgetTheme,
-          supportedLocales,
-          defaultLocale: supportedLocales[0] || "en",
-        },
+        create: { orgId: user.orgId, ...settingsData },
+        update: settingsData,
       }),
     ]);
   } catch (err) {

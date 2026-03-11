@@ -24,6 +24,9 @@ const TENANT_SCOPED_MODELS = new Set([
   "Post",
   "PostTranslation",
   "EngagementEvent",
+  "RoadmapItem",
+  "RoadmapSuggestion",
+  "RoadmapVote",
 ]);
 
 /**

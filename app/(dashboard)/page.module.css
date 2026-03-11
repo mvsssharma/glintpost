@@ -14,10 +14,22 @@
   color: hsl(var(--text-muted));
 }
 
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: hsl(var(--text-main));
+}
+
 .stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
 }
 
 .statCard {
@@ -34,12 +46,62 @@
   box-shadow: var(--shadow-md);
 }
 
+.statHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.5rem;
+}
+
 .statCard h3 {
   font-size: 0.875rem;
   color: hsl(var(--text-muted));
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 0.5rem;
+}
+
+.tipIcon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: hsl(var(--border-light));
+  color: hsl(var(--text-muted));
+  font-size: 0.625rem;
+  font-weight: 700;
+  cursor: help;
+  flex-shrink: 0;
+}
+
+.tipIcon::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: hsl(var(--bg-main));
+  color: hsl(var(--text-main));
+  font-size: 0.75rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid hsl(var(--border-light));
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  box-shadow: var(--shadow-md);
+  z-index: 10;
+}
+
+.tipIcon:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 .statValue {

@@ -75,6 +75,10 @@ model Organization {
   posts       Post[]
   engagements EngagementEvent[]
 
+  roadmapItems       RoadmapItem[]
+  roadmapSuggestions RoadmapSuggestion[]
+  roadmapVotes       RoadmapVote[]
+
   // Billing (Razorpay)
   razorpayCustomerId     String?       @unique
   razorpaySubscriptionId String?
@@ -195,4 +199,82 @@ enum BillingStatus {
   PAST_DUE
   CANCELED
   INACTIVE
+}
+
+// === ROADMAP ===
+
+model RoadmapItem {
+  id    String       @id @default(cuid())
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  status      RoadmapItemStatus @default(UNDER_REVIEW)
+  sortOrder   Int               @default(0)
+
+  votes       RoadmapVote[]
+  suggestions RoadmapSuggestion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orgId, status])
+  @@index([orgId, createdAt])
+}
+
+model RoadmapSuggestion {
+  id    String       @id @default(cuid())
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  rawText         String
+  visitorId       String?
+  status          SuggestionStatus @default(PENDING)
+
+  matchedItemId   String?
+  matchedItem     RoadmapItem? @relation(fields: [matchedItemId], references: [id], onDelete: SetNull)
+  similarityScore Float?
+
+  createdAt DateTime @default(now())
+
+  @@index([orgId, status])
+  @@index([orgId, createdAt])
+}
+
+model RoadmapVote {
+  id    String       @id @default(cuid())
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  itemId    String
+  item      RoadmapItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  visitorId String
+  voteType  VoteType @default(UP)
+
+  createdAt DateTime @default(now())
+
+  @@unique([itemId, visitorId])
+  @@index([orgId, itemId])
+}
+
+enum RoadmapItemStatus {
+  UNDER_REVIEW
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+enum SuggestionStatus {
+  PENDING
+  MERGED
+  CREATED
+  DISMISSED
+}
+
+enum VoteType {
+  UP
+  DOWN
 }

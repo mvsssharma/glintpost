@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import styles from "./page.module.css";
 
 interface Post {
@@ -47,15 +48,19 @@ function ReactionButtons({
   );
 }
 
-function WidgetContent() {
+function ChangelogContent() {
   const searchParams = useSearchParams();
   const apiKey = searchParams.get("apiKey");
   const visitorId = searchParams.get("visitorId");
   const datalayerParam = searchParams.get("datalayer");
+  const themeParam = searchParams.get("theme");
+  const primaryColorParam = searchParams.get("primaryColor");
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [theme, setTheme] = useState<{ primaryColor: string; widgetTheme: string } | null>(null);
+  const [theme, setTheme] = useState<{ primaryColor: string; widgetTheme: string } | null>(
+    themeParam ? { primaryColor: primaryColorParam ?? DEFAULT_PRIMARY_COLOR, widgetTheme: themeParam } : null
+  );
   const [interactedPosts, setInteractedPosts] = useState<
     Record<string, "LIKE" | "DISLIKE">
   >({});
@@ -88,7 +93,7 @@ function WidgetContent() {
       }
 
       try {
-        const res = await fetch(`/api/track?apiKey=${apiKey}`, {
+        const res = await fetch(`/api/changelog/track?apiKey=${apiKey}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -133,23 +138,23 @@ function WidgetContent() {
 
     if (!apiKey) return;
 
-    fetch(`/api/widget/config?apiKey=${apiKey}`)
+    fetch(`/api/config?apiKey=${apiKey}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((config: { primaryColor?: string; widgetTheme?: string } | null) => {
         if (config) {
           setTheme({
-            primaryColor: config.primaryColor ?? "#10b981",
+            primaryColor: config.primaryColor ?? DEFAULT_PRIMARY_COLOR,
             widgetTheme: config.widgetTheme ?? "light",
           });
           window.parent.postMessage(
-            { type: "GLINTPOST_WIDGET_CONFIG", primaryColor: config.primaryColor },
+            { type: "GLINTPOST_CHANGELOG_CONFIG", primaryColor: config.primaryColor },
             "*"
           );
         }
       })
       .catch(() => { });
 
-    fetch(`/api/widget/posts?apiKey=${apiKey}`)
+    fetch(`/api/changelog/posts?apiKey=${apiKey}`)
       .then((res) => res.json())
       .then((data: Post[]) => {
         if (Array.isArray(data)) {
@@ -162,12 +167,12 @@ function WidgetContent() {
         setLoading(false);
       });
 
-    window.parent.postMessage({ type: "GLINTPOST_WIDGET_LOADED" }, "*");
+    window.parent.postMessage({ type: "GLINTPOST_CHANGELOG_LOADED" }, "*");
   }, [apiKey]);
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
-      if (e.data?.type === "GLINTPOST_WIDGET_OPENED") {
+      if (e.data?.type === "GLINTPOST_CHANGELOG_OPENED") {
         trackEvent("VIEW", null);
       }
     };
@@ -176,10 +181,10 @@ function WidgetContent() {
   }, [trackEvent]);
 
   const closeWidget = () => {
-    window.parent.postMessage({ type: "GLINTPOST_WIDGET_CLOSE" }, "*");
+    window.parent.postMessage({ type: "GLINTPOST_CHANGELOG_CLOSE" }, "*");
   };
 
-  if (loading) return <div className={styles.loading}>Loading updates...</div>;
+  if (loading || !theme) return <div className={styles.loading} style={{ background: "transparent" }} />;
 
   const themeStyle = theme?.primaryColor
     ? { ["--widget-primary" as string]: theme.primaryColor }
@@ -272,14 +277,18 @@ function WidgetContent() {
           })
         )}
       </div>
+
+      <footer className={styles.footer}>
+        Powered by <strong>GlintPost</strong>
+      </footer>
     </div>
   );
 }
 
-export default function WidgetPage() {
+export default function ChangelogPage() {
   return (
-    <Suspense fallback={<div className={styles.loading}>Loading...</div>}>
-      <WidgetContent />
+    <Suspense fallback={<div className={styles.loading} style={{ background: "transparent" }} />}>
+      <ChangelogContent />
     </Suspense>
   );
 }

@@ -8,9 +8,11 @@ const publicPaths = [
   "/reset-password",
   "/verify-email",
   "/api/auth",
-  "/api/widget",
-  "/api/track",
-  "/widget",
+  "/api/config",
+  "/api/changelog",
+  "/api/roadmap",
+  "/changelog",
+  "/board",
 ];
 
 function isPublicPath(pathname: string) {
@@ -47,6 +49,6 @@ export default auth((req) => {
 export const config = {
   matcher: [
     // Match all paths except static files and API internals
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|js|css)$).*)",
   ],
 };

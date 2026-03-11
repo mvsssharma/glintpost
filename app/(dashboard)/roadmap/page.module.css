@@ -1,0 +1,123 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.header p {
+  color: hsl(var(--text-muted));
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.emptyState {
+  padding: 3rem;
+  text-align: center;
+  background: hsl(var(--bg-surface));
+  border-radius: var(--radius-lg);
+  border: 1px dashed hsl(var(--border-light));
+  color: hsl(var(--text-muted));
+}
+
+.itemCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background: hsl(var(--bg-surface));
+  border-radius: var(--radius-lg);
+  border: 1px solid hsl(var(--border-light));
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-fast);
+}
+
+.itemCard:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.itemInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemTitle {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  margin-bottom: 0.375rem;
+}
+
+.itemMeta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8125rem;
+  color: hsl(var(--text-muted));
+  align-items: center;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: 0.6875rem;
+  color: white;
+}
+
+.votes {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.itemActions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.statusSelect {
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid hsl(var(--border-light));
+  background: hsl(var(--bg-main));
+  color: hsl(var(--text-main));
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.deleteBtn {
+  padding: 0.375rem 0.625rem;
+  border-radius: var(--radius-md);
+  border: 1px solid hsl(var(--error) / 0.3);
+  background: hsl(var(--error) / 0.08);
+  color: hsl(var(--error-text));
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.deleteBtn:hover {
+  background: hsl(var(--error) / 0.15);
+}

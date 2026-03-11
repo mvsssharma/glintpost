@@ -1,15 +1,15 @@
 (function () {
-  if (window.GlintPostInitialized) return;
-  window.GlintPostInitialized = true;
+  if (window.GlintPostRoadmapInitialized) return;
+  window.GlintPostRoadmapInitialized = true;
 
   var scriptTag =
     document.currentScript ||
-    document.querySelector('script[src*="widget.js"]');
+    document.querySelector('script[src*="roadmap-widget.js"]');
   var apiKey = scriptTag ? scriptTag.getAttribute("data-api-key") : null;
 
   if (!apiKey) {
     console.error(
-      "GlintPost Widget: Missing data-api-key attribute on the script tag."
+      "GlintPost Roadmap Widget: Missing data-api-key attribute on the script tag."
     );
     return;
   }
@@ -18,19 +18,20 @@
   var queryParams = new URLSearchParams({
     apiKey: apiKey,
     visitorId: clientConfig.visitorId || "",
-    datalayer: clientConfig.datalayer
-      ? JSON.stringify(clientConfig.datalayer)
-      : "",
   });
 
   var BASE_URL = new URL(scriptTag.src).origin;
-  var iframeUrl = BASE_URL + "/widget?" + queryParams.toString();
+  var iframeUrl = BASE_URL + "/board?" + queryParams.toString();
+
+  // Detect if changelog badge is present to stack above it
+  var hasChangelogBadge = !!document.querySelector(".glintpost-changelog-badge");
+  var badgeBottom = hasChangelogBadge ? "90px" : "24px";
 
   var style = document.createElement("style");
   style.innerHTML =
-    ".glintpost-badge {" +
+    ".glintpost-roadmap-badge {" +
     "  position: fixed;" +
-    "  bottom: 24px;" +
+    "  bottom: " + badgeBottom + ";" +
     "  right: 24px;" +
     "  width: 56px;" +
     "  height: 56px;" +
@@ -44,16 +45,16 @@
     "  justify-content: center;" +
     "  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;" +
     "}" +
-    ".glintpost-badge:hover {" +
+    ".glintpost-roadmap-badge:hover {" +
     "  transform: scale(1.05);" +
     "  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);" +
     "}" +
-    ".glintpost-badge svg {" +
+    ".glintpost-roadmap-badge svg {" +
     "  width: 28px;" +
     "  height: 28px;" +
     "  fill: white;" +
     "}" +
-    ".glintpost-iframe-container {" +
+    ".glintpost-roadmap-container {" +
     "  position: fixed;" +
     "  top: 0;" +
     "  right: 0;" +
@@ -66,46 +67,54 @@
     "  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);" +
     "  box-shadow: -4px 0 24px rgba(0,0,0,0.1);" +
     "}" +
-    ".glintpost-iframe-container.open {" +
+    ".glintpost-roadmap-container.open {" +
     "  transform: translateX(0);" +
     "}" +
-    ".glintpost-iframe {" +
+    ".glintpost-roadmap-iframe {" +
     "  width: 100%;" +
     "  height: 100%;" +
     "  border: none;" +
-    "  background: white;" +
     "}" +
     "@media (max-width: 480px) {" +
-    "  .glintpost-iframe-container {" +
+    "  .glintpost-roadmap-container {" +
     "    width: 100vw;" +
     "  }" +
     "}";
   document.head.appendChild(style);
 
   var badge = document.createElement("div");
-  badge.className = "glintpost-badge";
+  badge.className = "glintpost-roadmap-badge";
+  // Lightbulb icon for roadmap/ideas
   badge.innerHTML =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' +
-    '<path d="M12 2C6.48 2 2 5.92 2 10.75c0 2.29 1.05 4.39 2.76 5.98-.31 1.76-1.39 3.52-1.42 3.58-.09.15-.09.33.01.48.1.15.28.22.46.18 2.65-.63 4.54-1.93 5.56-2.7C10.22 18.15 11.09 18.25 12 18.25c5.52 0 10-3.92 10-8.75S17.52 2 12 2z"/>' +
+    '<path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6A4.997 4.997 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/>' +
     "</svg>";
 
   var container = document.createElement("div");
-  container.className = "glintpost-iframe-container";
+  container.className = "glintpost-roadmap-container";
 
   var iframe = document.createElement("iframe");
-  iframe.className = "glintpost-iframe";
+  iframe.className = "glintpost-roadmap-iframe";
   iframe.src = "about:blank";
   container.appendChild(iframe);
 
   document.body.appendChild(badge);
   document.body.appendChild(container);
 
-  // Fetch account config immediately to apply the correct badge color on load
-  fetch(BASE_URL + "/api/widget/config?apiKey=" + encodeURIComponent(apiKey))
+  // Fetch account config immediately to apply the correct badge color and theme
+  fetch(BASE_URL + "/api/config?apiKey=" + encodeURIComponent(apiKey))
     .then(function (res) { return res.ok ? res.json() : null; })
     .then(function (config) {
-      if (config && config.primaryColor) {
-        badge.style.backgroundColor = config.primaryColor;
+      if (config) {
+        if (config.primaryColor) {
+          badge.style.backgroundColor = config.primaryColor;
+          queryParams.set("primaryColor", config.primaryColor);
+        }
+        if (config.widgetTheme) {
+          queryParams.set("theme", config.widgetTheme);
+          iframe.style.background = config.widgetTheme === "dark" ? "hsl(224 71% 4%)" : "hsl(220 10% 98%)";
+        }
+        iframeUrl = BASE_URL + "/board?" + queryParams.toString();
       }
     })
     .catch(function () {});
@@ -121,7 +130,7 @@
 
   function notifyOpened() {
     if (iframe.contentWindow) {
-      iframe.contentWindow.postMessage({ type: "GLINTPOST_WIDGET_OPENED" }, "*");
+      iframe.contentWindow.postMessage({ type: "GLINTPOST_ROADMAP_OPENED" }, "*");
     }
   }
 
@@ -142,11 +151,11 @@
 
   window.addEventListener("message", function (event) {
     if (event.origin !== BASE_URL) return;
-    if (event.data && event.data.type === "GLINTPOST_WIDGET_CLOSE") {
+    if (event.data && event.data.type === "GLINTPOST_ROADMAP_CLOSE") {
       isOpen = false;
       container.classList.remove("open");
     }
-    if (event.data && event.data.type === "GLINTPOST_WIDGET_CONFIG" && event.data.primaryColor) {
+    if (event.data && event.data.type === "GLINTPOST_ROADMAP_CONFIG" && event.data.primaryColor) {
       badge.style.backgroundColor = event.data.primaryColor;
     }
   });

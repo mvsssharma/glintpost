@@ -8,10 +8,17 @@ export type {
   PostStatus,
   EngagementType,
   BillingStatus,
+  RoadmapItem,
+  RoadmapSuggestion,
+  RoadmapVote,
+  RoadmapItemStatus,
+  SuggestionStatus,
+  VoteType,
 } from "@prisma/client";
 
 export type { TargetingRule, TargetingRuleSet, TargetingOperator, TargetingRuleOp } from "./targeting";
 export type { GlintPostConfig, WidgetMessage, WidgetMessageType } from "./widget";
+export type { PublicRoadmapItem, SuggestionResponse } from "./roadmap";
 
 /** Organization with settings included */
 export interface OrgContext {

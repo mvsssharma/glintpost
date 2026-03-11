@@ -1,0 +1,6 @@
+/* Override body background for widget pages loaded in iframes.
+   The actual background is controlled by the parent iframe element
+   or by the themed container inside the page. */
+html, body {
+  background: transparent !important;
+}

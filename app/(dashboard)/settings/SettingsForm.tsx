@@ -13,6 +13,8 @@ import {
   COLOR_PRESETS,
   DEFAULT_PRIMARY_COLOR,
   SUPPORTED_LOCALES,
+  AI_PROVIDERS,
+  AI_MODELS,
 } from "@/lib/constants";
 import type { Organization, OrgSettings } from "@/types";
 import styles from "./page.module.css";
@@ -46,6 +48,9 @@ export function SettingsForm({
       ? settings.supportedLocales
       : ["en"]
   );
+  const [aiProvider, setAiProvider] = useState(settings?.aiProvider ?? "");
+  const [aiModel, setAiModel] = useState(settings?.aiModel ?? "");
+  const [aiApiKey, setAiApiKey] = useState("");
 
   const [settingsState, settingsAction, settingsPending] = useActionState<
     SettingsState,
@@ -181,6 +186,93 @@ export function SettingsForm({
             >
               Preview widget
             </a>
+          </div>
+        </form>
+      </section>
+
+      {/* AI configuration */}
+      <section className={styles.card}>
+        <h3>AI configuration</h3>
+        <p>
+          Configure an LLM provider to enable semantic duplicate detection for
+          roadmap suggestions. Without this, basic keyword matching is used.
+        </p>
+        <form action={settingsAction}>
+          <input type="hidden" name="name" value={orgName} />
+          <input type="hidden" name="primaryColor" value={primaryColor} />
+          <input type="hidden" name="widgetTheme" value={widgetTheme} />
+          <input type="hidden" name="locales" value={selectedLocales.join(",")} />
+          <input type="hidden" name="aiProvider" value={aiProvider} />
+          <input type="hidden" name="aiModel" value={aiModel} />
+          <input type="hidden" name="aiApiKey" value={aiApiKey} />
+
+          <div className={styles.fieldGroup}>
+            <label htmlFor="aiProvider" className={styles.label}>
+              Provider
+            </label>
+            <select
+              id="aiProvider"
+              value={aiProvider}
+              onChange={(e) => {
+                setAiProvider(e.target.value);
+                const provider = AI_PROVIDERS.find((p) => p.id === e.target.value);
+                setAiModel(provider?.defaultModel ?? "");
+              }}
+              className={styles.inputField}
+            >
+              <option value="">None (use keyword matching)</option>
+              {AI_PROVIDERS.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {aiProvider && (
+            <>
+              <div className={styles.fieldGroup}>
+                <label htmlFor="aiModel" className={styles.label}>
+                  Model
+                </label>
+                <select
+                  id="aiModel"
+                  value={aiModel}
+                  onChange={(e) => setAiModel(e.target.value)}
+                  className={styles.inputField}
+                >
+                  {(AI_MODELS[aiProvider] ?? []).map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.fieldGroup}>
+                <label htmlFor="aiApiKey" className={styles.label}>
+                  API key
+                </label>
+                <input
+                  id="aiApiKey"
+                  type="password"
+                  value={aiApiKey}
+                  onChange={(e) => setAiApiKey(e.target.value)}
+                  className={styles.inputField}
+                  placeholder={settings?.aiApiKey ? "••••••••  (saved)" : "Enter API key"}
+                />
+              </div>
+            </>
+          )}
+
+          <div className={styles.actions}>
+            <button
+              type="submit"
+              disabled={settingsPending}
+              className="btn-primary"
+            >
+              {settingsPending ? "Saving..." : "Save AI settings"}
+            </button>
           </div>
         </form>
       </section>

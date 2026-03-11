@@ -1,4 +1,5 @@
 import { requireOrg } from "@/lib/auth-helpers";
+import IntegrationTabs from "./IntegrationTabs";
 import styles from "./page.module.css";
 
 export default async function IntegrationPage() {
@@ -9,17 +10,17 @@ export default async function IntegrationPage() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h2>Widget Integration</h2>
+        <h2>Integration</h2>
         <p>
-          Embed the GlintPost widget into your app to share releases with your
-          users.
+          Embed GlintPost widgets into your app. Choose a widget type below to
+          get the integration code.
         </p>
       </header>
 
       <div className={styles.card}>
         <h3>Your API Key</h3>
         <p>
-          Use this key to authenticate the widget. Keep it safe — it identifies
+          Use this key to authenticate widgets. Keep it safe — it identifies
           your organization.
         </p>
         <div className={styles.codeBlock}>
@@ -29,45 +30,7 @@ export default async function IntegrationPage() {
         </div>
       </div>
 
-      <div className={styles.card}>
-        <h3>1. Copy the Script</h3>
-        <p>
-          Place this script block just before the closing{" "}
-          <code>&lt;/body&gt;</code> tag of your HTML.
-        </p>
-        <div className={styles.codeBlock}>
-          <pre>
-            <code>{`<!-- GlintPost Widget -->
-<script
-  src="${appUrl}/widget.js"
-  data-api-key="${org.apiKey}"
-  defer
-></script>`}</code>
-          </pre>
-        </div>
-      </div>
-
-      <div className={styles.card}>
-        <h3>2. Advanced Targeting (Optional)</h3>
-        <p>
-          To filter which posts users see or pass user-specific datalayer
-          variables, define a global <code>window.GlintPostConfig</code> object
-          before the script loads.
-        </p>
-        <div className={styles.codeBlock}>
-          <pre>
-            <code>{`<script>
-  window.GlintPostConfig = {
-    visitorId: "user_123",
-    datalayer: {
-      plan: "pro",
-      role: "admin"
-    }
-  };
-</script>`}</code>
-          </pre>
-        </div>
-      </div>
+      <IntegrationTabs apiKey={org.apiKey} appUrl={appUrl} />
     </div>
   );
 }

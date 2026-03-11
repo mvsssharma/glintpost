@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey } from "@/lib/api-key";
+import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const primaryColor = org.settings?.primaryColor ?? "#10b981";
+  const primaryColor = org.settings?.primaryColor ?? DEFAULT_PRIMARY_COLOR;
   const widgetTheme = org.settings?.widgetTheme ?? "light";
 
   return NextResponse.json({

@@ -208,6 +208,18 @@
   font-weight: 500;
 }
 
+.footer {
+  text-align: center;
+  padding: 1rem 0;
+  font-size: 0.75rem;
+  color: hsl(var(--text-muted));
+  border-top: 1px solid hsl(var(--border-light));
+}
+
+.footer strong {
+  color: var(--widget-primary, hsl(var(--primary)));
+}
+
 .loading,
 .empty {
   padding: 2rem;
