@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { updateRoadmapItemStatus, deleteRoadmapItem } from "@/app/actions/roadmap";
 import { ROADMAP_STATUSES } from "@/lib/constants";
+import type { RoadmapItemStatus } from "@prisma/client";
 import styles from "./page.module.css";
 
 interface Props {
@@ -22,7 +23,7 @@ interface Props {
 export function RoadmapItemRow({ item, statusColor, statusLabel }: Props) {
   const [isPending, startTransition] = useTransition();
 
-  const handleStatusChange = (newStatus: string) => {
+  const handleStatusChange = (newStatus: RoadmapItemStatus) => {
     startTransition(async () => {
       await updateRoadmapItemStatus(item.id, newStatus);
     });
@@ -55,7 +56,7 @@ export function RoadmapItemRow({ item, statusColor, statusLabel }: Props) {
         <select
           className={styles.statusSelect}
           value={item.status}
-          onChange={(e) => handleStatusChange(e.target.value)}
+          onChange={(e) => handleStatusChange(e.target.value as RoadmapItemStatus)}
           disabled={isPending}
         >
           {ROADMAP_STATUSES.map((s) => (

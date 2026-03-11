@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
+import { RoadmapItemStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 export interface RoadmapActionState {
@@ -30,7 +31,7 @@ export async function createRoadmapItem(
 
   const title = (formData.get("title") as string)?.trim();
   const description = (formData.get("description") as string)?.trim() || null;
-  const status = (formData.get("status") as string) || "UNDER_REVIEW";
+  const status = ((formData.get("status") as string) || "UNDER_REVIEW") as RoadmapItemStatus;
 
   if (!title || title.length < 3) {
     return { error: "Title must be at least 3 characters" };
@@ -46,7 +47,7 @@ export async function createRoadmapItem(
 
 export async function updateRoadmapItemStatus(
   itemId: string,
-  status: string,
+  status: RoadmapItemStatus,
 ): Promise<RoadmapActionState> {
   const orgId = await getOrgId();
   if (!orgId) return { error: "Not authenticated" };
