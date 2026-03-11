@@ -26,9 +26,11 @@ export function useRoadmap(apiKey: string | null, visitorId: string): UseRoadmap
   const fetchItems = useCallback(async () => {
     if (!apiKey) return;
     try {
-      const params = new URLSearchParams({ apiKey, visitorId });
+      const params = new URLSearchParams({ visitorId });
       if (filter !== "ALL") params.set("status", filter);
-      const res = await fetch(`/api/roadmap/items?${params}`);
+      const res = await fetch(`/api/roadmap/items?${params}`, {
+        headers: { "x-api-key": apiKey },
+      });
       if (!res.ok) throw new Error("Failed to fetch");
       const data: PublicRoadmapItem[] = await res.json();
       setItems(data);
@@ -89,9 +91,9 @@ export function useRoadmap(apiKey: string | null, visitorId: string): UseRoadmap
       );
 
       try {
-        const res = await fetch(`/api/roadmap/vote?apiKey=${apiKey}`, {
+        const res = await fetch("/api/roadmap/vote", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "x-api-key": apiKey },
           body: JSON.stringify({ itemId, visitorId, voteType }),
         });
         if (!res.ok) {
@@ -108,9 +110,9 @@ export function useRoadmap(apiKey: string | null, visitorId: string): UseRoadmap
   const submitSuggestion = useCallback(
     async (text: string) => {
       if (!apiKey) throw new Error("No API key");
-      const res = await fetch(`/api/roadmap/suggest?apiKey=${apiKey}`, {
+      const res = await fetch("/api/roadmap/suggest", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-api-key": apiKey },
         body: JSON.stringify({ text, visitorId }),
       });
       if (!res.ok) {

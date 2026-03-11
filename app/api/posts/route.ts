@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { prisma } from "@/lib/db";
+import { getOrgPrisma } from "@/lib/db";
+import { createPostSchema } from "@/lib/validations";
 
 export async function POST(req: Request) {
   try {
@@ -9,16 +10,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { title, content } = await req.json();
+    const body = await req.json();
+    const parsed = createPostSchema.safeParse(body);
 
-    if (!title || !content) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Title and content are required" },
+        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
         { status: 400 }
       );
     }
 
-    const post = await prisma.post.create({
+    const { title, content } = parsed.data;
+    const db = getOrgPrisma(session.orgId);
+
+    const post = await db.post.create({
       data: {
         orgId: session.orgId,
         status: "PUBLISHED",

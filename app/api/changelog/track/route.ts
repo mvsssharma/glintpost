@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey } from "@/lib/api-key";
-import { prisma } from "@/lib/db";
+import { getOrgPrisma } from "@/lib/db";
+import { trackEventSchema } from "@/lib/validations";
 
 export async function POST(req: NextRequest) {
   const org = await validateApiKey(req);
@@ -14,16 +15,19 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { type, postId, visitorId, datalayer } = body;
+    const parsed = trackEventSchema.safeParse(body);
 
-    if (!type) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Missing required field: type" },
+        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
         { status: 400 }
       );
     }
 
-    await prisma.engagementEvent.create({
+    const { type, postId, visitorId, datalayer } = parsed.data;
+    const db = getOrgPrisma(org.id);
+
+    await db.engagementEvent.create({
       data: {
         orgId: org.id,
         type,

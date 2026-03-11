@@ -7,6 +7,7 @@ import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import { encrypt } from "@/lib/crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { createOrgSchema, updateOrgSettingsSchema, formDataToObject } from "@/lib/validations";
 
 export interface OnboardingState {
   error?: string;
@@ -30,17 +31,16 @@ export async function createOrganization(
     redirect("/");
   }
 
-  const name = formData.get("name") as string;
-  const primaryColor =
-    (formData.get("primaryColor") as string) || DEFAULT_PRIMARY_COLOR;
-  const localesRaw = formData.get("locales") as string;
-  const supportedLocales = localesRaw
-    ? localesRaw.split(",").filter(Boolean)
-    : ["en"];
-
-  if (!name || name.trim().length < 2) {
-    return { error: "Organization name must be at least 2 characters" };
+  const parsed = createOrgSchema.safeParse(formDataToObject(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
+
+  const name = parsed.data.name;
+  const primaryColor = parsed.data.primaryColor || DEFAULT_PRIMARY_COLOR;
+  const supportedLocales = parsed.data.locales
+    ? parsed.data.locales.split(",").filter(Boolean)
+    : ["en"];
 
   // Generate a unique slug
   let slug = generateSlug(name);
@@ -107,24 +107,21 @@ export async function updateOrgSettings(
     return { error: "No organization found" };
   }
 
-  const name = (formData.get("name") as string)?.trim();
-  const primaryColor =
-    (formData.get("primaryColor") as string) || DEFAULT_PRIMARY_COLOR;
-  const widgetTheme =
-    (formData.get("widgetTheme") as string) === "dark" ? "dark" : "light";
-  const localesRaw = formData.get("locales") as string;
-  const supportedLocales = localesRaw
-    ? localesRaw.split(",").filter(Boolean)
+  const parsed = updateOrgSettingsSchema.safeParse(formDataToObject(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const name = parsed.data.name;
+  const primaryColor = parsed.data.primaryColor || DEFAULT_PRIMARY_COLOR;
+  const widgetTheme = parsed.data.widgetTheme === "dark" ? "dark" : "light";
+  const supportedLocales = parsed.data.locales
+    ? parsed.data.locales.split(",").filter(Boolean)
     : ["en"];
 
-  // AI settings (optional)
-  const aiProvider = (formData.get("aiProvider") as string) || null;
-  const aiModel = (formData.get("aiModel") as string) || null;
-  const aiApiKeyRaw = (formData.get("aiApiKey") as string) || "";
-
-  if (!name || name.length < 2) {
-    return { error: "Organization name must be at least 2 characters" };
-  }
+  const aiProvider = parsed.data.aiProvider ?? null;
+  const aiModel = parsed.data.aiModel ?? null;
+  const aiApiKeyRaw = parsed.data.aiApiKey || "";
 
   if (supportedLocales.length === 0 || !supportedLocales.includes("en")) {
     return { error: "English must be included in supported languages" };

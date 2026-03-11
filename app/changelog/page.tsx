@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import DOMPurify from "isomorphic-dompurify";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import styles from "./page.module.css";
 
@@ -93,9 +94,9 @@ function ChangelogContent() {
       }
 
       try {
-        const res = await fetch(`/api/changelog/track?apiKey=${apiKey}`, {
+        const res = await fetch("/api/changelog/track", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "x-api-key": apiKey! },
           body: JSON.stringify({
             type,
             postId,
@@ -138,7 +139,7 @@ function ChangelogContent() {
 
     if (!apiKey) return;
 
-    fetch(`/api/config?apiKey=${apiKey}`)
+    fetch("/api/config", { headers: { "x-api-key": apiKey } })
       .then((res) => (res.ok ? res.json() : null))
       .then((config: { primaryColor?: string; widgetTheme?: string } | null) => {
         if (config) {
@@ -154,7 +155,7 @@ function ChangelogContent() {
       })
       .catch(() => { });
 
-    fetch(`/api/changelog/posts?apiKey=${apiKey}`)
+    fetch("/api/changelog/posts", { headers: { "x-api-key": apiKey } })
       .then((res) => res.json())
       .then((data: Post[]) => {
         if (Array.isArray(data)) {
@@ -219,7 +220,7 @@ function ChangelogContent() {
           <h3 className={styles.detailTitle}>{selectedPost.title}</h3>
           <div
             className={styles.detailContent}
-            dangerouslySetInnerHTML={{ __html: selectedPost.content }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedPost.content) }}
           />
           <ReactionButtons
             post={selectedPost}
@@ -255,7 +256,7 @@ function ChangelogContent() {
                 <h3 className={styles.title}>{post.title}</h3>
                 <div
                   className={styles.contentPreview}
-                  dangerouslySetInnerHTML={{ __html: post.content }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
                 />
                 <button
                   className={styles.viewMore}

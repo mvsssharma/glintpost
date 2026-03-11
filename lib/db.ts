@@ -41,28 +41,21 @@ export function getOrgPrisma(orgId: string) {
 
         const a = args as Record<string, unknown>;
 
+        const READ_OPS = new Set([
+          "findMany", "findFirst", "findUnique",
+          "count", "deleteMany", "updateMany",
+          "update", "delete", "upsert",
+        ]);
+
         // For Organization model, scope by id instead of orgId
         if (model === "Organization") {
-          if (
-            operation === "findMany" ||
-            operation === "findFirst" ||
-            operation === "count" ||
-            operation === "deleteMany" ||
-            operation === "updateMany"
-          ) {
+          if (READ_OPS.has(operation)) {
             a.where = { ...(a.where as object), id: orgId };
           }
           return query(args);
         }
 
-        // For other tenant-scoped models, inject orgId into reads
-        if (
-          operation === "findMany" ||
-          operation === "findFirst" ||
-          operation === "count" ||
-          operation === "deleteMany" ||
-          operation === "updateMany"
-        ) {
+        if (READ_OPS.has(operation)) {
           a.where = { ...(a.where as object), orgId };
         } else if (operation === "create") {
           a.data = { ...(a.data as object), orgId };

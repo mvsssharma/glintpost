@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey } from "@/lib/api-key";
-import { prisma, getOrgPrisma } from "@/lib/db";
+import { getOrgPrisma } from "@/lib/db";
 import { findSimilarItems } from "@/lib/llm";
 import { SIMILARITY_THRESHOLD_DUPLICATE } from "@/lib/constants";
+import { suggestSchema } from "@/lib/validations";
 
 export async function POST(req: NextRequest) {
   const org = await validateApiKey(req);
@@ -11,26 +12,27 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { text, visitorId } = await req.json();
+    const body = await req.json();
+    const parsed = suggestSchema.safeParse(body);
 
-    if (!text || typeof text !== "string" || text.trim().length < 5) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Suggestion must be at least 5 characters" },
+        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
         { status: 400 },
       );
     }
 
+    const { text, visitorId } = parsed.data;
+    const trimmed = text.trim();
     const db = getOrgPrisma(org.id);
 
-    // Fetch existing non-archived items for similarity comparison
     const existingItems = await db.roadmapItem.findMany({
       where: { status: { not: "ARCHIVED" } },
       select: { id: true, title: true, description: true },
     });
 
-    // Check similarity (LLM or fallback)
     const similarItems = await findSimilarItems(
-      text.trim(),
+      trimmed,
       existingItems,
       org.settings,
     );
@@ -38,11 +40,10 @@ export async function POST(req: NextRequest) {
     const topMatch = similarItems[0];
     const isDuplicate = topMatch && topMatch.score >= SIMILARITY_THRESHOLD_DUPLICATE;
 
-    // Create the suggestion record
-    const suggestion = await prisma.roadmapSuggestion.create({
+    const suggestion = await db.roadmapSuggestion.create({
       data: {
         orgId: org.id,
-        rawText: text.trim(),
+        rawText: trimmed,
         visitorId: visitorId || null,
         status: isDuplicate ? "MERGED" : "PENDING",
         matchedItemId: topMatch ? topMatch.itemId : null,
@@ -50,13 +51,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // If duplicate, auto-upvote the matched item
     if (isDuplicate && visitorId && topMatch) {
-      await prisma.roadmapVote.upsert({
-        where: { itemId_visitorId: { itemId: topMatch.itemId, visitorId } },
-        create: { orgId: org.id, itemId: topMatch.itemId, visitorId, voteType: "UP" },
-        update: {},
+      const existing = await db.roadmapVote.findFirst({
+        where: { itemId: topMatch.itemId, visitorId },
       });
+      if (!existing) {
+        await db.roadmapVote.create({
+          data: { orgId: org.id, itemId: topMatch.itemId, visitorId, voteType: "UP" },
+        });
+      }
     }
 
     return NextResponse.json(

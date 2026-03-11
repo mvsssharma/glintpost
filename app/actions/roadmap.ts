@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { RoadmapItemStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { createRoadmapItemSchema, formDataToObject } from "@/lib/validations";
 
 export interface RoadmapActionState {
   error?: string;
@@ -29,16 +30,15 @@ export async function createRoadmapItem(
   const orgId = await getOrgId();
   if (!orgId) return { error: "Not authenticated" };
 
-  const title = (formData.get("title") as string)?.trim();
-  const description = (formData.get("description") as string)?.trim() || null;
-  const status = ((formData.get("status") as string) || "UNDER_REVIEW") as RoadmapItemStatus;
-
-  if (!title || title.length < 3) {
-    return { error: "Title must be at least 3 characters" };
+  const parsed = createRoadmapItemSchema.safeParse(formDataToObject(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
+  const { title, description, status } = parsed.data;
+
   await prisma.roadmapItem.create({
-    data: { orgId, title, description, status },
+    data: { orgId, title, description: description ?? null, status: status as RoadmapItemStatus },
   });
 
   revalidatePath("/roadmap");
@@ -97,6 +97,10 @@ export async function handleSuggestion(
       data: { status: "CREATED", matchedItemId: newItem.id },
     });
   } else if (action === "merge" && mergeItemId) {
+    const mergeItem = await prisma.roadmapItem.findFirst({
+      where: { id: mergeItemId, orgId },
+    });
+    if (!mergeItem) return { error: "Item not found" };
     await prisma.roadmapSuggestion.update({
       where: { id: suggestionId },
       data: { status: "MERGED", matchedItemId: mergeItemId },

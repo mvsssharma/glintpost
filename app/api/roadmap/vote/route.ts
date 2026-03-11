@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey } from "@/lib/api-key";
-import { prisma } from "@/lib/db";
+import { getOrgPrisma } from "@/lib/db";
+import { voteSchema } from "@/lib/validations";
 
 export async function POST(req: NextRequest) {
   const org = await validateApiKey(req);
@@ -9,37 +10,38 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { itemId, visitorId, voteType } = await req.json();
+    const body = await req.json();
+    const parsed = voteSchema.safeParse(body);
 
-    if (!itemId || !visitorId || !voteType) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
+        { status: 400 },
+      );
     }
 
-    if (!["UP", "DOWN"].includes(voteType)) {
-      return NextResponse.json({ error: "Invalid vote type" }, { status: 400 });
-    }
+    const { itemId, visitorId, voteType } = parsed.data;
+    const db = getOrgPrisma(org.id);
 
     // Verify item belongs to this org
-    const item = await prisma.roadmapItem.findFirst({
-      where: { id: itemId, orgId: org.id },
+    const item = await db.roadmapItem.findFirst({
+      where: { id: itemId },
     });
     if (!item) {
       return NextResponse.json({ error: "Item not found" }, { status: 404 });
     }
 
     // Check for existing vote
-    const existingVote = await prisma.roadmapVote.findUnique({
-      where: { itemId_visitorId: { itemId, visitorId } },
+    const existingVote = await db.roadmapVote.findFirst({
+      where: { itemId, visitorId },
     });
 
     if (existingVote) {
       if (existingVote.voteType === voteType) {
-        // Toggle off
-        await prisma.roadmapVote.delete({ where: { id: existingVote.id } });
+        await db.roadmapVote.delete({ where: { id: existingVote.id } });
         return NextResponse.json({ action: "removed", voteType: null });
       } else {
-        // Switch vote
-        await prisma.roadmapVote.update({
+        await db.roadmapVote.update({
           where: { id: existingVote.id },
           data: { voteType },
         });
@@ -47,8 +49,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Create new vote
-    await prisma.roadmapVote.create({
+    await db.roadmapVote.create({
       data: { orgId: org.id, itemId, visitorId, voteType },
     });
 

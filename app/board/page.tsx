@@ -38,7 +38,7 @@ function RoadmapContent() {
 
   useEffect(() => {
     if (!apiKey) return;
-    fetch(`/api/config?apiKey=${apiKey}`)
+    fetch("/api/config", { headers: { "x-api-key": apiKey } })
       .then((res) => (res.ok ? res.json() : null))
       .then((config: { primaryColor?: string; widgetTheme?: string } | null) => {
         if (config) {

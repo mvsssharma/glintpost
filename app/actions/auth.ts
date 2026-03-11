@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 import { sendVerificationEmail } from "@/app/actions/email-verification";
+import { signupSchema, loginSchema, changePasswordSchema, formDataToObject } from "@/lib/validations";
 
 export interface AuthState {
   error?: string;
@@ -15,17 +16,12 @@ export async function signupAction(
   _prevState: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
-  const name = formData.get("name") as string;
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
-  if (!name || !email || !password) {
-    return { error: "All fields are required" };
+  const parsed = signupSchema.safeParse(formDataToObject(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  if (password.length < 8) {
-    return { error: "Password must be at least 8 characters" };
-  }
+  const { name, email, password } = parsed.data;
 
   try {
     const existing = await prisma.user.findUnique({ where: { email } });
@@ -74,12 +70,12 @@ export async function loginAction(
   _prevState: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
-  if (!email || !password) {
-    return { error: "Email and password are required" };
+  const parsed = loginSchema.safeParse(formDataToObject(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
+
+  const { email, password } = parsed.data;
 
   try {
     await signIn("credentials", {
@@ -94,7 +90,6 @@ export async function loginAction(
     throw error;
   }
 
-  // If user's email is not verified, send a verification email and redirect to verify-email
   const user = await prisma.user.findUnique({
     where: { email },
     select: { emailVerified: true },
@@ -122,21 +117,12 @@ export async function changePasswordAction(
     return { error: "Not authenticated" };
   }
 
-  const currentPassword = formData.get("currentPassword") as string;
-  const newPassword = formData.get("newPassword") as string;
-  const confirmPassword = formData.get("confirmPassword") as string;
-
-  if (!currentPassword || !newPassword || !confirmPassword) {
-    return { error: "All fields are required" };
+  const parsed = changePasswordSchema.safeParse(formDataToObject(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  if (newPassword.length < 8) {
-    return { error: "New password must be at least 8 characters" };
-  }
-
-  if (newPassword !== confirmPassword) {
-    return { error: "New password and confirmation do not match" };
-  }
+  const { currentPassword, newPassword } = parsed.data;
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },

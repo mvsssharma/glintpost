@@ -3,6 +3,11 @@
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
+import {
+  requestPasswordResetSchema,
+  resetPasswordSchema,
+  formDataToObject,
+} from "@/lib/validations";
 
 const PASSWORD_RESET_PREFIX = "password-reset:";
 
@@ -19,11 +24,12 @@ export async function requestPasswordReset(
   _prevState: PasswordResetState,
   formData: FormData,
 ): Promise<PasswordResetState> {
-  const email = formData.get("email") as string;
-
-  if (!email) {
-    return { error: "Email is required" };
+  const parsed = requestPasswordResetSchema.safeParse(formDataToObject(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
+
+  const { email } = parsed.data;
 
   // Always return success to avoid email enumeration
   const successMessage =
@@ -81,22 +87,12 @@ export async function resetPassword(
   _prevState: PasswordResetState,
   formData: FormData,
 ): Promise<PasswordResetState> {
-  const token = formData.get("token") as string;
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-  const confirmPassword = formData.get("confirmPassword") as string;
-
-  if (!token || !email) {
-    return { error: "Invalid reset link" };
+  const parsed = resetPasswordSchema.safeParse(formDataToObject(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  if (!password || password.length < 8) {
-    return { error: "Password must be at least 8 characters" };
-  }
-
-  if (password !== confirmPassword) {
-    return { error: "Passwords do not match" };
-  }
+  const { token, email, password } = parsed.data;
 
   try {
     // Find and validate token
