@@ -33,8 +33,8 @@ export default function PreviewContent({
       .forEach((el) => el.remove());
 
     // Reset initialization flags so scripts can re-run
-    (window as Record<string, unknown>).GlintPostChangelogInitialized = false;
-    (window as Record<string, unknown>).GlintPostRoadmapInitialized = false;
+    (window as unknown as Record<string, unknown>).GlintPostChangelogInitialized = false;
+    (window as unknown as Record<string, unknown>).GlintPostRoadmapInitialized = false;
 
     // Remove old widget scripts
     document
@@ -65,8 +65,8 @@ export default function PreviewContent({
       )
       .forEach((el) => el.remove());
 
-    (window as Record<string, unknown>).GlintPostChangelogInitialized = false;
-    (window as Record<string, unknown>).GlintPostRoadmapInitialized = false;
+    (window as unknown as Record<string, unknown>).GlintPostChangelogInitialized = false;
+    (window as unknown as Record<string, unknown>).GlintPostRoadmapInitialized = false;
 
     document
       .querySelectorAll(
