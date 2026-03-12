@@ -5,14 +5,30 @@ import { WIDGETS, type WidgetConfig, type EmbedOption } from "@/lib/widgets";
 import styles from "./page.module.css";
 
 function getChangelogHeadlessSnippet(appUrl: string, apiKey: string): string {
-  return `// Fetch changelog posts
+  return `// --- Visitor ID ---
+// Generate a unique visitor ID per browser and persist it.
+// This is used for like/dislike deduplication.
+// If your users are logged in, you can use their user ID instead.
+function getVisitorId() {
+  const KEY = "glintpost_visitor_id";
+  let id = localStorage.getItem(KEY);
+  if (!id) {
+    id = "v_" + crypto.randomUUID();
+    localStorage.setItem(KEY, id);
+  }
+  return id;
+}
+
+const visitorId = getVisitorId();
+
+// --- Fetch changelog posts ---
 const res = await fetch("${appUrl}/api/changelog/posts", {
   headers: { "x-api-key": "${apiKey}" }
 });
 const posts = await res.json();
 // Each post: { id, title, content, createdAt, likes, dislikes }
 
-// Like a post
+// --- Like a post ---
 await fetch("${appUrl}/api/changelog/track", {
   method: "POST",
   headers: {
@@ -20,23 +36,39 @@ await fetch("${appUrl}/api/changelog/track", {
     "Content-Type": "application/json"
   },
   body: JSON.stringify({
-    type: "LIKE",           // "LIKE" | "DISLIKE" | "VIEW"
-    postId: "post_id_here",
-    visitorId: "visitor_123" // required for LIKE/DISLIKE
+    type: "LIKE",    // "LIKE" | "DISLIKE" | "VIEW"
+    postId: posts[0].id,
+    visitorId        // required for LIKE/DISLIKE
   })
 });`;
 }
 
 function getRoadmapHeadlessSnippet(appUrl: string, apiKey: string): string {
-  return `// Fetch roadmap items (with visitor's votes)
+  return `// --- Visitor ID ---
+// Generate a unique visitor ID per browser and persist it.
+// This is used for vote deduplication and tracking.
+// If your users are logged in, you can use their user ID instead.
+function getVisitorId() {
+  const KEY = "glintpost_visitor_id";
+  let id = localStorage.getItem(KEY);
+  if (!id) {
+    id = "v_" + crypto.randomUUID();
+    localStorage.setItem(KEY, id);
+  }
+  return id;
+}
+
+const visitorId = getVisitorId();
+
+// --- Fetch roadmap items (with visitor's votes) ---
 const res = await fetch(
-  "${appUrl}/api/roadmap/items?visitorId=visitor_123",
+  "${appUrl}/api/roadmap/items?visitorId=" + visitorId,
   { headers: { "x-api-key": "${apiKey}" } }
 );
 const items = await res.json();
 // Each item: { id, title, description, status, upvotes, downvotes, myVote }
 
-// Vote on an item
+// --- Vote on an item ---
 await fetch("${appUrl}/api/roadmap/vote", {
   method: "POST",
   headers: {
@@ -44,13 +76,13 @@ await fetch("${appUrl}/api/roadmap/vote", {
     "Content-Type": "application/json"
   },
   body: JSON.stringify({
-    itemId: "item_id_here",
-    visitorId: "visitor_123",
-    voteType: "UP"           // "UP" | "DOWN"
+    itemId: items[0].id,
+    visitorId,
+    voteType: "UP"   // "UP" | "DOWN"
   })
 });
 
-// Submit a suggestion
+// --- Submit a suggestion ---
 await fetch("${appUrl}/api/roadmap/suggest", {
   method: "POST",
   headers: {
@@ -59,7 +91,7 @@ await fetch("${appUrl}/api/roadmap/suggest", {
   },
   body: JSON.stringify({
     text: "Add dark mode support",
-    visitorId: "visitor_123"
+    visitorId
   })
 });`;
 }

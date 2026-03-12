@@ -45,7 +45,7 @@ export const WIDGETS: WidgetConfig[] = [
         mode: "headless",
         title: "Headless API",
         description:
-          "Fetch changelog data via REST API and render it in your own UI. Set your allowed domain in Settings for cross-origin access.",
+          "Fetch changelog data via REST API and render it in your own UI. You generate and persist a visitor ID on your side for like/dislike deduplication. Set your allowed domain in Settings for cross-origin access.",
       },
       {
         mode: "advanced",
@@ -78,7 +78,7 @@ export const WIDGETS: WidgetConfig[] = [
         mode: "headless",
         title: "Headless API",
         description:
-          "Fetch roadmap items and submit votes/suggestions via REST API. Build your own roadmap UI. Set your allowed domain in Settings for cross-origin access.",
+          "Fetch roadmap items and submit votes/suggestions via REST API. Build your own roadmap UI. You generate and persist a visitor ID on your side for vote deduplication. Set your allowed domain in Settings for cross-origin access.",
       },
       {
         mode: "advanced",
