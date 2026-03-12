@@ -45,8 +45,8 @@ export function RoadmapItemRow({ item, statusColor, statusLabel }: Props) {
             {statusLabel}
           </span>
           <span className={styles.votes}>
-            <span style={{ color: "#22c55e" }}>▲</span> {item.upvotes}{" "}
-            <span style={{ color: "#ef4444" }}>▼</span> {item.downvotes}
+            <span><span style={{ color: "#22c55e" }}>▲</span> {item.upvotes}</span>
+            <span><span style={{ color: "#ef4444" }}>▼</span> {item.downvotes}</span>
           </span>
           <span>{new Date(item.createdAt).toLocaleDateString()}</span>
         </div>
