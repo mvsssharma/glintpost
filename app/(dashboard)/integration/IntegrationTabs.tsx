@@ -4,6 +4,66 @@ import { useState } from "react";
 import { WIDGETS, type WidgetConfig, type EmbedOption } from "@/lib/widgets";
 import styles from "./page.module.css";
 
+function getChangelogHeadlessSnippet(appUrl: string, apiKey: string): string {
+  return `// Fetch changelog posts
+const res = await fetch("${appUrl}/api/changelog/posts", {
+  headers: { "x-api-key": "${apiKey}" }
+});
+const posts = await res.json();
+// Each post: { id, title, content, createdAt, likes, dislikes }
+
+// Like a post
+await fetch("${appUrl}/api/changelog/track", {
+  method: "POST",
+  headers: {
+    "x-api-key": "${apiKey}",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    type: "LIKE",           // "LIKE" | "DISLIKE" | "VIEW"
+    postId: "post_id_here",
+    visitorId: "visitor_123" // required for LIKE/DISLIKE
+  })
+});`;
+}
+
+function getRoadmapHeadlessSnippet(appUrl: string, apiKey: string): string {
+  return `// Fetch roadmap items (with visitor's votes)
+const res = await fetch(
+  "${appUrl}/api/roadmap/items?visitorId=visitor_123",
+  { headers: { "x-api-key": "${apiKey}" } }
+);
+const items = await res.json();
+// Each item: { id, title, description, status, upvotes, downvotes, myVote }
+
+// Vote on an item
+await fetch("${appUrl}/api/roadmap/vote", {
+  method: "POST",
+  headers: {
+    "x-api-key": "${apiKey}",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    itemId: "item_id_here",
+    visitorId: "visitor_123",
+    voteType: "UP"           // "UP" | "DOWN"
+  })
+});
+
+// Submit a suggestion
+await fetch("${appUrl}/api/roadmap/suggest", {
+  method: "POST",
+  headers: {
+    "x-api-key": "${apiKey}",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "Add dark mode support",
+    visitorId: "visitor_123"
+  })
+});`;
+}
+
 function getCodeSnippet(
   option: EmbedOption,
   widget: WidgetConfig,
@@ -17,6 +77,10 @@ function getCodeSnippet(
       return `<iframe\n  src="${appUrl}${widget.pagePath}?apiKey=${apiKey}"\n  style="width:100%;height:600px;border:none;border-radius:8px;"\n></iframe>`;
     case "hosted":
       return `${appUrl}${widget.pagePath}?apiKey=${apiKey}`;
+    case "headless":
+      return widget.key === "changelog"
+        ? getChangelogHeadlessSnippet(appUrl, apiKey)
+        : getRoadmapHeadlessSnippet(appUrl, apiKey);
     case "advanced":
       return `<script>\n  window.GlintPostConfig = {\n    visitorId: "user_123",\n    datalayer: {\n      plan: "pro",\n      role: "admin"\n    }\n  };\n</script>`;
   }

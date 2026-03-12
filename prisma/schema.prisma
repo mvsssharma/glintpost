@@ -104,6 +104,9 @@ model OrgSettings {
   supportedLocales String[] @default(["en"])
   defaultLocale    String   @default("en")
 
+  // CORS — allowed origin for headless API access
+  allowedDomain String?
+
   // Storage tracking
   storageUsedBytes BigInt @default(0)
   storageCapBytes  BigInt @default(52428800) // 50MB default

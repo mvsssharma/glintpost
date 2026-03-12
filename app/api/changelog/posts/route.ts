@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey } from "@/lib/api-key";
 import { getOrgPrisma } from "@/lib/db";
 import { cacheGet, cacheSet } from "@/lib/cache";
+import { corsHeaders, handlePreflight } from "@/lib/cors";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +64,10 @@ async function fetchAndCachePosts(orgId: string): Promise<CachedChangelogPost[]>
   return result;
 }
 
+export async function OPTIONS(req: NextRequest) {
+  return handlePreflight(req);
+}
+
 export async function GET(req: NextRequest) {
   const org = await validateApiKey(req);
 
@@ -73,19 +78,22 @@ export async function GET(req: NextRequest) {
     );
   }
 
+  const origin = req.headers.get("origin");
+  const cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
+
   try {
     const cached = cacheGet<CachedChangelogPost[]>(org.id, "changelog-posts");
     if (cached) {
-      return NextResponse.json(cached);
+      return NextResponse.json(cached, { headers: cors });
     }
 
     const result = await fetchAndCachePosts(org.id);
-    return NextResponse.json(result);
+    return NextResponse.json(result, { headers: cors });
   } catch (error) {
     console.error("Failed to fetch widget posts:", error);
     return NextResponse.json(
       { error: "Failed to fetch posts" },
-      { status: 500 }
+      { status: 500, headers: cors }
     );
   }
 }

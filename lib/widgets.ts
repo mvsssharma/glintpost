@@ -1,4 +1,4 @@
-export type EmbedMode = "slideover" | "inline" | "hosted" | "advanced";
+export type EmbedMode = "slideover" | "inline" | "hosted" | "advanced" | "headless";
 
 export interface EmbedOption {
   mode: EmbedMode;
@@ -42,6 +42,12 @@ export const WIDGETS: WidgetConfig[] = [
           "Link directly to the hosted changelog page. Use this in navbars, buttons, or emails.",
       },
       {
+        mode: "headless",
+        title: "Headless API",
+        description:
+          "Fetch changelog data via REST API and render it in your own UI. Set your allowed domain in Settings for cross-origin access.",
+      },
+      {
         mode: "advanced",
         title: "Advanced Config",
         description:
@@ -67,6 +73,12 @@ export const WIDGETS: WidgetConfig[] = [
         title: "Hosted Page",
         description:
           "Link directly to the hosted roadmap page. Share it with your users or link from your app.",
+      },
+      {
+        mode: "headless",
+        title: "Headless API",
+        description:
+          "Fetch roadmap items and submit votes/suggestions via REST API. Build your own roadmap UI. Set your allowed domain in Settings for cross-origin access.",
       },
       {
         mode: "advanced",

@@ -55,6 +55,7 @@ export const updateOrgSettingsSchema = z.object({
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   widgetTheme: z.enum(["light", "dark"]).optional(),
   locales: z.string().optional(),
+  allowedDomain: z.string().max(255).optional(),
   aiProvider: z.enum(AI_PROVIDERS).nullable().optional(),
   aiModel: z.string().max(100).nullable().optional(),
   aiApiKey: z.string().max(500).optional(),

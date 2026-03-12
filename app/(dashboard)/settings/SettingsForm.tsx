@@ -48,6 +48,9 @@ export function SettingsForm({
       ? settings.supportedLocales
       : ["en"]
   );
+  const [allowedDomain, setAllowedDomain] = useState(
+    settings?.allowedDomain ?? ""
+  );
   const [aiProvider, setAiProvider] = useState(settings?.aiProvider ?? "");
   const [aiModel, setAiModel] = useState(settings?.aiModel ?? "");
   const [aiApiKey, setAiApiKey] = useState("");
@@ -80,6 +83,7 @@ export function SettingsForm({
           <input type="hidden" name="name" value={orgName} />
           <input type="hidden" name="primaryColor" value={primaryColor} />
           <input type="hidden" name="widgetTheme" value={widgetTheme} />
+          <input type="hidden" name="allowedDomain" value={allowedDomain} />
           <input
             type="hidden"
             name="locales"
@@ -170,6 +174,23 @@ export function SettingsForm({
             </div>
           </div>
 
+          <div className={styles.fieldGroup}>
+            <label htmlFor="allowedDomain" className={styles.label}>
+              Allowed domain (for headless API)
+            </label>
+            <input
+              id="allowedDomain"
+              type="text"
+              value={allowedDomain}
+              onChange={(e) => setAllowedDomain(e.target.value)}
+              className={styles.inputField}
+              placeholder="https://example.com"
+            />
+            <span className={styles.hint}>
+              The origin where your API calls come from. Subdomains (e.g. app.example.com) must be added separately.
+            </span>
+          </div>
+
           <div className={styles.actions}>
             <button
               type="submit"
@@ -201,6 +222,7 @@ export function SettingsForm({
           <input type="hidden" name="name" value={orgName} />
           <input type="hidden" name="primaryColor" value={primaryColor} />
           <input type="hidden" name="widgetTheme" value={widgetTheme} />
+          <input type="hidden" name="allowedDomain" value={allowedDomain} />
           <input type="hidden" name="locales" value={selectedLocales.join(",")} />
           <input type="hidden" name="aiProvider" value={aiProvider} />
           <input type="hidden" name="aiModel" value={aiModel} />

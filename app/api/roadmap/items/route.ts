@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey } from "@/lib/api-key";
 import { getOrgPrisma } from "@/lib/db";
 import { cacheGet, cacheSet } from "@/lib/cache";
+import { corsHeaders, handlePreflight } from "@/lib/cors";
 
 export const dynamic = "force-dynamic";
 
@@ -59,12 +60,18 @@ async function fetchAndCacheItems(orgId: string): Promise<CachedRoadmapItem[]> {
   return result;
 }
 
+export async function OPTIONS(req: NextRequest) {
+  return handlePreflight(req);
+}
+
 export async function GET(req: NextRequest) {
   const org = await validateApiKey(req);
   if (!org) {
     return NextResponse.json({ error: "Invalid or missing API key" }, { status: 401 });
   }
 
+  const origin = req.headers.get("origin");
+  const cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
   const visitorId = req.nextUrl.searchParams.get("visitorId");
 
   try {
@@ -94,9 +101,9 @@ export async function GET(req: NextRequest) {
       myVote: visitorVotes[item.id] ?? null,
     }));
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, { headers: cors });
   } catch (error) {
     console.error("Failed to fetch roadmap items:", error);
-    return NextResponse.json({ error: "Failed to fetch roadmap items" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch roadmap items" }, { status: 500, headers: cors });
   }
 }

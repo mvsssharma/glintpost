@@ -3,13 +3,21 @@ import { validateApiKey } from "@/lib/api-key";
 import { getOrgPrisma } from "@/lib/db";
 import { voteSchema } from "@/lib/validations";
 import { cacheUpdate } from "@/lib/cache";
+import { corsHeaders, handlePreflight } from "@/lib/cors";
 import type { CachedRoadmapItem } from "@/app/api/roadmap/items/route";
+
+export async function OPTIONS(req: NextRequest) {
+  return handlePreflight(req);
+}
 
 export async function POST(req: NextRequest) {
   const org = await validateApiKey(req);
   if (!org) {
     return NextResponse.json({ error: "Invalid or missing API key" }, { status: 401 });
   }
+
+  const origin = req.headers.get("origin");
+  const cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
 
   try {
     const body = await req.json();
@@ -18,7 +26,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: parsed.error.issues[0]?.message ?? "Invalid input" },
-        { status: 400 },
+        { status: 400, headers: cors },
       );
     }
 
@@ -30,7 +38,7 @@ export async function POST(req: NextRequest) {
       where: { id: itemId },
     });
     if (!item) {
-      return NextResponse.json({ error: "Item not found" }, { status: 404 });
+      return NextResponse.json({ error: "Item not found" }, { status: 404, headers: cors });
     }
 
     // Check for existing vote
@@ -46,7 +54,7 @@ export async function POST(req: NextRequest) {
         cacheUpdate<CachedRoadmapItem[]>(org.id, "roadmap-items", (items) =>
           items.map((i) => i.id === itemId ? { ...i, [field]: Math.max(0, i[field] - 1) } : i)
         );
-        return NextResponse.json({ action: "removed", voteType: null });
+        return NextResponse.json({ action: "removed", voteType: null }, { headers: cors });
       } else {
         // Switch vote type (UP→DOWN or DOWN→UP)
         await db.roadmapVote.update({
@@ -58,7 +66,7 @@ export async function POST(req: NextRequest) {
         cacheUpdate<CachedRoadmapItem[]>(org.id, "roadmap-items", (items) =>
           items.map((i) => i.id === itemId ? { ...i, [incField]: i[incField] + 1, [decField]: Math.max(0, i[decField] - 1) } : i)
         );
-        return NextResponse.json({ action: "changed", voteType });
+        return NextResponse.json({ action: "changed", voteType }, { headers: cors });
       }
     }
 
@@ -71,9 +79,9 @@ export async function POST(req: NextRequest) {
       items.map((i) => i.id === itemId ? { ...i, [field]: i[field] + 1 } : i)
     );
 
-    return NextResponse.json({ action: "created", voteType }, { status: 201 });
+    return NextResponse.json({ action: "created", voteType }, { status: 201, headers: cors });
   } catch (error) {
     console.error("Vote error:", error);
-    return NextResponse.json({ error: "Failed to process vote" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to process vote" }, { status: 500, headers: cors });
   }
 }

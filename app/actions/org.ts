@@ -123,6 +123,26 @@ export async function updateOrgSettings(
   const aiModel = parsed.data.aiModel ?? null;
   const aiApiKeyRaw = parsed.data.aiApiKey || "";
 
+  // Validate allowed domain — must be a valid origin, no regex/wildcards
+  const allowedDomainRaw = (parsed.data.allowedDomain || "").trim().replace(/\/+$/, "");
+  let allowedDomain: string | null = null;
+  if (allowedDomainRaw) {
+    // Reject regex special characters and wildcards
+    if (/[*+?{}()|[\]\\^$]/.test(allowedDomainRaw)) {
+      return { error: "Allowed domain must be an exact origin (e.g. https://example.com). Wildcards and patterns are not supported." };
+    }
+    try {
+      const url = new URL(allowedDomainRaw);
+      // Must be http or https, must have a hostname, no path beyond /
+      if (!["http:", "https:"].includes(url.protocol) || !url.hostname) {
+        return { error: "Allowed domain must start with https:// or http://" };
+      }
+      allowedDomain = url.origin; // Normalizes to protocol + host + port
+    } catch {
+      return { error: "Allowed domain must be a valid URL (e.g. https://example.com)" };
+    }
+  }
+
   if (supportedLocales.length === 0 || !supportedLocales.includes("en")) {
     return { error: "English must be included in supported languages" };
   }
@@ -138,6 +158,7 @@ export async function updateOrgSettings(
     widgetTheme,
     supportedLocales,
     defaultLocale: supportedLocales[0] || "en",
+    allowedDomain,
     ...(aiProvider !== null && { aiProvider }),
     ...(aiModel !== null && { aiModel }),
     ...(aiApiKey !== undefined && { aiApiKey }),

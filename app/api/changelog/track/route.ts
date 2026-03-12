@@ -3,7 +3,12 @@ import { validateApiKey } from "@/lib/api-key";
 import { getOrgPrisma } from "@/lib/db";
 import { changelogEventSchema } from "@/lib/validations";
 import { cacheUpdate } from "@/lib/cache";
+import { corsHeaders, handlePreflight } from "@/lib/cors";
 import type { CachedChangelogPost } from "@/app/api/changelog/posts/route";
+
+export async function OPTIONS(req: NextRequest) {
+  return handlePreflight(req);
+}
 
 export async function POST(req: NextRequest) {
   const org = await validateApiKey(req);
@@ -15,6 +20,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const origin = req.headers.get("origin");
+  const cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
+
   try {
     const body = await req.json();
     const parsed = changelogEventSchema.safeParse(body);
@@ -22,7 +30,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: parsed.error.issues[0]?.message ?? "Invalid input" },
-        { status: 400 }
+        { status: 400, headers: cors }
       );
     }
 
@@ -34,13 +42,13 @@ export async function POST(req: NextRequest) {
       if (!visitorId) {
         return NextResponse.json(
           { error: "visitorId is required for LIKE/DISLIKE events" },
-          { status: 400 }
+          { status: 400, headers: cors }
         );
       }
       if (!postId) {
         return NextResponse.json(
           { error: "postId is required for LIKE/DISLIKE events" },
-          { status: 400 }
+          { status: 400, headers: cors }
         );
       }
 
@@ -56,7 +64,7 @@ export async function POST(req: NextRequest) {
         cacheUpdate<CachedChangelogPost[]>(org.id, "changelog-posts", (posts) =>
           posts.map((p) => p.id === postId ? { ...p, [countField]: Math.max(0, p[countField] - 1) } : p)
         );
-        return NextResponse.json({ action: "removed", type: null });
+        return NextResponse.json({ action: "removed", type: null }, { headers: cors });
       }
 
       // Remove opposite reaction if present (switch from LIKE→DISLIKE or vice versa)
@@ -98,7 +106,7 @@ export async function POST(req: NextRequest) {
         })
       );
 
-      return NextResponse.json({ action: "created", type }, { status: 201 });
+      return NextResponse.json({ action: "created", type }, { status: 201, headers: cors });
     }
 
     // VIEW events: no dedup, visitorId optional
@@ -118,12 +126,12 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ action: "created", type }, { status: 201 });
+    return NextResponse.json({ action: "created", type }, { status: 201, headers: cors });
   } catch (error) {
     console.error("Tracking error:", error);
     return NextResponse.json(
       { error: "Failed to track event" },
-      { status: 500 }
+      { status: 500, headers: cors }
     );
   }
 }

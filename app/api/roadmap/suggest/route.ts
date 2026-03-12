@@ -4,12 +4,20 @@ import { getOrgPrisma } from "@/lib/db";
 import { findSimilarItems } from "@/lib/llm";
 import { SIMILARITY_THRESHOLD_DUPLICATE } from "@/lib/constants";
 import { suggestSchema } from "@/lib/validations";
+import { corsHeaders, handlePreflight } from "@/lib/cors";
+
+export async function OPTIONS(req: NextRequest) {
+  return handlePreflight(req);
+}
 
 export async function POST(req: NextRequest) {
   const org = await validateApiKey(req);
   if (!org) {
     return NextResponse.json({ error: "Invalid or missing API key" }, { status: 401 });
   }
+
+  const origin = req.headers.get("origin");
+  const cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
 
   try {
     const body = await req.json();
@@ -18,7 +26,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: parsed.error.issues[0]?.message ?? "Invalid input" },
-        { status: 400 },
+        { status: 400, headers: cors },
       );
     }
 
@@ -79,10 +87,10 @@ export async function POST(req: NextRequest) {
           .filter((s) => s.score < SIMILARITY_THRESHOLD_DUPLICATE)
           .slice(0, 3),
       },
-      { status: 201 },
+      { status: 201, headers: cors },
     );
   } catch (error) {
     console.error("Suggestion error:", error);
-    return NextResponse.json({ error: "Failed to submit suggestion" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to submit suggestion" }, { status: 500, headers: cors });
   }
 }
