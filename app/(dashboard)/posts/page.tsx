@@ -9,19 +9,40 @@ export default async function PostsPage() {
   const { org } = await requireOrg();
   const db = getOrgPrisma(org.id);
 
-  const posts = (await db.post.findMany({
+  const rawPosts = (await db.post.findMany({
     orderBy: { createdAt: "desc" },
     include: {
       translations: { where: { locale: "en" }, take: 1 },
-      _count: { select: { engagements: true } },
+      _count: {
+        select: {
+          changelogEvents: { where: { type: "LIKE" } },
+        },
+      },
     },
   })) as Array<{
     id: string;
     status: string;
     createdAt: Date;
     translations: Array<{ title: string; content: string }>;
-    _count: { engagements: number };
+    _count: { changelogEvents: number };
   }>;
+
+  // _count only supports one filter per relation, so query dislikes separately
+  const postIds = rawPosts.map((p) => p.id);
+  const dislikeCounts = await db.changelogEvent.groupBy({
+    by: ["postId"],
+    where: { postId: { in: postIds }, type: "DISLIKE" },
+    _count: true,
+  });
+  const dislikeMap = Object.fromEntries(
+    dislikeCounts.map((d: { postId: string | null; _count: number }) => [d.postId, d._count])
+  );
+
+  const posts = rawPosts.map((post) => ({
+    ...post,
+    likes: post._count.changelogEvents,
+    dislikes: (dislikeMap[post.id] as number) ?? 0,
+  }));
 
   return (
     <div className={styles.container}>
@@ -53,8 +74,8 @@ export default async function PostsPage() {
                     <span className={styles.date}>
                       {new Date(post.createdAt).toLocaleDateString()}
                     </span>
-                    <span className={styles.engagements}>
-                      {post._count.engagements} engagements
+                    <span className={styles.reactions}>
+                      👍 {post.likes} 👎 {post.dislikes}
                     </span>
                   </div>
                 </div>

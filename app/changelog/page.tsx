@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import DOMPurify from "isomorphic-dompurify";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
+import { getVisitorId } from "@/lib/visitor";
 import styles from "./page.module.css";
 
 interface Post {
@@ -34,14 +35,12 @@ function ReactionButtons({
       <button
         onClick={onLike}
         className={`${styles.reactionBtn} ${interaction === "LIKE" ? styles.activeReaction : ""}`}
-        disabled={!!interaction}
       >
         👍 {likeCount > 0 && <span className={styles.count}>{likeCount}</span>}
       </button>
       <button
         onClick={onDislike}
         className={`${styles.reactionBtn} ${interaction === "DISLIKE" ? styles.activeReaction : ""}`}
-        disabled={!!interaction}
       >
         👎 {dislikeCount > 0 && <span className={styles.count}>{dislikeCount}</span>}
       </button>
@@ -52,8 +51,9 @@ function ReactionButtons({
 function ChangelogContent() {
   const searchParams = useSearchParams();
   const apiKey = searchParams.get("apiKey");
-  const visitorId = searchParams.get("visitorId");
+  const visitorIdParam = searchParams.get("visitorId");
   const datalayerParam = searchParams.get("datalayer");
+  const [visitorId, setVisitorId] = useState("");
   const themeParam = searchParams.get("theme");
   const primaryColorParam = searchParams.get("primaryColor");
 
@@ -67,23 +67,33 @@ function ChangelogContent() {
   >({});
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
+  useEffect(() => {
+    setVisitorId(getVisitorId(visitorIdParam));
+  }, [visitorIdParam]);
+
   const trackEvent = useCallback(
     async (
       type: "LIKE" | "DISLIKE" | "VIEW",
       postId: string | null
     ) => {
       if (!postId && type !== "VIEW") return;
-      // Only block duplicate LIKE/DISLIKE, always allow VIEW
-      if (type !== "VIEW" && postId && interactedPosts[postId]) return;
 
-      const newInteractions = { ...interactedPosts };
+      // Optimistic update for LIKE/DISLIKE
+      const prevInteractions = { ...interactedPosts };
       if (postId && type !== "VIEW") {
-        newInteractions[postId] = type as "LIKE" | "DISLIKE";
-        setInteractedPosts(newInteractions);
-        localStorage.setItem(
-          "glintpost_interactions",
-          JSON.stringify(newInteractions)
-        );
+        const alreadyInteracted = interactedPosts[postId];
+        if (alreadyInteracted === type) {
+          // Toggle off
+          const updated = { ...interactedPosts };
+          delete updated[postId];
+          setInteractedPosts(updated);
+          localStorage.setItem("glintpost_interactions", JSON.stringify(updated));
+        } else {
+          // Toggle on
+          const updated = { ...interactedPosts, [postId]: type as "LIKE" | "DISLIKE" };
+          setInteractedPosts(updated);
+          localStorage.setItem("glintpost_interactions", JSON.stringify(updated));
+        }
       }
 
       let datalayer: Record<string, string> | undefined;
@@ -106,23 +116,13 @@ function ChangelogContent() {
         });
         // Revert optimistic update on server error
         if (!res.ok && postId && type !== "VIEW") {
-          const reverted = { ...interactedPosts };
-          delete reverted[postId];
-          setInteractedPosts(reverted);
-          localStorage.setItem(
-            "glintpost_interactions",
-            JSON.stringify(reverted)
-          );
+          setInteractedPosts(prevInteractions);
+          localStorage.setItem("glintpost_interactions", JSON.stringify(prevInteractions));
         }
       } catch {
         if (postId && type !== "VIEW") {
-          const reverted = { ...interactedPosts };
-          delete reverted[postId];
-          setInteractedPosts(reverted);
-          localStorage.setItem(
-            "glintpost_interactions",
-            JSON.stringify(reverted)
-          );
+          setInteractedPosts(prevInteractions);
+          localStorage.setItem("glintpost_interactions", JSON.stringify(prevInteractions));
         }
       }
     },

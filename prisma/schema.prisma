@@ -72,12 +72,13 @@ model Organization {
 
   user        User?
   settings    OrgSettings?
-  posts       Post[]
-  engagements EngagementEvent[]
+  posts           Post[]
+  changelogEvents ChangelogEvent[]
 
   roadmapItems       RoadmapItem[]
   roadmapSuggestions RoadmapSuggestion[]
   roadmapVotes       RoadmapVote[]
+  roadmapViews       RoadmapView[]
 
   // Billing (Razorpay)
   razorpayCustomerId     String?       @unique
@@ -127,8 +128,8 @@ model Post {
   // JSON: { operator: "AND"|"OR", rules: [{ param, op, value }] }
   targetingRules Json?
 
-  translations PostTranslation[]
-  engagements  EngagementEvent[]
+  translations    PostTranslation[]
+  changelogEvents ChangelogEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -153,7 +154,7 @@ model PostTranslation {
   @@index([postId])
 }
 
-model EngagementEvent {
+model ChangelogEvent {
   id    String       @id @default(cuid())
   orgId String
   org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
@@ -161,7 +162,7 @@ model EngagementEvent {
   postId String?
   post   Post?   @relation(fields: [postId], references: [id], onDelete: SetNull)
 
-  type EngagementType
+  type ChangelogEventType
 
   visitorId String?
   plan      String?
@@ -174,10 +175,12 @@ model EngagementEvent {
 
   createdAt DateTime @default(now())
 
+  @@unique([postId, visitorId, type])
   @@index([orgId, type])
   @@index([orgId, postId])
   @@index([orgId, createdAt])
   @@index([postId, type])
+  @@map("EngagementEvent")
 }
 
 // === ENUMS ===
@@ -187,10 +190,12 @@ enum PostStatus {
   PUBLISHED
 }
 
-enum EngagementType {
+enum ChangelogEventType {
   VIEW
   LIKE
   DISLIKE
+
+  @@map("EngagementType")
 }
 
 enum BillingStatus {
@@ -257,6 +262,18 @@ model RoadmapVote {
 
   @@unique([itemId, visitorId])
   @@index([orgId, itemId])
+}
+
+model RoadmapView {
+  id    String       @id @default(cuid())
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  visitorId String?
+
+  createdAt DateTime @default(now())
+
+  @@index([orgId, createdAt])
 }
 
 enum RoadmapItemStatus {

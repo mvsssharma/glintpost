@@ -107,3 +107,34 @@
   border-color: hsl(var(--error) / 0.3);
   color: hsl(var(--error-text));
 }
+
+.createForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  min-width: 280px;
+}
+
+.createInput,
+.createTextarea {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid hsl(var(--border-light));
+  background: hsl(var(--bg-main));
+  color: hsl(var(--text-main));
+  font-size: 0.875rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.createInput:focus,
+.createTextarea:focus {
+  outline: none;
+  border-color: hsl(var(--primary));
+}
+
+.createFormActions {
+  display: flex;
+  gap: 0.5rem;
+}

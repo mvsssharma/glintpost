@@ -4,22 +4,13 @@ import { Suspense, useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRoadmap } from "./useRoadmap";
 import { ROADMAP_STATUSES, DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
+import { getVisitorId } from "@/lib/visitor";
 import styles from "./page.module.css";
 
 const STATUS_FILTERS = [
   { value: "ALL", label: "All" },
   ...ROADMAP_STATUSES.filter((s) => s.value !== "ARCHIVED"),
 ];
-
-function getVisitorId(): string {
-  if (typeof window === "undefined") return "";
-  let id = localStorage.getItem("glintpost_visitor_id");
-  if (!id) {
-    id = "v_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
-    localStorage.setItem("glintpost_visitor_id", id);
-  }
-  return id;
-}
 
 function RoadmapContent() {
   const searchParams = useSearchParams();
@@ -33,7 +24,7 @@ function RoadmapContent() {
   );
 
   useEffect(() => {
-    setVisitorId(visitorIdParam || getVisitorId());
+    setVisitorId(getVisitorId(visitorIdParam));
   }, [visitorIdParam]);
 
   useEffect(() => {
@@ -54,6 +45,16 @@ function RoadmapContent() {
       })
       .catch(() => {});
   }, [apiKey]);
+
+  // Track roadmap widget view on load
+  useEffect(() => {
+    if (!apiKey || !visitorId) return;
+    fetch("/api/roadmap/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": apiKey },
+      body: JSON.stringify({ visitorId }),
+    }).catch(() => {});
+  }, [apiKey, visitorId]);
 
   const [isEmbedded, setIsEmbedded] = useState(false);
 

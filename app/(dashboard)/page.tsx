@@ -15,16 +15,18 @@ export default async function DashboardPage() {
     postLikes,
     postDislikes,
     roadmapItemsCount,
+    roadmapViews,
     upvotes,
     downvotes,
     pendingSuggestions,
   ] = await Promise.all([
     db.post.count(),
-    db.engagementEvent.count({ where: { type: "VIEW", postId: null } }),
-    db.engagementEvent.count({ where: { type: "VIEW", postId: { not: null } } }),
-    db.engagementEvent.count({ where: { type: "LIKE" } }),
-    db.engagementEvent.count({ where: { type: "DISLIKE" } }),
+    db.changelogEvent.count({ where: { type: "VIEW", postId: null } }),
+    db.changelogEvent.count({ where: { type: "VIEW", postId: { not: null } } }),
+    db.changelogEvent.count({ where: { type: "LIKE" } }),
+    db.changelogEvent.count({ where: { type: "DISLIKE" } }),
     db.roadmapItem.count(),
+    db.roadmapView.count(),
     db.roadmapVote.count({ where: { voteType: "UP" } }),
     db.roadmapVote.count({ where: { voteType: "DOWN" } }),
     db.roadmapSuggestion.count({ where: { status: "PENDING" } }),
@@ -90,6 +92,13 @@ export default async function DashboardPage() {
               <span className={styles.tipIcon} data-tip="Features listed on your public roadmap">?</span>
             </div>
             <div className={styles.statValue}>{roadmapItemsCount}</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statHeader}>
+              <h3>Views</h3>
+              <span className={styles.tipIcon} data-tip="Times the roadmap widget was opened">?</span>
+            </div>
+            <div className={styles.statValue}>{roadmapViews}</div>
           </div>
           <div className={styles.statCard}>
             <div className={styles.statHeader}>

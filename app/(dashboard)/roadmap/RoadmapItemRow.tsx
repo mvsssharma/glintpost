@@ -36,8 +36,6 @@ export function RoadmapItemRow({ item, statusColor, statusLabel }: Props) {
     });
   };
 
-  const net = item.upvotes - item.downvotes;
-
   return (
     <div className={styles.itemCard} style={{ opacity: isPending ? 0.6 : 1 }}>
       <div className={styles.itemInfo}>
@@ -47,7 +45,8 @@ export function RoadmapItemRow({ item, statusColor, statusLabel }: Props) {
             {statusLabel}
           </span>
           <span className={styles.votes}>
-            {net >= 0 ? "+" : ""}{net} votes ({item.upvotes} up / {item.downvotes} down)
+            <span style={{ color: "#22c55e" }}>▲</span> {item.upvotes}{" "}
+            <span style={{ color: "#ef4444" }}>▼</span> {item.downvotes}
           </span>
           <span>{new Date(item.createdAt).toLocaleDateString()}</span>
         </div>

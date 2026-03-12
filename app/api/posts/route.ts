@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getOrgPrisma } from "@/lib/db";
 import { createPostSchema } from "@/lib/validations";
+import { cacheInvalidate } from "@/lib/cache";
 
 export async function POST(req: Request) {
   try {
@@ -39,6 +40,7 @@ export async function POST(req: Request) {
       include: { translations: true },
     });
 
+    cacheInvalidate(session.orgId, "changelog-posts");
     return NextResponse.json(post, { status: 201 });
   } catch (error) {
     console.error("Failed to create post:", error);

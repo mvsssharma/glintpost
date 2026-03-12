@@ -69,10 +69,10 @@ export const createPostSchema = z.object({
 
 // === Engagement ===
 
-export const ENGAGEMENT_TYPES = ["VIEW", "LIKE", "DISLIKE"] as const;
+export const CHANGELOG_EVENT_TYPES = ["VIEW", "LIKE", "DISLIKE"] as const;
 
-export const trackEventSchema = z.object({
-  type: z.enum(ENGAGEMENT_TYPES, { message: "Invalid engagement type" }),
+export const changelogEventSchema = z.object({
+  type: z.enum(CHANGELOG_EVENT_TYPES, { message: "Invalid event type" }),
   postId: z.string().max(50).nullable().optional(),
   visitorId: z.string().max(200).nullable().optional(),
   datalayer: z

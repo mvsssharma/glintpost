@@ -1,8 +1,67 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey } from "@/lib/api-key";
 import { getOrgPrisma } from "@/lib/db";
+import { cacheGet, cacheSet } from "@/lib/cache";
 
 export const dynamic = "force-dynamic";
+
+export interface CachedChangelogPost {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  likes: number;
+  dislikes: number;
+  targetingRules: unknown;
+}
+
+async function fetchAndCachePosts(orgId: string): Promise<CachedChangelogPost[]> {
+  const db = getOrgPrisma(orgId);
+
+  const posts = (await db.post.findMany({
+    where: { status: "PUBLISHED" },
+    orderBy: { publishedAt: "desc" },
+    take: 20,
+    include: {
+      translations: { where: { locale: "en" }, take: 1 },
+      _count: {
+        select: {
+          changelogEvents: { where: { type: "LIKE" } },
+        },
+      },
+    },
+  })) as Array<{
+    id: string;
+    publishedAt: Date | null;
+    createdAt: Date;
+    targetingRules: unknown;
+    translations: Array<{ title: string; content: string }>;
+    _count: { changelogEvents: number };
+  }>;
+
+  const postIds = posts.map((p) => p.id);
+  const dislikeCounts = await db.changelogEvent.groupBy({
+    by: ["postId"],
+    where: { postId: { in: postIds }, type: "DISLIKE" },
+    _count: true,
+  });
+  const dislikeMap = Object.fromEntries(
+    dislikeCounts.map((d: { postId: string | null; _count: number }) => [d.postId, d._count])
+  );
+
+  const result: CachedChangelogPost[] = posts.map((post) => ({
+    id: post.id,
+    title: post.translations[0]?.title ?? "Untitled",
+    content: post.translations[0]?.content ?? "",
+    createdAt: (post.publishedAt ?? post.createdAt).toISOString(),
+    likes: post._count.changelogEvents,
+    dislikes: (dislikeMap[post.id] as number) ?? 0,
+    targetingRules: post.targetingRules ?? null,
+  }));
+
+  cacheSet(orgId, "changelog-posts", result);
+  return result;
+}
 
 export async function GET(req: NextRequest) {
   const org = await validateApiKey(req);
@@ -15,48 +74,12 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const db = getOrgPrisma(org.id);
+    const cached = cacheGet<CachedChangelogPost[]>(org.id, "changelog-posts");
+    if (cached) {
+      return NextResponse.json(cached);
+    }
 
-    const posts = (await db.post.findMany({
-      where: { status: "PUBLISHED" },
-      orderBy: { publishedAt: "desc" },
-      take: 20,
-      include: {
-        translations: { where: { locale: "en" }, take: 1 },
-        _count: {
-          select: {
-            engagements: { where: { type: "LIKE" } },
-          },
-        },
-      },
-    })) as Array<{
-      id: string;
-      publishedAt: Date | null;
-      createdAt: Date;
-      translations: Array<{ title: string; content: string }>;
-      _count: { engagements: number };
-    }>;
-
-    // _count only supports one filter per relation, so query dislikes separately
-    const postIds = posts.map((p) => p.id);
-    const dislikeCounts = await db.engagementEvent.groupBy({
-      by: ["postId"],
-      where: { postId: { in: postIds }, type: "DISLIKE" },
-      _count: true,
-    });
-    const dislikeMap = Object.fromEntries(
-      dislikeCounts.map((d: { postId: string | null; _count: number }) => [d.postId, d._count])
-    );
-
-    const result = posts.map((post) => ({
-      id: post.id,
-      title: post.translations[0]?.title ?? "Untitled",
-      content: post.translations[0]?.content ?? "",
-      createdAt: post.publishedAt ?? post.createdAt,
-      likes: post._count.engagements,
-      dislikes: (dislikeMap[post.id] as number) ?? 0,
-    }));
-
+    const result = await fetchAndCachePosts(org.id);
     return NextResponse.json(result);
   } catch (error) {
     console.error("Failed to fetch widget posts:", error);

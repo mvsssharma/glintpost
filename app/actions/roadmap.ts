@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { RoadmapItemStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { createRoadmapItemSchema, formDataToObject } from "@/lib/validations";
+import { cacheInvalidate } from "@/lib/cache";
 
 export interface RoadmapActionState {
   error?: string;
@@ -41,6 +42,7 @@ export async function createRoadmapItem(
     data: { orgId, title, description: description ?? null, status: status as RoadmapItemStatus },
   });
 
+  cacheInvalidate(orgId, "roadmap-items");
   revalidatePath("/roadmap");
   return { success: "Item created." };
 }
@@ -57,6 +59,7 @@ export async function updateRoadmapItemStatus(
     data: { status },
   });
 
+  cacheInvalidate(orgId, "roadmap-items");
   revalidatePath("/roadmap");
   return { success: "Status updated." };
 }
@@ -71,6 +74,7 @@ export async function deleteRoadmapItem(
     where: { id: itemId, orgId },
   });
 
+  cacheInvalidate(orgId, "roadmap-items");
   revalidatePath("/roadmap");
   return { success: "Item deleted." };
 }
@@ -79,6 +83,8 @@ export async function handleSuggestion(
   suggestionId: string,
   action: "create" | "merge" | "dismiss",
   mergeItemId?: string,
+  title?: string,
+  description?: string,
 ): Promise<RoadmapActionState> {
   const orgId = await getOrgId();
   if (!orgId) return { error: "Not authenticated" };
@@ -89,13 +95,18 @@ export async function handleSuggestion(
   if (!suggestion) return { error: "Suggestion not found" };
 
   if (action === "create") {
+    const itemTitle = title?.trim();
+    if (!itemTitle || itemTitle.length < 3) {
+      return { error: "Title must be at least 3 characters" };
+    }
     const newItem = await prisma.roadmapItem.create({
-      data: { orgId, title: suggestion.rawText },
+      data: { orgId, title: itemTitle, description: description?.trim() || null },
     });
     await prisma.roadmapSuggestion.update({
       where: { id: suggestionId },
       data: { status: "CREATED", matchedItemId: newItem.id },
     });
+    cacheInvalidate(orgId, "roadmap-items");
   } else if (action === "merge" && mergeItemId) {
     const mergeItem = await prisma.roadmapItem.findFirst({
       where: { id: mergeItemId, orgId },
