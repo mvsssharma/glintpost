@@ -120,6 +120,14 @@ export const SUGGESTION_STATUSES = [
 export const SIMILARITY_THRESHOLD_DUPLICATE = 0.8;
 export const SIMILARITY_THRESHOLD_RELATED = 0.6;
 
+export const FEEDBACK_QUESTION_TYPES = [
+  { value: "SELECT", label: "Select (options)" },
+  { value: "NPS", label: "NPS Scale (0–10)" },
+  { value: "TEXT", label: "Free Text" },
+] as const;
+
+export const MAX_FEEDBACK_QUESTIONS = 3;
+
 export const AI_MODELS: Record<string, { id: string; label: string }[]> = {
   openai: [
     { id: "gpt-4o", label: "GPT-4o" },

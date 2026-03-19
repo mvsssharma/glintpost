@@ -80,6 +80,9 @@ model Organization {
   roadmapVotes       RoadmapVote[]
   roadmapViews       RoadmapView[]
 
+  feedbackForm      FeedbackForm?
+  feedbackResponses FeedbackResponse[]
+
   // Billing (Razorpay)
   razorpayCustomerId     String?       @unique
   razorpaySubscriptionId String?
@@ -297,4 +300,46 @@ enum SuggestionStatus {
 enum VoteType {
   UP
   DOWN
+}
+
+// === FEEDBACK ===
+
+model FeedbackForm {
+  id    String       @id @default(cuid())
+  orgId String       @unique
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  title     String  @default("Share your feedback")
+  enabled   Boolean @default(false)
+  questions Json    // Array of { id, text, type, options?, required }
+
+  responses FeedbackResponse[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FeedbackResponse {
+  id     String       @id @default(cuid())
+  orgId  String
+  org    Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  formId String
+  form   FeedbackForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  visitorId String
+  answers   Json // Array of { questionId, value }
+
+  plan     String?
+  role     String?
+  region   String?
+  platform String?
+  version  String?
+  company  String?
+  locale   String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([formId, visitorId])
+  @@index([orgId, createdAt])
+  @@index([orgId, formId])
 }

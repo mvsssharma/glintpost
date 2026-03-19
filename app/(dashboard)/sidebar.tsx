@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   FileText,
   Map,
+  MessageSquare,
   Code,
   Settings,
   CreditCard,
@@ -19,6 +20,7 @@ const navItems = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/posts", label: "Changelog", icon: FileText },
   { href: "/roadmap", label: "Roadmap", icon: Map },
+  { href: "/feedback", label: "Feedback", icon: MessageSquare },
   { href: "/integration", label: "Integration", icon: Code },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

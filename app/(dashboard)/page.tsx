@@ -19,6 +19,8 @@ export default async function DashboardPage() {
     upvotes,
     downvotes,
     pendingSuggestions,
+    feedbackResponses,
+    feedbackForm,
   ] = await Promise.all([
     db.post.count(),
     db.changelogEvent.count({ where: { type: "VIEW", postId: null } }),
@@ -30,6 +32,8 @@ export default async function DashboardPage() {
     db.roadmapVote.count({ where: { voteType: "UP" } }),
     db.roadmapVote.count({ where: { voteType: "DOWN" } }),
     db.roadmapSuggestion.count({ where: { status: "PENDING" } }),
+    db.feedbackResponse.count(),
+    db.feedbackForm.findFirst({ select: { enabled: true } }),
   ]);
 
   const displayName =
@@ -120,6 +124,28 @@ export default async function DashboardPage() {
               <span className={styles.tipIcon} data-tip="User-submitted feature ideas awaiting review">?</span>
             </div>
             <div className={styles.statValue}>{pendingSuggestions}</div>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>Feedback</h3>
+        <div className={styles.stats}>
+          <div className={styles.statCard}>
+            <div className={styles.statHeader}>
+              <h3>Responses</h3>
+              <span className={styles.tipIcon} data-tip="Total feedback submissions from visitors">?</span>
+            </div>
+            <div className={styles.statValue}>{feedbackResponses}</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statHeader}>
+              <h3>Status</h3>
+              <span className={styles.tipIcon} data-tip="Whether the feedback form is live for visitors">?</span>
+            </div>
+            <div className={styles.statValue} style={{ fontSize: "1.25rem" }}>
+              {feedbackForm?.enabled ? "Live" : "Disabled"}
+            </div>
           </div>
         </div>
       </section>

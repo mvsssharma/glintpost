@@ -113,6 +113,47 @@ export const suggestSchema = z.object({
   visitorId: z.string().max(200).nullable().optional(),
 });
 
+// === Feedback ===
+
+const FEEDBACK_QUESTION_TYPES = ["SELECT", "NPS", "TEXT"] as const;
+
+export const feedbackQuestionSchema = z.object({
+  id: z.string().min(1).max(50),
+  text: z.string().min(1, "Question text is required").max(500),
+  type: z.enum(FEEDBACK_QUESTION_TYPES),
+  options: z.array(z.string().min(1).max(200)).max(10).optional(),
+  required: z.boolean(),
+});
+
+export const feedbackFormSchema = z.object({
+  title: z.string().min(1, "Title is required").max(200),
+  enabled: z.boolean().optional(),
+  questions: z.array(feedbackQuestionSchema).min(1, "At least one question is required").max(3),
+});
+
+export const feedbackSubmitSchema = z.object({
+  formId: z.string().min(1, "Form ID is required"),
+  visitorId: z.string().min(1, "Visitor ID is required").max(200),
+  answers: z.array(
+    z.object({
+      questionId: z.string().min(1),
+      value: z.union([z.string().max(5000), z.number()]),
+    })
+  ).min(1).max(3),
+  datalayer: z
+    .object({
+      plan: z.string().max(100).optional(),
+      role: z.string().max(100).optional(),
+      region: z.string().max(100).optional(),
+      platform: z.string().max(100).optional(),
+      version: z.string().max(100).optional(),
+      company: z.string().max(200).optional(),
+      locale: z.string().max(20).optional(),
+    })
+    .nullable()
+    .optional(),
+});
+
 // === Helpers ===
 
 /**

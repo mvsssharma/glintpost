@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { WIDGETS, type WidgetConfig, type EmbedOption } from "@/lib/widgets";
+import { WIDGETS_WITH_FEEDBACK, type WidgetConfig, type EmbedOption } from "@/lib/widgets";
 import styles from "./page.module.css";
 
 function getChangelogHeadlessSnippet(appUrl: string, apiKey: string): string {
@@ -96,6 +96,45 @@ await fetch("${appUrl}/api/roadmap/suggest", {
 });`;
 }
 
+function getFeedbackHeadlessSnippet(appUrl: string, apiKey: string): string {
+  return `// --- Visitor ID ---
+function getVisitorId() {
+  const KEY = "glintpost_visitor_id";
+  let id = localStorage.getItem(KEY);
+  if (!id) {
+    id = "v_" + crypto.randomUUID();
+    localStorage.setItem(KEY, id);
+  }
+  return id;
+}
+
+const visitorId = getVisitorId();
+
+// --- Fetch feedback form config ---
+const res = await fetch("${appUrl}/api/feedback/form", {
+  headers: { "x-api-key": "${apiKey}" }
+});
+const form = await res.json();
+// form: { id, title, questions: [{ id, text, type, options?, required }] }
+
+// --- Submit feedback ---
+await fetch("${appUrl}/api/feedback/submit", {
+  method: "POST",
+  headers: {
+    "x-api-key": "${apiKey}",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    formId: form.id,
+    visitorId,
+    answers: [
+      { questionId: form.questions[0].id, value: "Option A" },
+      { questionId: form.questions[1].id, value: 9 }
+    ]
+  })
+});`;
+}
+
 function getCodeSnippet(
   option: EmbedOption,
   widget: WidgetConfig,
@@ -110,9 +149,9 @@ function getCodeSnippet(
     case "hosted":
       return `${appUrl}${widget.pagePath}?apiKey=${apiKey}`;
     case "headless":
-      return widget.key === "changelog"
-        ? getChangelogHeadlessSnippet(appUrl, apiKey)
-        : getRoadmapHeadlessSnippet(appUrl, apiKey);
+      if (widget.key === "changelog") return getChangelogHeadlessSnippet(appUrl, apiKey);
+      if (widget.key === "feedback") return getFeedbackHeadlessSnippet(appUrl, apiKey);
+      return getRoadmapHeadlessSnippet(appUrl, apiKey);
     case "advanced":
       return `<script>\n  window.GlintPostConfig = {\n    visitorId: "user_123",\n    datalayer: {\n      plan: "pro",\n      role: "admin"\n    }\n  };\n</script>`;
   }
@@ -126,12 +165,12 @@ export default function IntegrationTabs({
   appUrl: string;
 }) {
   const [activeIdx, setActiveIdx] = useState(0);
-  const widget = WIDGETS[activeIdx];
+  const widget = WIDGETS_WITH_FEEDBACK[activeIdx];
 
   return (
     <>
       <div className={styles.tabs}>
-        {WIDGETS.map((w, i) => (
+        {WIDGETS_WITH_FEEDBACK.map((w, i) => (
           <button
             key={w.key}
             className={`${styles.tab} ${activeIdx === i ? styles.tabActive : ""}`}

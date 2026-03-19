@@ -90,7 +90,44 @@ export const WIDGETS: WidgetConfig[] = [
   },
 ];
 
-export const SLIDEOVER_WIDGETS = WIDGETS.filter((w) =>
+export const WIDGETS_WITH_FEEDBACK: WidgetConfig[] = [
+  ...WIDGETS,
+  {
+    key: "feedback",
+    label: "Feedback",
+    script: "feedback-widget.js",
+    pagePath: "/survey",
+    integrations: [
+      {
+        mode: "slideover",
+        title: "Slide-over Widget",
+        description:
+          "Adds a floating feedback button to your site. Clicking it opens a slide-over panel with the feedback form.",
+        recommended: true,
+      },
+      {
+        mode: "inline",
+        title: "Inline Embed",
+        description:
+          "Embed the feedback form directly into any page using an iframe.",
+      },
+      {
+        mode: "hosted",
+        title: "Hosted Page",
+        description:
+          "Link directly to the hosted feedback page. Share it via emails or in-app links.",
+      },
+      {
+        mode: "headless",
+        title: "Headless API",
+        description:
+          "Fetch the feedback form config and submit responses via REST API. Build your own feedback UI. Set your allowed domain in Settings for cross-origin access.",
+      },
+    ],
+  },
+];
+
+export const SLIDEOVER_WIDGETS = WIDGETS_WITH_FEEDBACK.filter((w) =>
   w.integrations.some((i) => i.mode === "slideover")
 );
 

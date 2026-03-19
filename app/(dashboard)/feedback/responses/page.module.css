@@ -1,0 +1,193 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 900px;
+}
+
+.header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.header p {
+  color: hsl(var(--text-muted));
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+/* Summary cards */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.summaryCard {
+  background: hsl(var(--bg-surface));
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid hsl(var(--border-light));
+  box-shadow: var(--shadow-sm);
+}
+
+.summaryTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: hsl(var(--text-main));
+  margin-bottom: 1rem;
+}
+
+/* NPS result */
+.npsResult {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.npsScore {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: hsl(var(--primary));
+}
+
+.npsLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: hsl(var(--text-muted));
+  margin-bottom: 0.75rem;
+}
+
+.npsBreakdown {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+}
+
+.npsPromoters {
+  color: hsl(152, 69%, 41%);
+}
+
+.npsPassives {
+  color: hsl(45, 93%, 47%);
+}
+
+.npsDetractors {
+  color: hsl(0, 72%, 51%);
+}
+
+/* Select bar chart */
+.selectResult {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.barRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.barLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  color: hsl(var(--text-main));
+}
+
+.barCount {
+  color: hsl(var(--text-muted));
+  font-size: 0.75rem;
+}
+
+.barTrack {
+  height: 8px;
+  background: hsl(var(--border-light));
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: hsl(var(--primary));
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  min-width: 2px;
+}
+
+.textHint {
+  font-size: 0.8125rem;
+  color: hsl(var(--text-muted));
+  font-style: italic;
+}
+
+/* Individual responses */
+.responsesSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: hsl(var(--text-main));
+}
+
+.responsesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.responseCard {
+  background: hsl(var(--bg-surface));
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid hsl(var(--border-light));
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.responseDate {
+  font-size: 0.75rem;
+  color: hsl(var(--text-muted));
+}
+
+.answerRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.answerLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: hsl(var(--text-muted));
+}
+
+.answerValue {
+  font-size: 0.875rem;
+  color: hsl(var(--text-main));
+}
+
+.visitorTag {
+  align-self: flex-start;
+  font-size: 0.6875rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  background: hsl(var(--border-light));
+  color: hsl(var(--text-muted));
+  font-family: monospace;
+}
