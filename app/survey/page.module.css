@@ -332,6 +332,11 @@
   background: hsl(0, 50%, 22%);
 }
 
+.dark .npsDetractor.npsBtnActive {
+  background: hsl(0, 72%, 51%);
+  border-color: hsl(0, 72%, 51%);
+}
+
 .dark .npsPassive {
   border-color: hsl(45, 60%, 30%);
   background: hsl(45, 60%, 15%);
@@ -341,6 +346,12 @@
   background: hsl(45, 60%, 22%);
 }
 
+.dark .npsPassive.npsBtnActive {
+  background: hsl(45, 93%, 47%);
+  border-color: hsl(45, 93%, 47%);
+  color: hsl(0, 0%, 20%) !important;
+}
+
 .dark .npsPromoter {
   border-color: hsl(152, 50%, 30%);
   background: hsl(152, 50%, 15%);
@@ -348,6 +359,11 @@
 
 .dark .npsPromoter:hover {
   background: hsl(152, 50%, 22%);
+}
+
+.dark .npsPromoter.npsBtnActive {
+  background: hsl(152, 69%, 41%);
+  border-color: hsl(152, 69%, 41%);
 }
 
 /* Light theme */
