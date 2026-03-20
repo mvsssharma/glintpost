@@ -20,7 +20,7 @@ export default async function DashboardPage() {
     downvotes,
     pendingSuggestions,
     feedbackResponses,
-    feedbackForm,
+    activeFeedbackForms,
   ] = await Promise.all([
     db.post.count(),
     db.changelogEvent.count({ where: { type: "VIEW", postId: null } }),
@@ -33,7 +33,7 @@ export default async function DashboardPage() {
     db.roadmapVote.count({ where: { voteType: "DOWN" } }),
     db.roadmapSuggestion.count({ where: { status: "PENDING" } }),
     db.feedbackResponse.count(),
-    db.feedbackForm.findFirst({ select: { enabled: true } }),
+    db.feedbackForm.count({ where: { enabled: true } }),
   ]);
 
   const displayName =
@@ -144,7 +144,7 @@ export default async function DashboardPage() {
               <span className={styles.tipIcon} data-tip="Whether the feedback form is live for visitors">?</span>
             </div>
             <div className={styles.statValue} style={{ fontSize: "1.25rem" }}>
-              {feedbackForm?.enabled ? "Live" : "Disabled"}
+              {activeFeedbackForms > 0 ? `${activeFeedbackForms} live` : "None live"}
             </div>
           </div>
         </div>

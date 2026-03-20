@@ -20,9 +20,21 @@ export async function GET(req: NextRequest) {
   const origin = req.headers.get("origin");
   const cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
 
-  const form = await prisma.feedbackForm.findUnique({
-    where: { orgId: org.id },
-  });
+  const formId = req.nextUrl.searchParams.get("formId");
+
+  let form;
+  if (formId) {
+    // Fetch specific form by ID
+    form = await prisma.feedbackForm.findUnique({
+      where: { id: formId, orgId: org.id },
+    });
+  } else {
+    // Fallback: return the first enabled form for this org
+    form = await prisma.feedbackForm.findFirst({
+      where: { orgId: org.id, enabled: true },
+      orderBy: { createdAt: "asc" },
+    });
+  }
 
   if (!form || !form.enabled) {
     return NextResponse.json(

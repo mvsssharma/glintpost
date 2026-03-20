@@ -24,8 +24,10 @@ function emptyQuestion(): FeedbackQuestion {
 }
 
 export function FeedbackFormBuilder({
+  formId,
   existingForm,
 }: {
+  formId?: string;
   existingForm: {
     title: string;
     enabled: boolean;
@@ -108,6 +110,7 @@ export function FeedbackFormBuilder({
       </p>
 
       <form action={formAction}>
+        {formId && <input type="hidden" name="formId" value={formId} />}
         <input type="hidden" name="title" value={title} />
         <input type="hidden" name="enabled" value={String(enabled)} />
         <input type="hidden" name="questions" value={JSON.stringify(questions)} />

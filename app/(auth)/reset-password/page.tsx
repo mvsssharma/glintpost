@@ -7,6 +7,7 @@ import {
   resetPassword,
   type PasswordResetState,
 } from "@/app/actions/password-reset";
+import { PasswordInput } from "../PasswordInput";
 import styles from "../auth.module.css";
 import { Suspense } from "react";
 
@@ -71,15 +72,12 @@ function ResetPasswordForm() {
           <label htmlFor="password" className={styles.label}>
             New password
           </label>
-          <input
+          <PasswordInput
             id="password"
             name="password"
-            type="password"
-            required
-            minLength={8}
             autoComplete="new-password"
-            className="input-field"
             placeholder="At least 8 characters"
+            minLength={8}
             autoFocus
           />
         </div>
@@ -87,15 +85,12 @@ function ResetPasswordForm() {
           <label htmlFor="confirmPassword" className={styles.label}>
             Confirm password
           </label>
-          <input
+          <PasswordInput
             id="confirmPassword"
             name="confirmPassword"
-            type="password"
-            required
-            minLength={8}
             autoComplete="new-password"
-            className="input-field"
             placeholder="Re-enter your password"
+            minLength={8}
           />
         </div>
         <button

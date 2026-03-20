@@ -2,7 +2,6 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  max-width: 800px;
 }
 
 .header h2 {
@@ -314,4 +313,115 @@
 .addQuestionBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Form list */
+.emptyState {
+  background: hsl(var(--bg-surface));
+  padding: 3rem 2rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid hsl(var(--border-light));
+  text-align: center;
+  color: hsl(var(--text-muted));
+}
+
+.formList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formCard {
+  background: hsl(var(--bg-surface));
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid hsl(var(--border-light));
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.formCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.formCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.formCardTitle h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.statusBadge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statusActive {
+  background: hsl(152, 69%, 41%, 0.1);
+  color: hsl(152, 69%, 41%);
+}
+
+.statusDisabled {
+  background: hsl(var(--border-light));
+  color: hsl(var(--text-muted));
+}
+
+.formCardMeta {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: hsl(var(--text-muted));
+}
+
+.formCardActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.deleteBtn {
+  background: none;
+  border: none;
+  color: hsl(var(--text-muted));
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.deleteBtn:hover {
+  color: hsl(var(--error-text));
+  background: hsl(var(--error) / 0.1);
+}
+
+.copyIdBtn {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid hsl(var(--border-light));
+  border-radius: var(--radius-md);
+  background: hsl(var(--bg-main));
+  color: hsl(var(--text-muted));
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.copyIdBtn:hover {
+  border-color: hsl(var(--primary));
+  color: hsl(var(--primary));
 }

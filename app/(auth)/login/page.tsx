@@ -4,6 +4,7 @@ import { useActionState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loginAction, type AuthState } from "@/app/actions/auth";
+import { PasswordInput } from "../PasswordInput";
 import styles from "../auth.module.css";
 
 function LoginForm() {
@@ -49,13 +50,10 @@ function LoginForm() {
           <label htmlFor="password" className={styles.label}>
             Password
           </label>
-          <input
+          <PasswordInput
             id="password"
             name="password"
-            type="password"
-            required
             autoComplete="current-password"
-            className="input-field"
             placeholder="Enter your password"
           />
         </div>

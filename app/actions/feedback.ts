@@ -53,21 +53,36 @@ export async function saveFeedbackForm(
     }
   }
 
+  const formId = raw.formId; // present when editing, absent when creating
+
   try {
-    await prisma.feedbackForm.upsert({
-      where: { orgId: user.orgId },
-      create: {
-        orgId: user.orgId,
-        title: parsed.data.title,
-        enabled: parsed.data.enabled ?? false,
-        questions: parsed.data.questions,
-      },
-      update: {
-        title: parsed.data.title,
-        enabled: parsed.data.enabled ?? false,
-        questions: parsed.data.questions,
-      },
-    });
+    if (formId) {
+      // Update existing form — verify it belongs to this org
+      const existing = await prisma.feedbackForm.findUnique({
+        where: { id: formId },
+      });
+      if (!existing || existing.orgId !== user.orgId) {
+        return { error: "Form not found" };
+      }
+      await prisma.feedbackForm.update({
+        where: { id: formId },
+        data: {
+          title: parsed.data.title,
+          enabled: parsed.data.enabled ?? false,
+          questions: parsed.data.questions,
+        },
+      });
+    } else {
+      // Create new form
+      await prisma.feedbackForm.create({
+        data: {
+          orgId: user.orgId,
+          title: parsed.data.title,
+          enabled: parsed.data.enabled ?? false,
+          questions: parsed.data.questions,
+        },
+      });
+    }
   } catch (err) {
     console.error("Failed to save feedback form:", err);
     return { error: "Failed to save feedback form" };
@@ -75,4 +90,38 @@ export async function saveFeedbackForm(
 
   revalidatePath("/feedback");
   return { success: "Feedback form saved." };
+}
+
+export async function deleteFeedbackForm(
+  formId: string,
+): Promise<FeedbackFormState> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "Not authenticated" };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { orgId: true },
+  });
+  if (!user?.orgId) {
+    return { error: "No organization found" };
+  }
+
+  const form = await prisma.feedbackForm.findUnique({
+    where: { id: formId },
+  });
+  if (!form || form.orgId !== user.orgId) {
+    return { error: "Form not found" };
+  }
+
+  try {
+    await prisma.feedbackForm.delete({ where: { id: formId } });
+  } catch (err) {
+    console.error("Failed to delete feedback form:", err);
+    return { error: "Failed to delete feedback form" };
+  }
+
+  revalidatePath("/feedback");
+  return { success: "Feedback form deleted." };
 }

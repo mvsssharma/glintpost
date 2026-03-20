@@ -80,7 +80,7 @@ model Organization {
   roadmapVotes       RoadmapVote[]
   roadmapViews       RoadmapView[]
 
-  feedbackForm      FeedbackForm?
+  feedbackForms     FeedbackForm[]
   feedbackResponses FeedbackResponse[]
 
   // Billing (Razorpay)
@@ -306,7 +306,7 @@ enum VoteType {
 
 model FeedbackForm {
   id    String       @id @default(cuid())
-  orgId String       @unique
+  orgId String
   org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   title     String  @default("Share your feedback")
@@ -317,6 +317,8 @@ model FeedbackForm {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([orgId])
 }
 
 model FeedbackResponse {

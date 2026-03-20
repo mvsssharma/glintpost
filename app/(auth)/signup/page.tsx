@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { signupAction, type AuthState } from "@/app/actions/auth";
+import { PasswordInput } from "../PasswordInput";
 import styles from "../auth.module.css";
 
 export default function SignupPage() {
@@ -48,15 +49,12 @@ export default function SignupPage() {
           <label htmlFor="password" className={styles.label}>
             Password
           </label>
-          <input
+          <PasswordInput
             id="password"
             name="password"
-            type="password"
-            required
-            minLength={8}
             autoComplete="new-password"
-            className="input-field"
             placeholder="At least 8 characters"
+            minLength={8}
           />
         </div>
         <button

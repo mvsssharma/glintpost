@@ -1,21 +1,20 @@
 import { requireOrg } from "@/lib/auth-helpers";
-import { prisma } from "@/lib/db";
-import { FeedbackFormBuilder } from "./FeedbackFormBuilder";
-import styles from "./page.module.css";
+import { getOrgPrisma } from "@/lib/db";
 import Link from "next/link";
-import type { FeedbackQuestion } from "@/types";
+import styles from "./page.module.css";
+import { DeleteFormButton } from "./DeleteFormButton";
+import { CopyFormId } from "./CopyFormId";
 
 export const dynamic = "force-dynamic";
 
 export default async function FeedbackPage() {
   const { org } = await requireOrg();
+  const db = getOrgPrisma(org.id);
 
-  const form = await prisma.feedbackForm.findUnique({
-    where: { orgId: org.id },
+  const forms = await db.feedbackForm.findMany({
     include: { _count: { select: { responses: true } } },
+    orderBy: { createdAt: "desc" },
   });
-
-  const responseCount = form?._count?.responses ?? 0;
 
   return (
     <div className={styles.container}>
@@ -23,29 +22,53 @@ export default async function FeedbackPage() {
         <div className={styles.headerRow}>
           <div>
             <h2>Feedback</h2>
-            <p>Configure a feedback form for your visitors. Max 3 questions.</p>
+            <p>Create and manage feedback forms for your visitors. Each form can have up to 3 questions.</p>
           </div>
-          {form && (
-            <Link href="/feedback/responses" className="btn-secondary">
-              {responseCount > 0
-                ? `View responses (${responseCount})`
-                : "View responses"}
-            </Link>
-          )}
+          <Link href="/feedback/new" className="btn-primary">
+            + New form
+          </Link>
         </div>
       </header>
 
-      <FeedbackFormBuilder
-        existingForm={
-          form
-            ? {
-                title: form.title,
-                enabled: form.enabled,
-                questions: form.questions as unknown as FeedbackQuestion[],
-              }
-            : null
-        }
-      />
+      {forms.length === 0 ? (
+        <div className={styles.emptyState}>
+          <p>No feedback forms yet. Create your first form to start collecting feedback.</p>
+        </div>
+      ) : (
+        <div className={styles.formList}>
+          {forms.map((form) => (
+            <div key={form.id} className={styles.formCard}>
+              <div className={styles.formCardHeader}>
+                <div className={styles.formCardTitle}>
+                  <h3>{form.title}</h3>
+                  <span
+                    className={`${styles.statusBadge} ${form.enabled ? styles.statusActive : styles.statusDisabled}`}
+                  >
+                    {form.enabled ? "Live" : "Disabled"}
+                  </span>
+                </div>
+                <DeleteFormButton formId={form.id} formTitle={form.title} />
+              </div>
+              <div className={styles.formCardMeta}>
+                <span>{form._count.responses} response{form._count.responses !== 1 ? "s" : ""}</span>
+                <span>&middot;</span>
+                <span>Created {new Date(form.createdAt).toLocaleDateString()}</span>
+              </div>
+              <div className={styles.formCardActions}>
+                <Link href={`/feedback/${form.id}`} className="btn-secondary">
+                  Edit
+                </Link>
+                <Link href={`/feedback/${form.id}/responses`} className="btn-secondary">
+                  {form._count.responses > 0
+                    ? `View responses (${form._count.responses})`
+                    : "View responses"}
+                </Link>
+                <CopyFormId formId={form.id} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

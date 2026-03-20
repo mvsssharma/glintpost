@@ -6,6 +6,7 @@
     document.currentScript ||
     document.querySelector('script[src*="feedback-widget.js"]');
   var apiKey = scriptTag ? scriptTag.getAttribute("data-api-key") : null;
+  var formId = scriptTag ? scriptTag.getAttribute("data-form-id") : null;
 
   if (!apiKey) {
     console.error(
@@ -22,6 +23,9 @@
       ? JSON.stringify(clientConfig.datalayer)
       : "",
   });
+  if (formId) {
+    queryParams.set("formId", formId);
+  }
 
   var BASE_URL = new URL(scriptTag.src).origin;
   var iframeUrl = BASE_URL + "/survey?" + queryParams.toString();

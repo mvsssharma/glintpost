@@ -113,17 +113,33 @@ export function SettingsForm({
 
           <div className={styles.fieldGroup}>
             <span className={styles.label}>Brand color (widget)</span>
-            <div className={styles.colorGrid}>
-              {COLOR_PRESETS.map((preset) => (
-                <button
-                  key={preset.value}
-                  type="button"
-                  className={`${styles.colorSwatch} ${primaryColor === preset.value ? styles.colorSwatchActive : ""}`}
-                  style={{ background: preset.value }}
-                  onClick={() => setPrimaryColor(preset.value)}
-                  title={preset.name}
+            <div className={styles.colorPickerRow}>
+              <div className={styles.colorGrid}>
+                {COLOR_PRESETS.map((preset) => (
+                  <button
+                    key={preset.value}
+                    type="button"
+                    className={`${styles.colorSwatch} ${primaryColor === preset.value ? styles.colorSwatchActive : ""}`}
+                    style={{ background: preset.value }}
+                    onClick={() => setPrimaryColor(preset.value)}
+                    title={preset.name}
+                  />
+                ))}
+              </div>
+              <div className={styles.colorInputRow}>
+                <div
+                  className={styles.colorPreview}
+                  style={{ background: primaryColor }}
                 />
-              ))}
+                <input
+                  type="text"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className={styles.colorInput}
+                  placeholder="#10b981 or rgb(...) or hsl(...)"
+                  spellCheck={false}
+                />
+              </div>
             </div>
           </div>
 

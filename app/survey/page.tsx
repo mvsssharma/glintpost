@@ -61,6 +61,7 @@ function NpsScale({
 function SurveyContent() {
   const searchParams = useSearchParams();
   const apiKey = searchParams.get("apiKey");
+  const formIdParam = searchParams.get("formId");
   const visitorIdParam = searchParams.get("visitorId");
   const datalayerParam = searchParams.get("datalayer");
   const themeParam = searchParams.get("theme");
@@ -105,7 +106,10 @@ function SurveyContent() {
       .catch(() => {});
 
     // Fetch form
-    fetch("/api/feedback/form", { headers: { "x-api-key": apiKey } })
+    const formUrl = formIdParam
+      ? `/api/feedback/form?formId=${encodeURIComponent(formIdParam)}`
+      : "/api/feedback/form";
+    fetch(formUrl, { headers: { "x-api-key": apiKey } })
       .then((res) => {
         if (!res.ok) throw new Error("No form");
         return res.json();
