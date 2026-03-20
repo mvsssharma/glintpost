@@ -49,9 +49,13 @@
     "  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);" +
     "}" +
     ".glintpost-changelog-badge svg {" +
-    "  width: 28px;" +
-    "  height: 28px;" +
-    "  fill: white;" +
+    "  width: 26px;" +
+    "  height: 26px;" +
+    "  fill: none;" +
+    "  stroke: white;" +
+    "  stroke-width: 2;" +
+    "  stroke-linecap: round;" +
+    "  stroke-linejoin: round;" +
     "}" +
     ".glintpost-changelog-container {" +
     "  position: fixed;" +
@@ -85,7 +89,11 @@
   badge.className = "glintpost-changelog-badge";
   badge.innerHTML =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' +
-    '<path d="M12 2C6.48 2 2 5.92 2 10.75c0 2.29 1.05 4.39 2.76 5.98-.31 1.76-1.39 3.52-1.42 3.58-.09.15-.09.33.01.48.1.15.28.22.46.18 2.65-.63 4.54-1.93 5.56-2.7C10.22 18.15 11.09 18.25 12 18.25c5.52 0 10-3.92 10-8.75S17.52 2 12 2z"/>' +
+    '<path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/>' +
+    '<path d="M14 2v5a1 1 0 0 0 1 1h5"/>' +
+    '<path d="M10 9H8"/>' +
+    '<path d="M16 13H8"/>' +
+    '<path d="M16 17H8"/>' +
     "</svg>";
 
   var container = document.createElement("div");

@@ -51,7 +51,11 @@
     ".glintpost-feedback-badge svg {" +
     "  width: 26px;" +
     "  height: 26px;" +
-    "  fill: white;" +
+    "  fill: none;" +
+    "  stroke: white;" +
+    "  stroke-width: 2;" +
+    "  stroke-linecap: round;" +
+    "  stroke-linejoin: round;" +
     "}" +
     ".glintpost-feedback-container {" +
     "  position: fixed;" +
@@ -83,10 +87,10 @@
 
   var badge = document.createElement("div");
   badge.className = "glintpost-feedback-badge";
-  // Message square icon
+  // MessageSquare icon (matches sidebar)
   badge.innerHTML =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' +
-    '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>' +
+    '<path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/>' +
     "</svg>";
 
   var container = document.createElement("div");
