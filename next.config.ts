@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // --- Production hardening ---
+
+  // Remove x-powered-by header (don't advertise tech stack)
+  poweredByHeader: false,
+
+  // --- Dev-only logging (ignored in production builds) ---
+
   logging: {
     // Forward browser warnings & errors to terminal (no need to open DevTools)
     browserToTerminal: "warn",
