@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { WIDGETS } from "@/lib/widgets";
+import { WIDGETS_WITH_FEEDBACK as WIDGETS } from "@/lib/widgets";
 import styles from "./page.module.css";
 
 function hasSlideover(widget: (typeof WIDGETS)[number]) {
@@ -28,13 +28,14 @@ export default function PreviewContent({
     // Clean up any existing widget badges/containers
     document
       .querySelectorAll(
-        ".glintpost-changelog-badge, .glintpost-changelog-container, .glintpost-roadmap-badge, .glintpost-roadmap-container"
+        ".glintpost-changelog-badge, .glintpost-changelog-container, .glintpost-roadmap-badge, .glintpost-roadmap-container, .glintpost-feedback-badge, .glintpost-feedback-container"
       )
       .forEach((el) => el.remove());
 
     // Reset initialization flags so scripts can re-run
     (window as unknown as Record<string, unknown>).GlintPostChangelogInitialized = false;
     (window as unknown as Record<string, unknown>).GlintPostRoadmapInitialized = false;
+    (window as unknown as Record<string, unknown>).GlintPostFeedbackInitialized = false;
 
     // Remove old widget scripts
     document
@@ -61,12 +62,13 @@ export default function PreviewContent({
 
     document
       .querySelectorAll(
-        ".glintpost-changelog-badge, .glintpost-changelog-container, .glintpost-roadmap-badge, .glintpost-roadmap-container"
+        ".glintpost-changelog-badge, .glintpost-changelog-container, .glintpost-roadmap-badge, .glintpost-roadmap-container, .glintpost-feedback-badge, .glintpost-feedback-container"
       )
       .forEach((el) => el.remove());
 
     (window as unknown as Record<string, unknown>).GlintPostChangelogInitialized = false;
     (window as unknown as Record<string, unknown>).GlintPostRoadmapInitialized = false;
+    (window as unknown as Record<string, unknown>).GlintPostFeedbackInitialized = false;
 
     document
       .querySelectorAll(
