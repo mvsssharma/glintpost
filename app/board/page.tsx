@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useRoadmap } from "./useRoadmap";
 import { ROADMAP_STATUSES, DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import { getVisitorId } from "@/lib/visitor";
+import { getAllowedOrigins, getParentOrigin, isAllowedOrigin } from "@/lib/post-message";
 import styles from "./page.module.css";
 
 const STATUS_FILTERS = [
@@ -19,6 +20,7 @@ function RoadmapContent() {
   const themeParam = searchParams.get("theme");
   const primaryColorParam = searchParams.get("primaryColor");
   const [visitorId, setVisitorId] = useState("");
+  const [allowedOrigins, setAllowedOrigins] = useState<Set<string>>(() => getAllowedOrigins(null));
   const [theme, setTheme] = useState<{ primaryColor: string; widgetTheme: string } | null>(
     themeParam ? { primaryColor: primaryColorParam ?? DEFAULT_PRIMARY_COLOR, widgetTheme: themeParam } : null
   );
@@ -31,15 +33,17 @@ function RoadmapContent() {
     if (!apiKey) return;
     fetch("/api/config", { headers: { "x-api-key": apiKey } })
       .then((res) => (res.ok ? res.json() : null))
-      .then((config: { primaryColor?: string; widgetTheme?: string } | null) => {
+      .then((config: { primaryColor?: string; widgetTheme?: string; allowedDomain?: string | null } | null) => {
         if (config) {
+          const origins = getAllowedOrigins(config.allowedDomain ?? null);
+          setAllowedOrigins(origins);
           setTheme({
             primaryColor: config.primaryColor ?? DEFAULT_PRIMARY_COLOR,
             widgetTheme: config.widgetTheme ?? "light",
           });
           window.parent.postMessage(
             { type: "GLINTPOST_ROADMAP_CONFIG", primaryColor: config.primaryColor },
-            "*"
+            getParentOrigin(origins)
           );
         }
       })
@@ -63,18 +67,19 @@ function RoadmapContent() {
   }, []);
 
   const closeWidget = useCallback(() => {
-    window.parent.postMessage({ type: "GLINTPOST_ROADMAP_CLOSE" }, "*");
-  }, []);
+    window.parent.postMessage({ type: "GLINTPOST_ROADMAP_CLOSE" }, getParentOrigin(allowedOrigins));
+  }, [allowedOrigins]);
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
+      if (!isAllowedOrigin(e.origin, allowedOrigins)) return;
       if (e.data?.type === "GLINTPOST_ROADMAP_OPENED") {
         // Could trigger data refresh here if needed
       }
     };
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, []);
+  }, [allowedOrigins]);
 
   const {
     items,

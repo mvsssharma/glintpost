@@ -31,5 +31,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     primaryColor,
     widgetTheme,
+    allowedDomain: org.settings?.allowedDomain ?? null,
   }, { headers: cors });
 }

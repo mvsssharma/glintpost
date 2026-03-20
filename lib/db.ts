@@ -48,6 +48,7 @@ export function getOrgPrisma(orgId: string) {
           "findMany", "findFirst", "findUnique",
           "count", "deleteMany", "updateMany",
           "update", "delete", "upsert",
+          "groupBy", "aggregate",
         ]);
 
         // For Organization model, scope by id instead of orgId

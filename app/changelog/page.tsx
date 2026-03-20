@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import DOMPurify from "isomorphic-dompurify";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import { getVisitorId } from "@/lib/visitor";
+import { getAllowedOrigins, getParentOrigin, isAllowedOrigin } from "@/lib/post-message";
 import styles from "./page.module.css";
 
 interface Post {
@@ -62,6 +63,7 @@ function ChangelogContent() {
   const [theme, setTheme] = useState<{ primaryColor: string; widgetTheme: string } | null>(
     themeParam ? { primaryColor: primaryColorParam ?? DEFAULT_PRIMARY_COLOR, widgetTheme: themeParam } : null
   );
+  const [allowedOrigins, setAllowedOrigins] = useState<Set<string>>(() => getAllowedOrigins(null));
   const [interactedPosts, setInteractedPosts] = useState<
     Record<string, "LIKE" | "DISLIKE">
   >({});
@@ -141,15 +143,17 @@ function ChangelogContent() {
 
     fetch("/api/config", { headers: { "x-api-key": apiKey } })
       .then((res) => (res.ok ? res.json() : null))
-      .then((config: { primaryColor?: string; widgetTheme?: string } | null) => {
+      .then((config: { primaryColor?: string; widgetTheme?: string; allowedDomain?: string | null } | null) => {
         if (config) {
+          const origins = getAllowedOrigins(config.allowedDomain ?? null);
+          setAllowedOrigins(origins);
           setTheme({
             primaryColor: config.primaryColor ?? DEFAULT_PRIMARY_COLOR,
             widgetTheme: config.widgetTheme ?? "light",
           });
           window.parent.postMessage(
             { type: "GLINTPOST_CHANGELOG_CONFIG", primaryColor: config.primaryColor },
-            "*"
+            getParentOrigin(origins)
           );
         }
       })
@@ -168,21 +172,22 @@ function ChangelogContent() {
         setLoading(false);
       });
 
-    window.parent.postMessage({ type: "GLINTPOST_CHANGELOG_LOADED" }, "*");
-  }, [apiKey]);
+    window.parent.postMessage({ type: "GLINTPOST_CHANGELOG_LOADED" }, getParentOrigin(allowedOrigins));
+  }, [apiKey, allowedOrigins]);
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
+      if (!isAllowedOrigin(e.origin, allowedOrigins)) return;
       if (e.data?.type === "GLINTPOST_CHANGELOG_OPENED") {
         trackEvent("VIEW", null);
       }
     };
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [trackEvent]);
+  }, [trackEvent, allowedOrigins]);
 
   const closeWidget = () => {
-    window.parent.postMessage({ type: "GLINTPOST_CHANGELOG_CLOSE" }, "*");
+    window.parent.postMessage({ type: "GLINTPOST_CHANGELOG_CLOSE" }, getParentOrigin(allowedOrigins));
   };
 
   if (loading || !theme) return <div className={styles.loading} style={{ background: "transparent" }} />;

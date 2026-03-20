@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import { getVisitorId } from "@/lib/visitor";
+import { getAllowedOrigins, getParentOrigin, isAllowedOrigin } from "@/lib/post-message";
 import styles from "./page.module.css";
 
 interface FeedbackQuestion {
@@ -75,6 +76,7 @@ function SurveyContent() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [allowedOrigins, setAllowedOrigins] = useState<Set<string>>(() => getAllowedOrigins(null));
 
   useEffect(() => {
     setVisitorId(getVisitorId(visitorIdParam));
@@ -86,15 +88,17 @@ function SurveyContent() {
     // Fetch config
     fetch("/api/config", { headers: { "x-api-key": apiKey } })
       .then((res) => (res.ok ? res.json() : null))
-      .then((config: { primaryColor?: string; widgetTheme?: string } | null) => {
+      .then((config: { primaryColor?: string; widgetTheme?: string; allowedDomain?: string | null } | null) => {
         if (config) {
+          const origins = getAllowedOrigins(config.allowedDomain ?? null);
+          setAllowedOrigins(origins);
           setTheme({
             primaryColor: config.primaryColor ?? DEFAULT_PRIMARY_COLOR,
             widgetTheme: config.widgetTheme ?? "light",
           });
           window.parent.postMessage(
             { type: "GLINTPOST_FEEDBACK_CONFIG", primaryColor: config.primaryColor },
-            "*"
+            getParentOrigin(origins)
           );
         }
       })
@@ -114,11 +118,11 @@ function SurveyContent() {
         setLoading(false);
       });
 
-    window.parent.postMessage({ type: "GLINTPOST_FEEDBACK_LOADED" }, "*");
-  }, [apiKey]);
+    window.parent.postMessage({ type: "GLINTPOST_FEEDBACK_LOADED" }, getParentOrigin(allowedOrigins));
+  }, [apiKey, allowedOrigins]);
 
   const closeWidget = () => {
-    window.parent.postMessage({ type: "GLINTPOST_FEEDBACK_CLOSE" }, "*");
+    window.parent.postMessage({ type: "GLINTPOST_FEEDBACK_CLOSE" }, getParentOrigin(allowedOrigins));
   };
 
   async function handleSubmit() {

@@ -128,7 +128,7 @@
 
   function notifyOpened() {
     if (iframe.contentWindow) {
-      iframe.contentWindow.postMessage({ type: "GLINTPOST_CHANGELOG_OPENED" }, "*");
+      iframe.contentWindow.postMessage({ type: "GLINTPOST_CHANGELOG_OPENED" }, BASE_URL);
     }
   }
 
