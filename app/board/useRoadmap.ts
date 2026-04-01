@@ -16,7 +16,11 @@ interface UseRoadmapReturn {
   }>;
 }
 
-export function useRoadmap(apiKey: string | null, visitorId: string): UseRoadmapReturn {
+export function useRoadmap(
+  apiKey: string | null,
+  visitorId: string,
+  ensureVisitorId?: () => string,
+): UseRoadmapReturn {
   const [items, setItems] = useState<PublicRoadmapItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +30,8 @@ export function useRoadmap(apiKey: string | null, visitorId: string): UseRoadmap
   const fetchItems = useCallback(async () => {
     if (!apiKey) return;
     try {
-      const params = new URLSearchParams({ visitorId });
+      const params = new URLSearchParams();
+      if (visitorId) params.set("visitorId", visitorId);
       if (filter !== "ALL") params.set("status", filter);
       const res = await fetch(`/api/roadmap/items?${params}`, {
         headers: { "x-api-key": apiKey },
@@ -56,6 +61,9 @@ export function useRoadmap(apiKey: string | null, visitorId: string): UseRoadmap
   const voteOnItem = useCallback(
     async (itemId: string, voteType: "UP" | "DOWN") => {
       if (!apiKey) return;
+
+      // Lazy visitorId creation on first interaction
+      const effectiveVisitorId = ensureVisitorId ? ensureVisitorId() : visitorId;
 
       // Optimistic update
       setItems((prev) =>
@@ -94,7 +102,7 @@ export function useRoadmap(apiKey: string | null, visitorId: string): UseRoadmap
         const res = await fetch("/api/roadmap/vote", {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-api-key": apiKey },
-          body: JSON.stringify({ itemId, visitorId, voteType }),
+          body: JSON.stringify({ itemId, visitorId: effectiveVisitorId, voteType }),
         });
         if (!res.ok) {
           // Revert on error
@@ -104,16 +112,18 @@ export function useRoadmap(apiKey: string | null, visitorId: string): UseRoadmap
         await fetchItems();
       }
     },
-    [apiKey, visitorId, fetchItems],
+    [apiKey, visitorId, ensureVisitorId, fetchItems],
   );
 
   const submitSuggestion = useCallback(
     async (text: string) => {
       if (!apiKey) throw new Error("No API key");
+      // Lazy visitorId creation on suggestion submit
+      const effectiveVisitorId = ensureVisitorId ? ensureVisitorId() : visitorId;
       const res = await fetch("/api/roadmap/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-api-key": apiKey },
-        body: JSON.stringify({ text, visitorId }),
+        body: JSON.stringify({ text, visitorId: effectiveVisitorId }),
       });
       if (!res.ok) {
         const err = await res.json();
@@ -124,7 +134,7 @@ export function useRoadmap(apiKey: string | null, visitorId: string): UseRoadmap
       await fetchItems();
       return data;
     },
-    [apiKey, visitorId, fetchItems],
+    [apiKey, visitorId, ensureVisitorId, fetchItems],
   );
 
   return {

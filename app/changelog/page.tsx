@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import DOMPurify from "isomorphic-dompurify";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
-import { getVisitorId } from "@/lib/visitor";
+import { getVisitorId, getExistingVisitorId } from "@/lib/visitor";
 import { getAllowedOrigins, getParentOrigin, isAllowedOrigin } from "@/lib/post-message";
 import styles from "./page.module.css";
 
@@ -69,8 +69,16 @@ function ChangelogContent() {
   >({});
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
+  // Lazy visitorId: only read existing ID on mount, never create on page load
   useEffect(() => {
-    setVisitorId(getVisitorId(visitorIdParam));
+    setVisitorId(getExistingVisitorId(visitorIdParam));
+  }, [visitorIdParam]);
+
+  // Ensure visitorId exists (create if needed) — only call on user interaction
+  const ensureVisitorId = useCallback((): string => {
+    const id = getVisitorId(visitorIdParam);
+    setVisitorId(id);
+    return id;
   }, [visitorIdParam]);
 
   const trackEvent = useCallback(
@@ -79,6 +87,9 @@ function ChangelogContent() {
       postId: string | null
     ) => {
       if (!postId && type !== "VIEW") return;
+
+      // For interactions, ensure visitorId exists (lazy creation)
+      const effectiveVisitorId = type !== "VIEW" ? ensureVisitorId() : visitorId;
 
       // Optimistic update for LIKE/DISLIKE
       const prevInteractions = { ...interactedPosts };
@@ -98,8 +109,9 @@ function ChangelogContent() {
         }
       }
 
+      // Only include datalayer on user interactions, not passive views
       let datalayer: Record<string, string> | undefined;
-      if (datalayerParam) {
+      if (type !== "VIEW" && datalayerParam) {
         try {
           datalayer = JSON.parse(datalayerParam);
         } catch { }
@@ -112,7 +124,7 @@ function ChangelogContent() {
           body: JSON.stringify({
             type,
             postId,
-            visitorId,
+            visitorId: type !== "VIEW" ? effectiveVisitorId : undefined,
             datalayer,
           }),
         });
@@ -128,7 +140,7 @@ function ChangelogContent() {
         }
       }
     },
-    [apiKey, datalayerParam, interactedPosts, visitorId]
+    [apiKey, datalayerParam, interactedPosts, visitorId, ensureVisitorId]
   );
 
   useEffect(() => {

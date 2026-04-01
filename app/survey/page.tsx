@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
-import { getVisitorId } from "@/lib/visitor";
+import { getVisitorId, getExistingVisitorId } from "@/lib/visitor";
 import { getAllowedOrigins, getParentOrigin, isAllowedOrigin } from "@/lib/post-message";
 import styles from "./page.module.css";
 
@@ -79,8 +79,9 @@ function SurveyContent() {
   const [error, setError] = useState("");
   const [allowedOrigins, setAllowedOrigins] = useState<Set<string>>(() => getAllowedOrigins(null));
 
+  // Lazy visitorId: only read existing ID on mount, never create on page load
   useEffect(() => {
-    setVisitorId(getVisitorId(visitorIdParam));
+    setVisitorId(getExistingVisitorId(visitorIdParam));
   }, [visitorIdParam]);
 
   useEffect(() => {
@@ -146,6 +147,10 @@ function SurveyContent() {
 
     setSubmitting(true);
 
+    // Lazy visitorId creation — only generated when user explicitly submits
+    const effectiveVisitorId = getVisitorId(visitorIdParam);
+    setVisitorId(effectiveVisitorId);
+
     let datalayer: Record<string, string> | undefined;
     if (datalayerParam) {
       try {
@@ -159,7 +164,7 @@ function SurveyContent() {
         headers: { "Content-Type": "application/json", "x-api-key": apiKey },
         body: JSON.stringify({
           formId: form.id,
-          visitorId,
+          visitorId: effectiveVisitorId,
           answers: Object.entries(answers).map(([questionId, value]) => ({
             questionId,
             value,

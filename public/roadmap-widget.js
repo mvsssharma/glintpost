@@ -14,7 +14,12 @@
     return;
   }
 
+  // --- Shared badge registry for stacking ---
+  if (!window.__glintpost_badges) window.__glintpost_badges = [];
+
   var clientConfig = window.GlintPostConfig || {};
+  var consentGranted = clientConfig.consent !== false; // default: true
+
   var queryParams = new URLSearchParams({
     apiKey: apiKey,
     visitorId: clientConfig.visitorId || "",
@@ -23,15 +28,20 @@
   var BASE_URL = new URL(scriptTag.src).origin;
   var iframeUrl = BASE_URL + "/board?" + queryParams.toString();
 
-  // Detect if changelog badge is present to stack above it
-  var hasChangelogBadge = !!document.querySelector(".glintpost-changelog-badge");
-  var badgeBottom = hasChangelogBadge ? "90px" : "24px";
+  // --- Stacking logic ---
+  var BADGE_SIZE = 56;
+  var BADGE_GAP = 10;
+  var BADGE_MARGIN = 24;
+  var badgeIndex = window.__glintpost_badges.length;
+  var badgeBottom = BADGE_MARGIN + badgeIndex * (BADGE_SIZE + BADGE_GAP);
+
+  window.__glintpost_badges.push("roadmap");
 
   var style = document.createElement("style");
   style.innerHTML =
     ".glintpost-roadmap-badge {" +
     "  position: fixed;" +
-    "  bottom: " + badgeBottom + ";" +
+    "  bottom: " + badgeBottom + "px;" +
     "  right: 24px;" +
     "  width: 56px;" +
     "  height: 56px;" +
@@ -139,6 +149,7 @@
   });
 
   badge.addEventListener("click", function () {
+    if (!consentGranted) return;
     loadIframeOnce();
     isOpen = !isOpen;
     if (isOpen) {
@@ -159,4 +170,28 @@
       badge.style.backgroundColor = event.data.primaryColor;
     }
   });
+
+  // --- Public API ---
+  if (!window.GlintPost) window.GlintPost = {};
+
+  window.GlintPost.consent = function (granted) {
+    consentGranted = !!granted;
+  };
+
+  window.GlintPost.destroy = function () {
+    try {
+      localStorage.removeItem("glintpost_visitor_id");
+      localStorage.removeItem("glintpost_changelog_last_seen");
+      localStorage.removeItem("glintpost_interactions");
+      for (var i = localStorage.length - 1; i >= 0; i--) {
+        var key = localStorage.key(i);
+        if (key && key.indexOf("glintpost_feedback_") === 0) {
+          localStorage.removeItem(key);
+        }
+      }
+    } catch (e) {}
+    if (badge.parentNode) badge.parentNode.removeChild(badge);
+    if (container.parentNode) container.parentNode.removeChild(container);
+    consentGranted = false;
+  };
 })();

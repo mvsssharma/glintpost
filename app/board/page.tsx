@@ -4,7 +4,7 @@ import { Suspense, useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRoadmap } from "./useRoadmap";
 import { ROADMAP_STATUSES, DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
-import { getVisitorId } from "@/lib/visitor";
+import { getVisitorId, getExistingVisitorId } from "@/lib/visitor";
 import { getAllowedOrigins, getParentOrigin, isAllowedOrigin } from "@/lib/post-message";
 import styles from "./page.module.css";
 
@@ -25,8 +25,16 @@ function RoadmapContent() {
     themeParam ? { primaryColor: primaryColorParam ?? DEFAULT_PRIMARY_COLOR, widgetTheme: themeParam } : null
   );
 
+  // Lazy visitorId: only read existing ID on mount, never create on page load
   useEffect(() => {
-    setVisitorId(getVisitorId(visitorIdParam));
+    setVisitorId(getExistingVisitorId(visitorIdParam));
+  }, [visitorIdParam]);
+
+  // Ensure visitorId exists (create if needed) — only call on user interaction
+  const ensureVisitorId = useCallback((): string => {
+    const id = getVisitorId(visitorIdParam);
+    setVisitorId(id);
+    return id;
   }, [visitorIdParam]);
 
   useEffect(() => {
@@ -50,15 +58,15 @@ function RoadmapContent() {
       .catch(() => {});
   }, [apiKey]);
 
-  // Track roadmap widget view on load
+  // Track roadmap widget view anonymously (no visitorId)
   useEffect(() => {
-    if (!apiKey || !visitorId) return;
+    if (!apiKey) return;
     fetch("/api/roadmap/track", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-api-key": apiKey },
-      body: JSON.stringify({ visitorId }),
+      body: JSON.stringify({}),
     }).catch(() => {});
-  }, [apiKey, visitorId]);
+  }, [apiKey]);
 
   const [isEmbedded, setIsEmbedded] = useState(false);
 
@@ -91,7 +99,7 @@ function RoadmapContent() {
     setSortBy,
     voteOnItem,
     submitSuggestion,
-  } = useRoadmap(apiKey, visitorId);
+  } = useRoadmap(apiKey, visitorId, ensureVisitorId);
 
   const [suggestionText, setSuggestionText] = useState("");
   const [suggestionOpen, setSuggestionOpen] = useState(false);
