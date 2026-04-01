@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import { getVisitorId, getExistingVisitorId } from "@/lib/visitor";
@@ -78,6 +78,8 @@ function SurveyContent() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [allowedOrigins, setAllowedOrigins] = useState<Set<string>>(() => getAllowedOrigins(null));
+  const allowedOriginsRef = useRef(allowedOrigins);
+  allowedOriginsRef.current = allowedOrigins;
 
   // Lazy visitorId: only read existing ID on mount, never create on page load
   useEffect(() => {
@@ -123,8 +125,9 @@ function SurveyContent() {
         setLoading(false);
       });
 
-    window.parent.postMessage({ type: "GLINTPOST_FEEDBACK_LOADED" }, getParentOrigin(allowedOrigins));
-  }, [apiKey, allowedOrigins]);
+    window.parent.postMessage({ type: "GLINTPOST_FEEDBACK_LOADED" }, getParentOrigin(allowedOriginsRef.current));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiKey]);
 
   const closeWidget = () => {
     window.parent.postMessage({ type: "GLINTPOST_FEEDBACK_CLOSE" }, getParentOrigin(allowedOrigins));

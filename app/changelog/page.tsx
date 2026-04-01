@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense, useCallback } from "react";
+import { useEffect, useState, Suspense, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import DOMPurify from "isomorphic-dompurify";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
@@ -64,6 +64,8 @@ function ChangelogContent() {
     themeParam ? { primaryColor: primaryColorParam ?? DEFAULT_PRIMARY_COLOR, widgetTheme: themeParam } : null
   );
   const [allowedOrigins, setAllowedOrigins] = useState<Set<string>>(() => getAllowedOrigins(null));
+  const allowedOriginsRef = useRef(allowedOrigins);
+  allowedOriginsRef.current = allowedOrigins;
   const [interactedPosts, setInteractedPosts] = useState<
     Record<string, "LIKE" | "DISLIKE">
   >({});
@@ -184,8 +186,9 @@ function ChangelogContent() {
         setLoading(false);
       });
 
-    window.parent.postMessage({ type: "GLINTPOST_CHANGELOG_LOADED" }, getParentOrigin(allowedOrigins));
-  }, [apiKey, allowedOrigins]);
+    window.parent.postMessage({ type: "GLINTPOST_CHANGELOG_LOADED" }, getParentOrigin(allowedOriginsRef.current));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiKey]);
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
