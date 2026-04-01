@@ -232,7 +232,13 @@
     loadIframeOnce();
     isOpen = !isOpen;
     if (isOpen) {
-      container.classList.add("open");
+      // Defer class addition by two frames so the browser paints the initial
+      // translateX(100%) state before transitioning to translateX(0).
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          container.classList.add("open");
+        });
+      });
     } else {
       container.classList.remove("open");
     }

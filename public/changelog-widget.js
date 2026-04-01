@@ -331,9 +331,18 @@
     loadIframeOnce();
     isOpen = !isOpen;
     if (isOpen) {
-      container.classList.add("open");
-      notifyOpened();
-      markAsSeen();
+      // Defer class addition by two frames so the browser paints the initial
+      // translateX(100%) state before transitioning to translateX(0).
+      // Without this, setting iframe.src and adding .open in the same sync
+      // block causes the browser to batch both into one paint, skipping the
+      // slide-in animation entirely.
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          container.classList.add("open");
+          notifyOpened();
+          markAsSeen();
+        });
+      });
     } else {
       container.classList.remove("open");
     }
