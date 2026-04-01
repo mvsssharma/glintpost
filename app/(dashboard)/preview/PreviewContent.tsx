@@ -8,6 +8,44 @@ function hasSlideover(widget: (typeof WIDGETS)[number]) {
   return widget.integrations.some((i) => i.mode === "slideover");
 }
 
+const WIDGET_DOM_SELECTOR = [
+  ".glintpost-changelog-badge",
+  ".glintpost-changelog-tab",
+  ".glintpost-changelog-container",
+  ".glintpost-roadmap-badge",
+  ".glintpost-roadmap-container",
+  ".glintpost-feedback-badge",
+  ".glintpost-feedback-tab",
+  ".glintpost-feedback-container",
+].join(", ");
+
+function cleanupWidgets() {
+  // Remove all widget DOM elements (badges, tabs, slide-over containers)
+  document.querySelectorAll(WIDGET_DOM_SELECTOR).forEach((el) => el.remove());
+
+  // Remove widget-injected <style> tags (they contain .glintpost- rules)
+  document.querySelectorAll("style").forEach((el) => {
+    if (el.innerHTML.includes("glintpost-")) el.remove();
+  });
+
+  // Reset initialization flags so scripts can re-run
+  const win = window as unknown as Record<string, unknown>;
+  win.GlintPostChangelogInitialized = false;
+  win.GlintPostRoadmapInitialized = false;
+  win.GlintPostFeedbackInitialized = false;
+
+  // Reset badge/tab stacking registries — prevents position creep
+  win.__glintpost_badges = [];
+  win.__glintpost_tabs = [];
+
+  // Remove old widget scripts
+  document
+    .querySelectorAll(
+      WIDGETS.map((w) => `script[src*="${w.script}"]`).join(", ")
+    )
+    .forEach((el) => el.remove());
+}
+
 export default function PreviewContent({
   apiKey,
   theme,
@@ -25,24 +63,7 @@ export default function PreviewContent({
   useEffect(() => {
     if (!isSlideover) return;
 
-    // Clean up any existing widget badges/containers
-    document
-      .querySelectorAll(
-        ".glintpost-changelog-badge, .glintpost-changelog-container, .glintpost-roadmap-badge, .glintpost-roadmap-container, .glintpost-feedback-badge, .glintpost-feedback-container"
-      )
-      .forEach((el) => el.remove());
-
-    // Reset initialization flags so scripts can re-run
-    (window as unknown as Record<string, unknown>).GlintPostChangelogInitialized = false;
-    (window as unknown as Record<string, unknown>).GlintPostRoadmapInitialized = false;
-    (window as unknown as Record<string, unknown>).GlintPostFeedbackInitialized = false;
-
-    // Remove old widget scripts
-    document
-      .querySelectorAll(
-        WIDGETS.map((w) => `script[src*="${w.script}"]`).join(", ")
-      )
-      .forEach((el) => el.remove());
+    cleanupWidgets();
 
     // Load the selected widget script
     const script = document.createElement("script");
@@ -59,22 +80,7 @@ export default function PreviewContent({
   // Clean up slideover artifacts when switching to inline widget
   useEffect(() => {
     if (isSlideover) return;
-
-    document
-      .querySelectorAll(
-        ".glintpost-changelog-badge, .glintpost-changelog-container, .glintpost-roadmap-badge, .glintpost-roadmap-container, .glintpost-feedback-badge, .glintpost-feedback-container"
-      )
-      .forEach((el) => el.remove());
-
-    (window as unknown as Record<string, unknown>).GlintPostChangelogInitialized = false;
-    (window as unknown as Record<string, unknown>).GlintPostRoadmapInitialized = false;
-    (window as unknown as Record<string, unknown>).GlintPostFeedbackInitialized = false;
-
-    document
-      .querySelectorAll(
-        WIDGETS.map((w) => `script[src*="${w.script}"]`).join(", ")
-      )
-      .forEach((el) => el.remove());
+    cleanupWidgets();
   }, [isSlideover]);
 
   return (
