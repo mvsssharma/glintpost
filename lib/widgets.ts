@@ -1,4 +1,4 @@
-export type EmbedMode = "slideover" | "inline" | "hosted" | "advanced" | "headless";
+export type EmbedMode = "slideover" | "tab" | "inline" | "hosted" | "advanced" | "headless";
 
 export interface EmbedOption {
   mode: EmbedMode;
@@ -28,6 +28,12 @@ export const WIDGETS: WidgetConfig[] = [
         description:
           "Adds a floating badge to your site. Clicking it opens a slide-over panel with the changelog.",
         recommended: true,
+      },
+      {
+        mode: "tab",
+        title: "Side Tab",
+        description:
+          "Adds a small sticky tab on the right edge of the viewport. Clicking it opens the changelog slide-over. Works well alongside feedback tabs.",
       },
       {
         mode: "inline",
@@ -104,6 +110,12 @@ export const WIDGETS_WITH_FEEDBACK: WidgetConfig[] = [
         description:
           "Adds a floating feedback button to your site. Clicking it opens a slide-over panel with the feedback form.",
         recommended: true,
+      },
+      {
+        mode: "tab",
+        title: "Side Tab",
+        description:
+          "Adds a small sticky tab on the right edge of the viewport. Clicking it opens the feedback slide-over. Works well alongside changelog tabs.",
       },
       {
         mode: "inline",

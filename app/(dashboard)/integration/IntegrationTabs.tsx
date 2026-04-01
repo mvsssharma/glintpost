@@ -188,6 +188,11 @@ function getCodeSnippet(
         return `<!-- GlintPost ${widget.label} Widget -->\n${formIdComment}\n<script\n  src="${appUrl}/${widget.script}"\n  data-api-key="${apiKey}"\n${formIdAttr}\n  defer\n></script>`;
       }
       return `<!-- GlintPost ${widget.label} Widget -->\n<script\n  src="${appUrl}/${widget.script}"\n  data-api-key="${apiKey}"\n  defer\n></script>`;
+    case "tab":
+      if (isFeedback) {
+        return `<!-- GlintPost ${widget.label} Side Tab -->\n${formIdComment}\n<script\n  src="${appUrl}/${widget.script}"\n  data-api-key="${apiKey}"\n  data-mode="tab"\n${formIdAttr}\n  defer\n></script>`;
+      }
+      return `<!-- GlintPost ${widget.label} Side Tab -->\n<script\n  src="${appUrl}/${widget.script}"\n  data-api-key="${apiKey}"\n  data-mode="tab"\n  defer\n></script>`;
     case "inline":
       if (isFeedback) {
         return `<!-- Replace YOUR_FORM_ID with the Form ID from Feedback page -->\n<iframe\n  src="${appUrl}${widget.pagePath}?apiKey=${apiKey}&formId=YOUR_FORM_ID"\n  style="width:100%;height:600px;border:none;border-radius:8px;"\n></iframe>`;
