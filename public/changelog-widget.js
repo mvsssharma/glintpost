@@ -278,6 +278,8 @@
         }
         iframeUrl = BASE_URL + "/changelog?" + queryParams.toString();
       }
+      // Preload iframe after config so it's ready before user clicks
+      loadIframeOnce();
     })
     .catch(function () {});
 

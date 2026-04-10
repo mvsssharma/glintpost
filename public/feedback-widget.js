@@ -215,6 +215,8 @@
         }
         iframeUrl = BASE_URL + "/survey?" + queryParams.toString();
       }
+      // Preload iframe after config so it's ready before user clicks
+      loadIframeOnce();
     })
     .catch(function () {});
 

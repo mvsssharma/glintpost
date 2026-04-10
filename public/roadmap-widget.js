@@ -126,6 +126,8 @@
         }
         iframeUrl = BASE_URL + "/board?" + queryParams.toString();
       }
+      // Preload iframe after config so it's ready before user clicks
+      loadIframeOnce();
     })
     .catch(function () {});
 
@@ -153,8 +155,14 @@
     loadIframeOnce();
     isOpen = !isOpen;
     if (isOpen) {
-      container.classList.add("open");
-      notifyOpened();
+      // Defer class addition by two frames so the browser paints the initial
+      // translateX(100%) state before transitioning to translateX(0).
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          container.classList.add("open");
+          notifyOpened();
+        });
+      });
     } else {
       container.classList.remove("open");
     }
