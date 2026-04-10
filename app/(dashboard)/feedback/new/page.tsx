@@ -4,7 +4,7 @@ import styles from "../page.module.css";
 
 export default function NewFeedbackFormPage() {
   return (
-    <div className={styles.container}>
+    <div className={styles.containerNarrow}>
       <header className={styles.header}>
         <div className={styles.headerRow}>
           <div>
