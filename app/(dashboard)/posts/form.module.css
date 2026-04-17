@@ -1,0 +1,147 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 800px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  border: 1px solid hsl(var(--border-light));
+  background: hsl(var(--bg-surface));
+  color: hsl(var(--text-muted));
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.backBtn:hover {
+  color: hsl(var(--text-main));
+  background: hsl(var(--bg-surface-hover));
+}
+
+.header h2 {
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: hsl(var(--text-main));
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.titleInput {
+  width: 100%;
+  padding: 0.875rem 0;
+  border: none;
+  border-bottom: 2px solid hsl(var(--border-light));
+  background: transparent;
+  color: hsl(var(--text-main));
+  font-size: 1.5rem;
+  font-weight: 600;
+  outline: none;
+  transition: border-color var(--transition-fast);
+  margin-bottom: 1.5rem;
+}
+
+.titleInput::placeholder {
+  color: hsl(var(--text-muted));
+  font-weight: 400;
+}
+
+.titleInput:focus {
+  border-bottom-color: hsl(var(--primary));
+}
+
+.contentLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: hsl(var(--text-muted));
+  margin-bottom: 0.625rem;
+}
+
+.editorWrapper {
+  border: 1px solid hsl(var(--border-light));
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: hsl(var(--bg-surface));
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.editorWrapper:focus-within {
+  border-color: hsl(var(--primary) / 0.5);
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.08);
+}
+
+/* Override Quill styles to blend with the card */
+.editorWrapper :global(.ql-toolbar) {
+  border: none !important;
+  border-bottom: 1px solid hsl(var(--border-light)) !important;
+  background: hsl(var(--bg-surface)) !important;
+  padding: 0.625rem 0.75rem !important;
+}
+
+.editorWrapper :global(.ql-container) {
+  border: none !important;
+  font-size: 0.9375rem;
+}
+
+.editorWrapper :global(.ql-editor) {
+  padding: 1rem 1.25rem !important;
+  min-height: 480px;
+  color: hsl(var(--text-main)) !important;
+}
+
+.editorWrapper :global(.ql-editor.ql-blank::before) {
+  color: hsl(var(--text-muted)) !important;
+  font-style: normal !important;
+  left: 1.25rem !important;
+}
+
+/* Dark mode toolbar icons */
+@media (prefers-color-scheme: dark) {
+  .editorWrapper :global(.ql-toolbar .ql-stroke) {
+    stroke: hsl(var(--text-muted)) !important;
+  }
+  .editorWrapper :global(.ql-toolbar .ql-fill) {
+    fill: hsl(var(--text-muted)) !important;
+  }
+  .editorWrapper :global(.ql-toolbar .ql-picker) {
+    color: hsl(var(--text-muted)) !important;
+  }
+  .editorWrapper :global(.ql-toolbar button:hover .ql-stroke),
+  .editorWrapper :global(.ql-toolbar button.ql-active .ql-stroke) {
+    stroke: hsl(var(--primary)) !important;
+  }
+  .editorWrapper :global(.ql-toolbar button:hover .ql-fill),
+  .editorWrapper :global(.ql-toolbar button.ql-active .ql-fill) {
+    fill: hsl(var(--primary)) !important;
+  }
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid hsl(var(--border-light));
+}

@@ -31,6 +31,11 @@
   cursor: pointer;
   color: hsl(var(--text-muted));
   transition: color var(--transition-fast);
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .closeBtn:hover {
@@ -44,7 +49,10 @@
   font-weight: 600;
   cursor: pointer;
   color: var(--widget-primary, hsl(var(--primary)));
-  padding: 0;
+  padding: 0.5rem 0.75rem;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
   transition: opacity var(--transition-fast);
 }
 
@@ -107,12 +115,15 @@
 .viewMore {
   background: none;
   border: none;
-  padding: 0;
+  padding: 0.5rem 0;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--widget-primary, hsl(var(--primary)));
   cursor: pointer;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   transition: opacity var(--transition-fast);
 }
 
@@ -176,7 +187,8 @@
   background: hsl(var(--bg-main));
   border: 1px solid hsl(var(--border-light));
   border-radius: var(--radius-full);
-  padding: 0.25rem 0.75rem;
+  padding: 0.5rem 0.875rem;
+  min-height: 44px;
   font-size: 0.875rem;
   cursor: pointer;
   transition: all var(--transition-fast);

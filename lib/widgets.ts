@@ -75,6 +75,12 @@ export const WIDGETS: WidgetConfig[] = [
         recommended: true,
       },
       {
+        mode: "slideover",
+        title: "Slide-over Widget",
+        description:
+          "Adds a floating button to your site. Clicking it opens a slide-over panel with the roadmap. Works best on mobile or for quick-glance access.",
+      },
+      {
         mode: "hosted",
         title: "Hosted Page",
         description:

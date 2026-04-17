@@ -66,6 +66,13 @@ export const updateOrgSettingsSchema = z.object({
 export const createPostSchema = z.object({
   title: z.string().min(1, "Title is required").max(500),
   content: z.string().min(1, "Content is required").max(100_000),
+  status: z.enum(["DRAFT", "PUBLISHED"]).optional().default("DRAFT"),
+});
+
+export const updatePostSchema = z.object({
+  title: z.string().min(1, "Title is required").max(500).optional(),
+  content: z.string().min(1, "Content is required").max(100_000).optional(),
+  status: z.enum(["DRAFT", "PUBLISHED"]).optional(),
 });
 
 // === Engagement ===

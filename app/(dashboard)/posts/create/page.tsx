@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import RichTextEditor from "@/app/components/RichTextEditor";
-import styles from "./page.module.css";
+import styles from "../form.module.css";
 
 export default function CreatePostPage() {
   const router = useRouter();
@@ -11,15 +11,13 @@ export default function CreatePostPage() {
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (status: "DRAFT" | "PUBLISHED") => {
     setIsSubmitting(true);
-
     try {
       const res = await fetch("/api/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content }),
+        body: JSON.stringify({ title, content, status }),
       });
 
       if (res.ok) {
@@ -39,45 +37,46 @@ export default function CreatePostPage() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h2>Create Release Announcement</h2>
+        <button className={styles.backBtn} onClick={() => router.back()} aria-label="Go back">
+          &#8592;
+        </button>
+        <h2>New Announcement</h2>
       </header>
 
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.formGroup}>
-          <label htmlFor="title">Post Title</label>
-          <input
-            type="text"
-            id="title"
-            className="input-field"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g., Introducing our new Analytics dashboard"
-            required
-          />
-        </div>
+      <div className={styles.form}>
+        <input
+          type="text"
+          className={styles.titleInput}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Post title…"
+          autoFocus
+        />
 
-        <div className={styles.formGroup}>
-          <label>Content</label>
-          <RichTextEditor value={content} onChange={setContent} />
+        <div className={styles.contentLabel}>Content</div>
+        <div className={styles.editorWrapper}>
+          <RichTextEditor value={content} onChange={setContent} height={480} />
         </div>
 
         <div className={styles.actions}>
           <button
             type="button"
             className="btn-secondary"
-            onClick={() => router.back()}
+            disabled={isSubmitting || !title.trim() || !content.trim()}
+            onClick={() => handleSubmit("DRAFT")}
           >
-            Cancel
+            {isSubmitting ? "Saving…" : "Save as Draft"}
           </button>
           <button
-            type="submit"
+            type="button"
             className="btn-primary"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !title.trim() || !content.trim()}
+            onClick={() => handleSubmit("PUBLISHED")}
           >
-            {isSubmitting ? "Publishing..." : "Publish Post"}
+            {isSubmitting ? "Publishing…" : "Publish"}
           </button>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

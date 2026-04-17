@@ -30,6 +30,11 @@
   font-size: 1.5rem;
   cursor: pointer;
   color: hsl(var(--text-muted));
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: color var(--transition-fast);
 }
 
@@ -134,6 +139,8 @@
 
 .npsBtn {
   aspect-ratio: 1;
+  min-width: 0;
+  min-height: 32px;
   border: 1px solid hsl(var(--border-light));
   border-radius: var(--radius-md);
   background: hsl(var(--bg-surface));
@@ -364,6 +371,33 @@
 .dark .npsPromoter.npsBtnActive {
   background: hsl(152, 69%, 41%);
   border-color: hsl(152, 69%, 41%);
+}
+
+/* Mobile touch targets */
+@media (max-width: 480px) {
+  .npsButtons {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+  }
+
+  .npsBtn {
+    min-height: 40px;
+    font-size: 0.875rem;
+  }
+
+  .selectOption {
+    padding: 0.75rem 0.875rem;
+    min-height: 44px;
+  }
+
+  .submitBtn {
+    min-height: 48px;
+    font-size: 1rem;
+  }
+
+  .body {
+    padding: 1.25rem;
+  }
 }
 
 /* Light theme */

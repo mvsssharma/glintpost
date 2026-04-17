@@ -22,7 +22,6 @@ const TENANT_SCOPED_MODELS = new Set([
   "Organization",
   "OrgSettings",
   "Post",
-  "PostTranslation",
   "ChangelogEvent",
   "RoadmapItem",
   "RoadmapSuggestion",

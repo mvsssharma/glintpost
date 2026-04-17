@@ -1,16 +1,25 @@
 import Link from "next/link";
 import { requireOrg } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
+import PostActions from "./PostActions";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
 
-export default async function PostsPage() {
+export default async function PostsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
   const { org } = await requireOrg();
   const db = getOrgPrisma(org.id);
+  const { status: statusFilter } = await searchParams;
+
+  const activeFilter = statusFilter === "PUBLISHED" ? "PUBLISHED" : statusFilter === "DRAFT" ? "DRAFT" : "ALL";
 
   const rawPosts = (await db.post.findMany({
     orderBy: { createdAt: "desc" },
+    ...(activeFilter !== "ALL" && { where: { status: activeFilter } }),
     include: {
       translations: { where: { locale: "en" }, take: 1 },
       _count: {
@@ -56,10 +65,37 @@ export default async function PostsPage() {
         </Link>
       </header>
 
+      <div className={styles.filterTabs}>
+        <Link
+          href="/posts"
+          className={`${styles.filterTab} ${activeFilter === "ALL" ? styles.filterTabActive : ""}`}
+        >
+          All
+        </Link>
+        <Link
+          href="/posts?status=DRAFT"
+          className={`${styles.filterTab} ${activeFilter === "DRAFT" ? styles.filterTabActive : ""}`}
+        >
+          Drafts
+        </Link>
+        <Link
+          href="/posts?status=PUBLISHED"
+          className={`${styles.filterTab} ${activeFilter === "PUBLISHED" ? styles.filterTabActive : ""}`}
+        >
+          Published
+        </Link>
+      </div>
+
       <div className={styles.postList}>
         {posts.length === 0 ? (
           <div className={styles.emptyState}>
-            <p>No posts yet. Create your first release announcement!</p>
+            <p>
+              {activeFilter === "DRAFT"
+                ? "No drafts yet."
+                : activeFilter === "PUBLISHED"
+                  ? "No published posts yet."
+                  : "No posts yet. Create your first release announcement!"}
+            </p>
           </div>
         ) : (
           posts.map((post) => {
@@ -70,7 +106,9 @@ export default async function PostsPage() {
                 <div className={styles.postInfo}>
                   <h3 className={styles.postTitle}>{title}</h3>
                   <div className={styles.postMeta}>
-                    <span className={styles.status}>{post.status}</span>
+                    <span className={`${styles.status} ${post.status === "DRAFT" ? styles.statusDraft : styles.statusPublished}`}>
+                      {post.status}
+                    </span>
                     <span className={styles.date}>
                       {new Date(post.createdAt).toLocaleDateString()}
                     </span>
@@ -80,9 +118,7 @@ export default async function PostsPage() {
                     </span>
                   </div>
                 </div>
-                <div className={styles.postActions}>
-                  <button className="btn-secondary">Edit</button>
-                </div>
+                <PostActions postId={post.id} />
               </div>
             );
           })

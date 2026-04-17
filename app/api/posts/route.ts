@@ -21,14 +21,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const { title, content } = parsed.data;
+    const { title, content, status } = parsed.data;
     const db = getOrgPrisma(session.orgId);
 
     const post = await db.post.create({
       data: {
         orgId: session.orgId,
-        status: "PUBLISHED",
-        publishedAt: new Date(),
+        status: status ?? "DRAFT",
+        publishedAt: status === "PUBLISHED" ? new Date() : null,
         translations: {
           create: {
             locale: "en",
