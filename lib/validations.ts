@@ -63,16 +63,32 @@ export const updateOrgSettingsSchema = z.object({
 
 // === Posts ===
 
+const TARGETING_PARAMS = ["plan", "role", "region", "platform", "version", "company", "locale"] as const;
+const TARGETING_OPS = ["equals", "not_equals", "contains", "in"] as const;
+
+const targetingRuleSchema = z.object({
+  param: z.enum(TARGETING_PARAMS),
+  op: z.enum(TARGETING_OPS),
+  value: z.union([z.string().min(1).max(200), z.array(z.string().min(1).max(200)).min(1).max(50)]),
+});
+
+export const targetingRulesSchema = z.object({
+  operator: z.enum(["AND", "OR"]),
+  rules: z.array(targetingRuleSchema).min(1).max(20),
+});
+
 export const createPostSchema = z.object({
   title: z.string().min(1, "Title is required").max(500),
   content: z.string().min(1, "Content is required").max(100_000),
   status: z.enum(["DRAFT", "PUBLISHED"]).optional().default("DRAFT"),
+  targetingRules: targetingRulesSchema.nullable().optional(),
 });
 
 export const updatePostSchema = z.object({
   title: z.string().min(1, "Title is required").max(500).optional(),
   content: z.string().min(1, "Content is required").max(100_000).optional(),
   status: z.enum(["DRAFT", "PUBLISHED"]).optional(),
+  targetingRules: targetingRulesSchema.nullable().optional(),
 });
 
 // === Engagement ===

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { getOrgPrisma } from "@/lib/db";
 import { createPostSchema } from "@/lib/validations";
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { title, content, status } = parsed.data;
+    const { title, content, status, targetingRules } = parsed.data;
     const db = getOrgPrisma(session.orgId);
 
     const post = await db.post.create({
@@ -29,6 +30,7 @@ export async function POST(req: Request) {
         orgId: session.orgId,
         status: status ?? "DRAFT",
         publishedAt: status === "PUBLISHED" ? new Date() : null,
+        targetingRules: targetingRules ?? Prisma.DbNull,
         translations: {
           create: {
             locale: "en",

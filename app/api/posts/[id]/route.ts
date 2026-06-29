@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { getOrgPrisma } from "@/lib/db";
 import { updatePostSchema } from "@/lib/validations";
@@ -50,7 +51,7 @@ export async function PUT(req: Request, context: Context) {
       );
     }
 
-    const { title, content, status } = parsed.data;
+    const { title, content, status, targetingRules } = parsed.data;
     const db = getOrgPrisma(session.orgId);
 
     const existing = await db.post.findUnique({ where: { id } });
@@ -65,6 +66,9 @@ export async function PUT(req: Request, context: Context) {
       if (status === "PUBLISHED" && !existing.publishedAt) {
         postUpdate.publishedAt = new Date();
       }
+    }
+    if (targetingRules !== undefined) {
+      postUpdate.targetingRules = targetingRules === null ? Prisma.DbNull : targetingRules;
     }
 
     // Update post + translation in a transaction

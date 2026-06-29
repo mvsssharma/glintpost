@@ -3,54 +3,51 @@
 ## Live Features
 
 ### Changelog
-- Post CRUD (create, list — no edit page yet)
+- Post CRUD (create, edit, delete, list)
 - Rich text editor (Quill) with HTML storage
+- Image uploads to Cloudflare R2 (toolbar + clipboard paste — no base64 in DB)
 - Multi-language support via PostTranslation model
 - Like/dislike/view tracking with datalayer targeting
-- Widget embed: slideover, inline, hosted, headless
-- Status: DRAFT / PUBLISHED (schema supports it, but UI publishes immediately — no draft workflow)
+- Widget embed: slideover, side tab, inline, hosted, headless, advanced config
+- Draft/publish workflow with status filter (DRAFT / PUBLISHED / ALL) on posts list
 
 ### Roadmap
 - Item CRUD with status workflow (Under Review → Planned → In Progress → Completed → Archived)
 - Public voting (up/down) with visitor tracking
 - AI-powered suggestion similarity detection (BYO key, fallback to Jaccard word overlap)
 - Suggestion management: merge, create as item, dismiss
-- Widget embed: inline, hosted, headless
+- Widget embed: slideover, inline, hosted, headless, advanced config
 
 ### Feedback
+- Multi-form support (create multiple independent feedback forms)
 - Configurable form builder (SELECT / NPS / TEXT, max 3 questions)
 - Public submission with visitor + datalayer tracking
 - Response viewer in dashboard
-- Widget embed: slideover, inline, hosted, headless
+- Widget embed: slideover, side tab, inline, hosted, headless
 
 ### Settings & Integration
 - Org settings: theme, locales, allowed domain, AI provider/key/model
-- Widget embed code generator
-- Live widget preview (iframe-based)
+- Widget embed code generator with per-mode code snippets
+- Live widget preview (iframe-based with preloaded iframes)
 - Razorpay billing integration
+- Storage tracking (used/cap bytes per org)
+
+### Privacy & Compliance
+- GDPR-compliant lazy visitor ID generation
+- Consent API for visitor tracking
+- Anonymous passive tracking (views without persistent IDs)
 
 ---
 
-## Planned: Post Edit Page & Draft Workflow
+## ~~Planned: Post Edit Page & Draft Workflow~~ ✓ Done
 
-**Status:** Not started — prerequisite for AI changelog feature
-
-### What's Missing
-- No `/posts/[id]/edit` route — the "Edit" button on the posts list is a dead button
-- No draft workflow — create page only has "Publish", skipping the DRAFT state entirely
-- No status filter on the posts list page
-
-### Implementation
-1. **Post edit page** (`/posts/[id]/edit`) — load existing post data into Quill editor, save changes
-2. **Draft/publish workflow** — "Save as Draft" and "Publish" buttons on create/edit pages
-3. **Status filter** on posts list — tabs or filter for DRAFT vs PUBLISHED
-4. **Post delete** — if not already available
+**Status:** Complete — shipped with post CRUD, draft workflow, status filter, and R2 image uploads
 
 ---
 
 ## Planned: AI Changelog Writing
 
-**Status:** Not started — depends on post edit page & draft workflow
+**Status:** Not started — prerequisite (post edit + draft workflow) is now complete
 
 ### Overview
 AI-assisted changelog drafting and translation. Bridges the gap between internal ticket/PR language and customer-facing announcements.

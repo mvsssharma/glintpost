@@ -1,19 +1,18 @@
 export type TargetingOperator = "AND" | "OR";
 
-export type TargetingRuleOp =
-  | "eq"
-  | "neq"
-  | "gt"
-  | "lt"
-  | "gte"
-  | "lte"
-  | "contains"
-  | "in"
-  | "containsAny"
-  | "containsAll";
+export type TargetingParam =
+  | "plan"
+  | "role"
+  | "region"
+  | "platform"
+  | "version"
+  | "company"
+  | "locale";
+
+export type TargetingRuleOp = "equals" | "not_equals" | "contains" | "in";
 
 export interface TargetingRule {
-  param: string;
+  param: TargetingParam;
   op: TargetingRuleOp;
   value: string | string[];
 }

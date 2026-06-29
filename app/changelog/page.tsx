@@ -1,12 +1,23 @@
 "use client";
 
-import { useEffect, useState, Suspense, useCallback, useRef } from "react";
+import { useEffect, useState, useMemo, Suspense, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import DOMPurify from "isomorphic-dompurify";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import { getVisitorId, getExistingVisitorId } from "@/lib/visitor";
 import { getAllowedOrigins, getParentOrigin, isAllowedOrigin } from "@/lib/post-message";
 import styles from "./page.module.css";
+
+interface TargetingRule {
+  param: string;
+  op: string;
+  value: string | string[];
+}
+
+interface TargetingRuleSet {
+  operator: "AND" | "OR";
+  rules: TargetingRule[];
+}
 
 interface Post {
   id: string;
@@ -15,6 +26,38 @@ interface Post {
   createdAt: string;
   likes: number;
   dislikes: number;
+  targetingRules: TargetingRuleSet | null;
+}
+
+function matchesTargetingRules(
+  post: Post,
+  datalayer: Record<string, string> | null
+): boolean {
+  if (!post.targetingRules) return true;
+  if (!datalayer) return false;
+
+  const { operator, rules } = post.targetingRules;
+
+  const evalRule = (rule: TargetingRule): boolean => {
+    const actual = datalayer[rule.param] ?? "";
+    switch (rule.op) {
+      case "equals":
+        return actual === rule.value;
+      case "not_equals":
+        return actual !== rule.value;
+      case "contains":
+        return typeof rule.value === "string" &&
+          actual.toLowerCase().includes(rule.value.toLowerCase());
+      case "in":
+        return Array.isArray(rule.value) && rule.value.includes(actual);
+      default:
+        return false;
+    }
+  };
+
+  return operator === "AND"
+    ? rules.every(evalRule)
+    : rules.some(evalRule);
 }
 
 function ReactionButtons({
@@ -57,6 +100,12 @@ function ChangelogContent() {
   const [visitorId, setVisitorId] = useState("");
   const themeParam = searchParams.get("theme");
   const primaryColorParam = searchParams.get("primaryColor");
+
+  const parsedDatalayer = useMemo(() => {
+    if (!datalayerParam) return null;
+    try { return JSON.parse(datalayerParam) as Record<string, string>; }
+    catch { return null; }
+  }, [datalayerParam]);
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -213,8 +262,10 @@ function ChangelogContent() {
 
   const themeClass = theme?.widgetTheme === "dark" ? styles.dark : styles.light;
 
+  const visiblePosts = posts.filter((p) => matchesTargetingRules(p, parsedDatalayer));
+
   const selectedPost = selectedPostId
-    ? posts.find((p) => p.id === selectedPostId)
+    ? visiblePosts.find((p) => p.id === selectedPostId)
     : null;
 
   if (selectedPost) {
@@ -263,10 +314,10 @@ function ChangelogContent() {
       </header>
 
       <div className={styles.feed}>
-        {posts.length === 0 ? (
+        {visiblePosts.length === 0 ? (
           <p className={styles.empty}>No recent updates.</p>
         ) : (
-          posts.map((post) => {
+          visiblePosts.map((post) => {
             const interaction = interactedPosts[post.id];
             return (
               <article key={post.id} className={styles.postCard}>

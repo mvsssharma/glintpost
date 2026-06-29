@@ -3,11 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import RichTextEditor from "@/app/components/RichTextEditor";
+import TargetingRulesEditor from "../../TargetingRulesEditor";
+import type { TargetingRuleSet } from "@/types/targeting";
 import styles from "../../form.module.css";
 
 interface PostData {
   id: string;
   status: "DRAFT" | "PUBLISHED";
+  targetingRules: TargetingRuleSet | null;
   translations: Array<{ locale: string; title: string; content: string }>;
 }
 
@@ -17,6 +20,7 @@ export default function EditPostPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [status, setStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT");
+  const [targetingRules, setTargetingRules] = useState<TargetingRuleSet | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +38,7 @@ export default function EditPostPage() {
         setTitle(enTranslation?.title ?? "");
         setContent(enTranslation?.content ?? "");
         setStatus(post.status);
+        setTargetingRules(post.targetingRules ?? null);
       } catch {
         setError("Failed to load post");
       } finally {
@@ -52,6 +57,7 @@ export default function EditPostPage() {
         body: JSON.stringify({
           title,
           content,
+          targetingRules,
           ...(newStatus && { status: newStatus }),
         }),
       });
@@ -111,6 +117,8 @@ export default function EditPostPage() {
         <div className={styles.editorWrapper}>
           <RichTextEditor value={content} onChange={setContent} height={480} />
         </div>
+
+        <TargetingRulesEditor value={targetingRules} onChange={setTargetingRules} />
 
         <div className={styles.actions}>
           {status === "DRAFT" && (

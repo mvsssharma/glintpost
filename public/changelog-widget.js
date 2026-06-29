@@ -283,6 +283,38 @@
     })
     .catch(function () {});
 
+  // Targeting: filter posts by visitor's datalayer
+  var visitorDatalayer = clientConfig.datalayer || null;
+
+  function matchesTargeting(post) {
+    if (!post.targetingRules) return true;
+    if (!visitorDatalayer) return false;
+    var rules = post.targetingRules.rules;
+    var op = post.targetingRules.operator;
+
+    function evalRule(rule) {
+      var actual = visitorDatalayer[rule.param] || "";
+      switch (rule.op) {
+        case "equals": return actual === rule.value;
+        case "not_equals": return actual !== rule.value;
+        case "contains":
+          return typeof rule.value === "string" &&
+            actual.toLowerCase().indexOf(rule.value.toLowerCase()) !== -1;
+        case "in":
+          return Array.isArray(rule.value) && rule.value.indexOf(actual) !== -1;
+        default: return false;
+      }
+    }
+
+    if (op === "AND") {
+      for (var i = 0; i < rules.length; i++) { if (!evalRule(rules[i])) return false; }
+      return true;
+    } else {
+      for (var j = 0; j < rules.length; j++) { if (evalRule(rules[j])) return true; }
+      return false;
+    }
+  }
+
   // Check for unread posts
   fetch(BASE_URL + "/api/changelog/posts", {
     headers: { "x-api-key": apiKey }
@@ -290,6 +322,8 @@
     .then(function (res) { return res.ok ? res.json() : null; })
     .then(function (posts) {
       if (!posts || !posts.length) return;
+      var visible = posts.filter(matchesTargeting);
+      if (!visible.length) return;
       var lastSeen;
       try {
         lastSeen = localStorage.getItem(LAST_SEEN_KEY);
@@ -300,7 +334,7 @@
         return;
       }
       var lastSeenDate = new Date(lastSeen);
-      var newPosts = posts.filter(function (p) {
+      var newPosts = visible.filter(function (p) {
         return new Date(p.createdAt) > lastSeenDate;
       });
       if (newPosts.length > 0) {

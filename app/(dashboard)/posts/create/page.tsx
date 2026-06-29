@@ -3,12 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import RichTextEditor from "@/app/components/RichTextEditor";
+import TargetingRulesEditor from "../TargetingRulesEditor";
+import type { TargetingRuleSet } from "@/types/targeting";
 import styles from "../form.module.css";
 
 export default function CreatePostPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [targetingRules, setTargetingRules] = useState<TargetingRuleSet | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (status: "DRAFT" | "PUBLISHED") => {
@@ -17,7 +20,7 @@ export default function CreatePostPage() {
       const res = await fetch("/api/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content, status }),
+        body: JSON.stringify({ title, content, status, targetingRules }),
       });
 
       if (res.ok) {
@@ -57,6 +60,8 @@ export default function CreatePostPage() {
         <div className={styles.editorWrapper}>
           <RichTextEditor value={content} onChange={setContent} height={480} />
         </div>
+
+        <TargetingRulesEditor value={targetingRules} onChange={setTargetingRules} />
 
         <div className={styles.actions}>
           <button
