@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/auth";
-import { prisma } from "@/lib/db";
+import { prisma, getOrgPrisma } from "@/lib/db";
 import { RoadmapItemStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { createRoadmapItemSchema, formDataToObject } from "@/lib/validations";
@@ -37,8 +37,9 @@ export async function createRoadmapItem(
   }
 
   const { title, description, status } = parsed.data;
+  const db = getOrgPrisma(orgId);
 
-  await prisma.roadmapItem.create({
+  await db.roadmapItem.create({
     data: { orgId, title, description: description ?? null, status: status as RoadmapItemStatus },
   });
 
@@ -54,7 +55,9 @@ export async function updateRoadmapItemStatus(
   const orgId = await getOrgId();
   if (!orgId) return { error: "Not authenticated" };
 
-  await prisma.roadmapItem.updateMany({
+  const db = getOrgPrisma(orgId);
+
+  await db.roadmapItem.updateMany({
     where: { id: itemId, orgId },
     data: { status },
   });
@@ -70,7 +73,9 @@ export async function deleteRoadmapItem(
   const orgId = await getOrgId();
   if (!orgId) return { error: "Not authenticated" };
 
-  await prisma.roadmapItem.deleteMany({
+  const db = getOrgPrisma(orgId);
+
+  await db.roadmapItem.deleteMany({
     where: { id: itemId, orgId },
   });
 
@@ -89,7 +94,9 @@ export async function handleSuggestion(
   const orgId = await getOrgId();
   if (!orgId) return { error: "Not authenticated" };
 
-  const suggestion = await prisma.roadmapSuggestion.findFirst({
+  const db = getOrgPrisma(orgId);
+
+  const suggestion = await db.roadmapSuggestion.findFirst({
     where: { id: suggestionId, orgId },
   });
   if (!suggestion) return { error: "Suggestion not found" };
@@ -99,25 +106,25 @@ export async function handleSuggestion(
     if (!itemTitle || itemTitle.length < 3) {
       return { error: "Title must be at least 3 characters" };
     }
-    const newItem = await prisma.roadmapItem.create({
+    const newItem = await db.roadmapItem.create({
       data: { orgId, title: itemTitle, description: description?.trim() || null },
     });
-    await prisma.roadmapSuggestion.update({
+    await db.roadmapSuggestion.update({
       where: { id: suggestionId },
       data: { status: "CREATED", matchedItemId: newItem.id },
     });
     cacheInvalidate(orgId, "roadmap-items");
   } else if (action === "merge" && mergeItemId) {
-    const mergeItem = await prisma.roadmapItem.findFirst({
+    const mergeItem = await db.roadmapItem.findFirst({
       where: { id: mergeItemId, orgId },
     });
     if (!mergeItem) return { error: "Item not found" };
-    await prisma.roadmapSuggestion.update({
+    await db.roadmapSuggestion.update({
       where: { id: suggestionId },
       data: { status: "MERGED", matchedItemId: mergeItemId },
     });
   } else if (action === "dismiss") {
-    await prisma.roadmapSuggestion.update({
+    await db.roadmapSuggestion.update({
       where: { id: suggestionId },
       data: { status: "DISMISSED" },
     });

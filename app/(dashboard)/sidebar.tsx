@@ -7,6 +7,7 @@ import { signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   FileText,
+  Megaphone,
   Map,
   MessageSquare,
   Code,
@@ -19,6 +20,7 @@ import styles from "./dashboard.module.css";
 const navItems = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/posts", label: "Changelog", icon: FileText },
+  { href: "/announcements", label: "Announcements", icon: Megaphone },
   { href: "/roadmap", label: "Roadmap", icon: Map },
   { href: "/feedback", label: "Feedback", icon: MessageSquare },
   { href: "/integration", label: "Integration", icon: Code },

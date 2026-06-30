@@ -6,7 +6,7 @@ import {
   type SettingsState,
 } from "@/app/actions/org";
 import {
-  changePasswordAction,
+  changePassword,
   type ChangePasswordState,
 } from "@/app/actions/auth";
 import {
@@ -63,7 +63,7 @@ export function SettingsForm({
   const [passwordState, passwordAction, passwordPending] = useActionState<
     ChangePasswordState,
     FormData
-  >(changePasswordAction, {});
+  >(changePassword, {});
 
   return (
     <div className={styles.container}>

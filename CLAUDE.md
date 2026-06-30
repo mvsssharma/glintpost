@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Glintpost
 
 Product communication SaaS — changelog, roadmap voting, and feedback widgets that embed into customer sites.
@@ -18,6 +22,8 @@ npm run dev        # Dev server (Turbopack)
 npm run build      # prisma generate → prisma migrate deploy → next build
 npm run start      # Production server
 npm run lint       # ESLint
+npx prisma migrate dev --name <name>   # Create a new migration
+npx prisma studio                       # Visual DB browser
 ```
 
 **Always run `npm run build` locally before pushing to main/staging.**
@@ -26,6 +32,15 @@ npm run lint       # ESLint
 
 - **No infinite request loops from widget preview pages.** The public pages (`/changelog`, `/board`, `/survey`) are loaded inside iframes by both the preview page and production widgets. Any `useEffect`, `postMessage` listener, or API call on these pages must be guarded against re-render loops (e.g. missing dependency arrays, effect ↔ state ping-pong, or parent ↔ iframe message cycles). Always verify that switching widgets in the preview page and opening/closing slideovers does not produce runaway network requests.
 - **Always read Next.js docs before coding.** Find and read the relevant doc in `node_modules/next/dist/docs/`. Training data may be outdated — the docs are the source of truth.
+
+## Key Patterns
+
+- **Multi-tenancy:** `getOrgPrisma(orgId)` in `lib/db.ts` returns a Prisma extension that auto-injects `orgId` into all queries. Use it for all tenant-scoped operations instead of manually filtering. New models must be added to `TENANT_SCOPED_MODELS` in `lib/db.ts`.
+- **Auth guard chain:** `requireAuth()` → `requireVerified()` → `requireOrg()` in `lib/auth-helpers.ts`. Dashboard pages call `requireOrg()` which returns `{ session, org }`. Public API routes use `validateApiKey()` from `lib/api-key.ts` instead.
+- **Adding a new feature/widget:** Register it in `lib/widgets.ts` (both `WIDGETS` and/or `WIDGETS_WITH_FEEDBACK`), create its public page under `app/`, create its widget script in `public/`, add dashboard pages under `app/(dashboard)/`, and add API routes under `app/api/`.
+- **Public pages are iframe targets:** `app/changelog/`, `app/board/`, `app/survey/` render inside iframes on customer sites. They communicate with parent via `postMessage` with origin validation (`lib/post-message.ts`).
+- **CORS:** Controlled per-org via `allowedDomain` in OrgSettings. All public API routes must implement `OPTIONS` handler using `lib/cors.ts`.
+- **Cache:** In-memory org-level cache in `lib/cache.ts` with explicit invalidation (no TTL). Call cache invalidation after any mutation.
 
 ## Environment Variables
 

@@ -2,13 +2,13 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { signupAction, type AuthState } from "@/app/actions/auth";
+import { signup, type AuthState } from "@/app/actions/auth";
 import { PasswordInput } from "../PasswordInput";
 import styles from "../auth.module.css";
 
 export default function SignupPage() {
   const [state, formAction, isPending] = useActionState<AuthState, FormData>(
-    signupAction,
+    signup,
     {},
   );
 

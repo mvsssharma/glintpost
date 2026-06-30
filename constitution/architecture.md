@@ -18,6 +18,7 @@
 app/
   (auth)/            # Login, signup, password reset, email verification
   (dashboard)/       # Protected pages (sidebar layout)
+    announcements/   # Announcement CRUD + analytics
     posts/           # Changelog CRUD
     roadmap/         # Roadmap items, suggestions (AI similarity)
     feedback/        # Form builder + responses
@@ -25,6 +26,7 @@ app/
     integration/     # Widget embed code generator
     preview/         # Live widget preview
   api/               # Public REST API (API key auth)
+    announcements/   # CRUD, active (public), track (public)
     changelog/       # posts, track
     roadmap/         # items, vote, suggest, track
     feedback/        # form, submit
@@ -47,9 +49,10 @@ lib/
   visitor.ts         # Visitor ID generation
   crypto.ts          # AES-256-GCM encrypt/decrypt (key from AUTH_SECRET)
 public/
-  changelog-widget.js   # Slideover/embed widget script
-  roadmap-widget.js     # Inline embed widget script
-  feedback-widget.js    # Slideover/embed widget script
+  changelog-widget.js      # Slideover/embed widget script
+  roadmap-widget.js        # Inline embed widget script
+  feedback-widget.js       # Slideover/embed widget script
+  announcement-widget.js   # Direct DOM injection widget script
 prisma/
   schema.prisma         # Database schema
 types/                  # TypeScript type definitions
@@ -70,14 +73,14 @@ Routes under `app/api/` use API key validation (`x-api-key` header or `apiKey` q
 
 ## Widget System
 
-Three widgets (changelog, roadmap, feedback) support multiple embed modes:
+Four widgets (changelog, roadmap, feedback, announcements) support multiple embed modes:
 - **Slideover:** Floating badge → slide-over panel (changelog, feedback)
 - **Inline:** iframe embed
 - **Hosted:** Direct page link
 - **Headless:** REST API for custom UI
 - **Advanced:** Custom visitorId + datalayer targeting
 
-Widgets communicate via `postMessage` with origin validation. Allowed origins: org's `allowedDomain`, `app.glintpost.com`, `localhost`.
+Widgets communicate via `postMessage` with origin validation. Allowed origins: org's `allowedDomain`, `app.glintpost.com`, `localhost`. Announcements widget injects DOM directly (no iframe) and uses localStorage for session/seen tracking.
 
 ## Database (key models)
 
@@ -87,6 +90,7 @@ Widgets communicate via `postMessage` with origin validation. Allowed origins: o
 - **ChangelogEvent:** Like/dislike/view tracking with targeting data
 - **RoadmapItem/Vote/Suggestion/View:** Feature voting + AI similarity matching
 - **FeedbackForm/Response:** Configurable survey (SELECT/NPS/TEXT, max 3 questions)
+- **Announcement/AnnouncementEvent:** Push notifications with overlay/banner display, scheduling, priority, and VIEW/CLICK tracking
 
 ## Key Patterns
 

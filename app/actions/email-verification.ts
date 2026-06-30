@@ -14,7 +14,7 @@ export interface EmailVerificationState {
 
 /**
  * Send (or resend) a verification email for the given email address.
- * Can be called from signupAction (with email param) or from the
+ * Can be called from signup (with email param) or from the
  * verify-email page (using session email).
  */
 export async function sendVerificationEmail(

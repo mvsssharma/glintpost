@@ -48,7 +48,8 @@ function getVisitorId() {
   const KEY = "glintpost_visitor_id";
   let id = localStorage.getItem(KEY);
   if (!id) {
-    id = "v_" + crypto.randomUUID();
+    try { id = "v_" + crypto.randomUUID(); }
+    catch { id = "v_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15); }
     localStorage.setItem(KEY, id);
   }
   return id;
@@ -87,7 +88,8 @@ function getVisitorId() {
   const KEY = "glintpost_visitor_id";
   let id = localStorage.getItem(KEY);
   if (!id) {
-    id = "v_" + crypto.randomUUID();
+    try { id = "v_" + crypto.randomUUID(); }
+    catch { id = "v_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15); }
     localStorage.setItem(KEY, id);
   }
   return id;
@@ -137,7 +139,8 @@ function getVisitorId() {
   const KEY = "glintpost_visitor_id";
   let id = localStorage.getItem(KEY);
   if (!id) {
-    id = "v_" + crypto.randomUUID();
+    try { id = "v_" + crypto.randomUUID(); }
+    catch { id = "v_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15); }
     localStorage.setItem(KEY, id);
   }
   return id;
@@ -212,6 +215,10 @@ function getCodeSnippet(
   }
 }
 
+function getAnnouncementSnippet(appUrl: string, apiKey: string): string {
+  return `<!-- GlintPost Announcements -->\n<script\n  src="${appUrl}/announcement-widget.js"\n  data-api-key="${apiKey}"\n  defer\n></script>`;
+}
+
 export default function IntegrationTabs({
   apiKey,
   appUrl,
@@ -220,7 +227,9 @@ export default function IntegrationTabs({
   appUrl: string;
 }) {
   const [activeIdx, setActiveIdx] = useState(0);
-  const widget = WIDGETS_WITH_FEEDBACK[activeIdx];
+  const announcementIdx = WIDGETS_WITH_FEEDBACK.length;
+  const isAnnouncements = activeIdx === announcementIdx;
+  const widget = isAnnouncements ? null : WIDGETS_WITH_FEEDBACK[activeIdx];
 
   return (
     <>
@@ -234,27 +243,62 @@ export default function IntegrationTabs({
             {w.label}
           </button>
         ))}
+        <button
+          className={`${styles.tab} ${isAnnouncements ? styles.tabActive : ""}`}
+          onClick={() => setActiveIdx(announcementIdx)}
+        >
+          Announcements
+        </button>
       </div>
 
-      {widget.integrations.map((opt) => (
-        <div key={opt.mode} className={styles.card}>
-          <div className={styles.cardIntro}>
-            {opt.recommended ? (
-              <div className={styles.optionHeader}>
-                <h3>{opt.title}</h3>
-                <span className={styles.recommendedBadge}>Recommended</span>
-              </div>
-            ) : (
-              <h3>{opt.title}</h3>
-            )}
-            <p>{opt.description}</p>
+      {isAnnouncements ? (
+        <>
+          <div className={styles.card}>
+            <div className={styles.cardIntro}>
+              <h3>Announcement Widget</h3>
+              <p>
+                Shows a full-screen overlay or top banner to your users. Announcements auto-display once per session based on priority and scheduling.
+              </p>
+            </div>
+            <CopyCodeBlock
+              displayCode={getAnnouncementSnippet(appUrl, maskSecret(apiKey))}
+              copyCode={getAnnouncementSnippet(appUrl, apiKey)}
+            />
           </div>
-          <CopyCodeBlock
-            displayCode={getCodeSnippet(opt, widget, appUrl, maskSecret(apiKey))}
-            copyCode={getCodeSnippet(opt, widget, appUrl, apiKey)}
-          />
-        </div>
-      ))}
+          <div className={styles.card}>
+            <div className={styles.cardIntro}>
+              <h3>Advanced Config</h3>
+              <p>
+                Pass visitor identity and datalayer variables for targeting. Define this before the widget script loads.
+              </p>
+            </div>
+            <CopyCodeBlock
+              displayCode={`<script>\n  window.GlintPostConfig = {\n    visitorId: "user_123",\n    datalayer: {\n      plan: "pro",\n      role: "admin"\n    }\n  };\n</script>`}
+              copyCode={`<script>\n  window.GlintPostConfig = {\n    visitorId: "user_123",\n    datalayer: {\n      plan: "pro",\n      role: "admin"\n    }\n  };\n</script>`}
+            />
+          </div>
+        </>
+      ) : widget ? (
+        widget.integrations.map((opt) => (
+          <div key={opt.mode} className={styles.card}>
+            <div className={styles.cardIntro}>
+              {opt.recommended ? (
+                <div className={styles.optionHeader}>
+                  <h3>{opt.title}</h3>
+                  <span className={styles.recommendedBadge}>Recommended</span>
+                </div>
+              ) : (
+                <h3>{opt.title}</h3>
+              )}
+              <p>{opt.description}</p>
+            </div>
+            <CopyCodeBlock
+              displayCode={getCodeSnippet(opt, widget, appUrl, maskSecret(apiKey))}
+              copyCode={getCodeSnippet(opt, widget, appUrl, apiKey)}
+            />
+          </div>
+        ))
+      ) : null}
     </>
   );
 }

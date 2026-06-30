@@ -12,7 +12,7 @@ export interface AuthState {
   error?: string;
 }
 
-export async function signupAction(
+export async function signup(
   _prevState: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
@@ -66,7 +66,7 @@ export async function signupAction(
   redirect("/onboarding");
 }
 
-export async function loginAction(
+export async function login(
   _prevState: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
@@ -108,7 +108,7 @@ export interface ChangePasswordState {
 }
 
 /** Change password for the current user (credentials only). */
-export async function changePasswordAction(
+export async function changePassword(
   _prevState: ChangePasswordState,
   formData: FormData,
 ): Promise<ChangePasswordState> {

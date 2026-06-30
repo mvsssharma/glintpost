@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/auth";
-import { prisma } from "@/lib/db";
+import { prisma, getOrgPrisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { feedbackFormSchema, formDataToObject } from "@/lib/validations";
 
@@ -54,17 +54,17 @@ export async function saveFeedbackForm(
   }
 
   const formId = raw.formId; // present when editing, absent when creating
+  const db = getOrgPrisma(user.orgId);
 
   try {
     if (formId) {
-      // Update existing form — verify it belongs to this org
-      const existing = await prisma.feedbackForm.findUnique({
+      const existing = await db.feedbackForm.findUnique({
         where: { id: formId },
       });
-      if (!existing || existing.orgId !== user.orgId) {
+      if (!existing) {
         return { error: "Form not found" };
       }
-      await prisma.feedbackForm.update({
+      await db.feedbackForm.update({
         where: { id: formId },
         data: {
           title: parsed.data.title,
@@ -73,8 +73,7 @@ export async function saveFeedbackForm(
         },
       });
     } else {
-      // Create new form
-      await prisma.feedbackForm.create({
+      await db.feedbackForm.create({
         data: {
           orgId: user.orgId,
           title: parsed.data.title,
@@ -108,15 +107,17 @@ export async function deleteFeedbackForm(
     return { error: "No organization found" };
   }
 
-  const form = await prisma.feedbackForm.findUnique({
+  const db = getOrgPrisma(user.orgId);
+
+  const form = await db.feedbackForm.findUnique({
     where: { id: formId },
   });
-  if (!form || form.orgId !== user.orgId) {
+  if (!form) {
     return { error: "Form not found" };
   }
 
   try {
-    await prisma.feedbackForm.delete({ where: { id: formId } });
+    await db.feedbackForm.delete({ where: { id: formId } });
   } catch (err) {
     console.error("Failed to delete feedback form:", err);
     return { error: "Failed to delete feedback form" };

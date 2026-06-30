@@ -13,8 +13,21 @@ export default function CreatePostPage() {
   const [content, setContent] = useState("");
   const [targetingRules, setTargetingRules] = useState<TargetingRuleSet | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = (): Record<string, string> => {
+    const errs: Record<string, string> = {};
+    if (!title.trim()) errs.title = "Title is required.";
+    const textContent = content.replace(/<[^>]*>/g, "").trim();
+    if (!textContent) errs.content = "Content is required.";
+    return errs;
+  };
 
   const handleSubmit = async (status: "DRAFT" | "PUBLISHED") => {
+    const errs = validate();
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
     setIsSubmitting(true);
     try {
       const res = await fetch("/api/posts", {
@@ -43,23 +56,25 @@ export default function CreatePostPage() {
         <button className={styles.backBtn} onClick={() => router.back()} aria-label="Go back">
           &#8592;
         </button>
-        <h2>New Announcement</h2>
+        <h2>New Post</h2>
       </header>
 
       <div className={styles.form}>
         <input
           type="text"
-          className={styles.titleInput}
+          className={`${styles.titleInput} ${errors.title ? styles.titleError : ""}`}
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Post title…"
+          onChange={(e) => { setTitle(e.target.value); setErrors((prev) => { const { title: _, ...rest } = prev; return rest; }); }}
+          placeholder="Post title… *"
           autoFocus
         />
+        {errors.title && <p className={styles.errorText}>{errors.title}</p>}
 
-        <div className={styles.contentLabel}>Content</div>
-        <div className={styles.editorWrapper}>
-          <RichTextEditor value={content} onChange={setContent} height={480} />
+        <div className={styles.contentLabel}>Content <span className={styles.required}>*</span></div>
+        <div className={`${styles.editorWrapper} ${errors.content ? styles.editorError : ""}`}>
+          <RichTextEditor value={content} onChange={(v) => { setContent(v); setErrors((prev) => { const { content: _, ...rest } = prev; return rest; }); }} height={480} />
         </div>
+        {errors.content && <p className={styles.errorText}>{errors.content}</p>}
 
         <TargetingRulesEditor value={targetingRules} onChange={setTargetingRules} />
 
@@ -67,7 +82,7 @@ export default function CreatePostPage() {
           <button
             type="button"
             className="btn-secondary"
-            disabled={isSubmitting || !title.trim() || !content.trim()}
+            disabled={isSubmitting}
             onClick={() => handleSubmit("DRAFT")}
           >
             {isSubmitting ? "Saving…" : "Save as Draft"}
@@ -75,7 +90,7 @@ export default function CreatePostPage() {
           <button
             type="button"
             className="btn-primary"
-            disabled={isSubmitting || !title.trim() || !content.trim()}
+            disabled={isSubmitting}
             onClick={() => handleSubmit("PUBLISHED")}
           >
             {isSubmitting ? "Publishing…" : "Publish"}

@@ -25,6 +25,17 @@
 - Response viewer in dashboard
 - Widget embed: slideover, side tab, inline, hosted, headless
 
+### Announcements
+- Push-based notifications: full-screen overlay or top banner (configurable per announcement)
+- Announcement CRUD with draft/publish workflow
+- Scheduling via start/end dates with priority ordering
+- Session-based display: one announcement per session (30-min localStorage timeout)
+- Per-browser seen tracking: each announcement shown at most once (localStorage)
+- VIEW and CLICK event tracking with analytics (views, clicks, CTR)
+- Datalayer-based targeting rules (reuses changelog targeting system)
+- Widget script injects DOM directly into host page (not iframe)
+- Integration page with embed snippet and advanced config
+
 ### Settings & Integration
 - Org settings: theme, locales, allowed domain, AI provider/key/model
 - Widget embed code generator with per-mode code snippets

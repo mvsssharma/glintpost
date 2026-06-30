@@ -90,6 +90,12 @@ a {
 a:hover {
   color: hsl(var(--primary));
 }
+a.btn-primary:hover {
+  color: white;
+}
+a.btn-secondary:hover {
+  color: hsl(var(--text-main));
+}
 
 /* Micro-animations */
 @keyframes slideUpFade {
@@ -141,6 +147,12 @@ a:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
 
 .btn-secondary {
   display: inline-flex;
@@ -157,6 +169,10 @@ a:hover {
 }
 .btn-secondary:hover {
   background: hsl(var(--bg-surface-hover));
+}
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Inputs */

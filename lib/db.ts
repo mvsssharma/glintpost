@@ -29,6 +29,8 @@ const TENANT_SCOPED_MODELS = new Set([
   "RoadmapView",
   "FeedbackForm",
   "FeedbackResponse",
+  "Announcement",
+  "AnnouncementEvent",
 ]);
 
 /**

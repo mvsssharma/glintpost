@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/db";
 import { uploadToStorage } from "@/lib/storage";
 
 const ALLOWED_TYPES = new Set([
@@ -19,6 +20,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { orgId: true },
+    });
+    if (!user?.orgId) {
+      return NextResponse.json({ error: "No organization found" }, { status: 403 });
+    }
+
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 
@@ -35,8 +44,31 @@ export async function POST(req: Request) {
       );
     }
 
+    const settings = await prisma.orgSettings.findUnique({
+      where: { orgId: user.orgId },
+      select: { storageUsedBytes: true, storageCapBytes: true },
+    });
+
+    if (settings) {
+      const used = Number(settings.storageUsedBytes);
+      const cap = Number(settings.storageCapBytes);
+      if (used + file.size > cap) {
+        return NextResponse.json(
+          { error: `Storage limit exceeded (${Math.round(cap / 1024 / 1024)}MB). Delete unused images or upgrade your plan.` },
+          { status: 400 }
+        );
+      }
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
     const url = await uploadToStorage(buffer, file.name, file.type);
+
+    if (settings) {
+      await prisma.orgSettings.update({
+        where: { orgId: user.orgId },
+        data: { storageUsedBytes: { increment: BigInt(file.size) } },
+      });
+    }
 
     return NextResponse.json({ url });
   } catch (error) {

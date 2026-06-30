@@ -8,6 +8,8 @@ export default async function DashboardPage() {
   const { session, org } = await requireOrg();
   const db = getOrgPrisma(org.id);
 
+  const now = new Date();
+
   const [
     postsCount,
     widgetOpens,
@@ -21,6 +23,9 @@ export default async function DashboardPage() {
     pendingSuggestions,
     feedbackResponses,
     activeFeedbackForms,
+    activeAnnouncements,
+    announcementViews,
+    announcementClicks,
   ] = await Promise.all([
     db.post.count(),
     db.changelogEvent.count({ where: { type: "VIEW", postId: null } }),
@@ -34,6 +39,9 @@ export default async function DashboardPage() {
     db.roadmapSuggestion.count({ where: { status: "PENDING" } }),
     db.feedbackResponse.count(),
     db.feedbackForm.count({ where: { enabled: true } }),
+    db.announcement.count({ where: { status: "PUBLISHED", startDate: { lte: now }, endDate: { gte: now } } }),
+    db.announcementEvent.count({ where: { type: "VIEW" } }),
+    db.announcementEvent.count({ where: { type: "CLICK" } }),
   ]);
 
   const displayName =
@@ -124,6 +132,33 @@ export default async function DashboardPage() {
               <span className={styles.tipIcon} data-tip="User-submitted feature ideas awaiting review">?</span>
             </div>
             <div className={styles.statValue}>{pendingSuggestions}</div>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>Announcements</h3>
+        <div className={styles.stats}>
+          <div className={styles.statCard}>
+            <div className={styles.statHeader}>
+              <h3>Active</h3>
+              <span className={styles.tipIcon} data-tip="Published announcements currently within their scheduled date range">?</span>
+            </div>
+            <div className={styles.statValue}>{activeAnnouncements}</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statHeader}>
+              <h3>Views</h3>
+              <span className={styles.tipIcon} data-tip="Total times announcements were shown to visitors">?</span>
+            </div>
+            <div className={styles.statValue}>{announcementViews}</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statHeader}>
+              <h3>Clicks</h3>
+              <span className={styles.tipIcon} data-tip="Total CTA button clicks across all announcements">?</span>
+            </div>
+            <div className={styles.statValue}>{announcementClicks}</div>
           </div>
         </div>
       </section>

@@ -14,10 +14,15 @@ export function getVisitorId(override?: string | null): string {
   if (override) return override;
   if (typeof window === "undefined") return "";
 
-  let id = localStorage.getItem(STORAGE_KEY);
+  let id: string | null = null;
+  try { id = localStorage.getItem(STORAGE_KEY); } catch {}
   if (!id) {
-    id = "v_" + crypto.randomUUID();
-    localStorage.setItem(STORAGE_KEY, id);
+    try {
+      id = "v_" + crypto.randomUUID();
+    } catch {
+      id = "v_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    }
+    try { localStorage.setItem(STORAGE_KEY, id); } catch {}
   }
   return id;
 }

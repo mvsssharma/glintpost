@@ -1,0 +1,139 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.header p {
+  color: hsl(var(--text-muted));
+}
+
+.filterTabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid hsl(var(--border-light));
+  padding-bottom: 0;
+}
+
+.filterTab {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: hsl(var(--text-muted));
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.filterTab:hover {
+  color: hsl(var(--text-main));
+}
+
+.filterTabActive {
+  color: hsl(var(--text-main));
+  border-bottom-color: hsl(var(--primary));
+}
+
+.postList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.emptyState {
+  padding: 3rem;
+  text-align: center;
+  background: hsl(var(--bg-surface));
+  border-radius: var(--radius-lg);
+  border: 1px dashed hsl(var(--border-light));
+  color: hsl(var(--text-muted));
+}
+
+.postCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  background: hsl(var(--bg-surface));
+  border-radius: var(--radius-lg);
+  border: 1px solid hsl(var(--border-light));
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-fast);
+}
+
+.postCard:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.postTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.postMeta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: hsl(var(--text-muted));
+  align-items: center;
+}
+
+.status {
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  font-weight: 500;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.statusDraft {
+  background: hsl(45 80% 92%);
+  color: hsl(35 80% 35%);
+}
+
+.statusPublished {
+  background: hsl(145 60% 92%);
+  color: hsl(145 60% 30%);
+}
+
+.statusActive {
+  background: hsl(200 80% 92%);
+  color: hsl(200 80% 30%);
+}
+
+.typeBadge {
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  font-weight: 500;
+  font-size: 0.75rem;
+  background: hsl(var(--bg-surface-hover));
+  color: hsl(var(--text-muted));
+}
+
+.priority {
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: hsl(var(--text-muted));
+}
+
+.stats {
+  font-size: 0.8125rem;
+}
+
+.date {
+  font-size: 0.8125rem;
+}

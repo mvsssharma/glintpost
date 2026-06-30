@@ -17,6 +17,10 @@ export type {
   VoteType,
   FeedbackForm,
   FeedbackResponse,
+  Announcement,
+  AnnouncementEvent,
+  AnnouncementDisplayType,
+  AnnouncementEventType,
 } from "@prisma/client";
 
 export type { TargetingRule, TargetingRuleSet, TargetingOperator, TargetingRuleOp } from "./targeting";

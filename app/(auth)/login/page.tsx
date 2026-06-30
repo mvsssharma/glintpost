@@ -3,7 +3,7 @@
 import { useActionState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { loginAction, type AuthState } from "@/app/actions/auth";
+import { login, type AuthState } from "@/app/actions/auth";
 import { PasswordInput } from "../PasswordInput";
 import styles from "../auth.module.css";
 
@@ -12,7 +12,7 @@ function LoginForm() {
   const verified = searchParams.get("verified") === "true";
 
   const [state, formAction, isPending] = useActionState<AuthState, FormData>(
-    loginAction,
+    login,
     {},
   );
 

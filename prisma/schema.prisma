@@ -83,6 +83,9 @@ model Organization {
   feedbackForms     FeedbackForm[]
   feedbackResponses FeedbackResponse[]
 
+  announcements      Announcement[]
+  announcementEvents AnnouncementEvent[]
+
   // Billing (Razorpay)
   razorpayCustomerId     String?       @unique
   razorpaySubscriptionId String?
@@ -300,6 +303,72 @@ enum SuggestionStatus {
 enum VoteType {
   UP
   DOWN
+}
+
+// === ANNOUNCEMENTS ===
+
+model Announcement {
+  id    String       @id @default(cuid())
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  title       String
+  content     String
+  imageUrl    String?
+  videoUrl    String?
+  ctaText     String?
+  ctaUrl      String?
+  displayType AnnouncementDisplayType @default(OVERLAY)
+  priority    Int                     @default(0)
+  startDate   DateTime
+  endDate     DateTime
+  status      PostStatus              @default(DRAFT)
+
+  targetingRules Json?
+
+  events AnnouncementEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orgId, status])
+  @@index([orgId, startDate, endDate])
+}
+
+model AnnouncementEvent {
+  id    String       @id @default(cuid())
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  announcementId String
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+
+  type AnnouncementEventType
+
+  visitorId String?
+  plan      String?
+  role      String?
+  region    String?
+  platform  String?
+  version   String?
+  company   String?
+  locale    String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([announcementId, visitorId, type])
+  @@index([orgId, announcementId])
+  @@index([orgId, createdAt])
+}
+
+enum AnnouncementDisplayType {
+  OVERLAY
+  TOP_BANNER
+}
+
+enum AnnouncementEventType {
+  VIEW
+  CLICK
 }
 
 // === FEEDBACK ===

@@ -17,6 +17,8 @@ const WIDGET_DOM_SELECTOR = [
   ".glintpost-feedback-badge",
   ".glintpost-feedback-tab",
   ".glintpost-feedback-container",
+  ".glintpost-announcement-overlay",
+  ".glintpost-announcement-banner",
 ].join(", ");
 
 function cleanupWidgets() {
@@ -33,6 +35,7 @@ function cleanupWidgets() {
   win.GlintPostChangelogInitialized = false;
   win.GlintPostRoadmapInitialized = false;
   win.GlintPostFeedbackInitialized = false;
+  win.GlintPostAnnouncementInitialized = false;
 
   // Reset badge/tab stacking registries — prevents position creep
   win.__glintpost_badges = [];
@@ -41,12 +44,21 @@ function cleanupWidgets() {
   // Remove old widget scripts
   document
     .querySelectorAll(
-      WIDGETS.map((w) => `script[src*="${w.script}"]`).join(", ")
+      [...WIDGETS.map((w) => `script[src*="${w.script}"]`), 'script[src*="announcement-widget.js"]'].join(", ")
     )
     .forEach((el) => el.remove());
+
+  // Clear announcement session/seen storage so preview always shows
+  try {
+    localStorage.removeItem("glintpost_ann_session");
+    localStorage.removeItem("glintpost_ann_seen");
+  } catch (e) {}
 }
 
 type ViewportMode = "desktop" | "mobile";
+
+const ANNOUNCEMENT_IDX = WIDGETS.length;
+const TAB_LABELS = [...WIDGETS.map((w) => w.label), "Announcements"];
 
 export default function PreviewContent({
   apiKey,
@@ -60,15 +72,30 @@ export default function PreviewContent({
   const [activeIdx, setActiveIdx] = useState(0);
   const [viewport, setViewport] = useState<ViewportMode>("desktop");
   const containerRef = useRef<HTMLDivElement>(null);
-  const widget = WIDGETS[activeIdx];
-  const isSlideover = hasSlideover(widget);
+  const isAnnouncement = activeIdx === ANNOUNCEMENT_IDX;
+  const widget = isAnnouncement ? null : WIDGETS[activeIdx];
+  const isSlideover = widget ? hasSlideover(widget) : false;
 
   useEffect(() => {
-    if (!isSlideover) return;
+    if (isAnnouncement) {
+      cleanupWidgets();
+
+      const script = document.createElement("script");
+      script.src = "/announcement-widget.js";
+      script.setAttribute("data-api-key", apiKey);
+      script.defer = true;
+      document.body.appendChild(script);
+
+      return () => {
+        script.remove();
+        cleanupWidgets();
+      };
+    }
+
+    if (!isSlideover || !widget) return;
 
     cleanupWidgets();
 
-    // Load the selected widget script
     const script = document.createElement("script");
     script.src = `/${widget.script}`;
     script.setAttribute("data-api-key", apiKey);
@@ -77,29 +104,30 @@ export default function PreviewContent({
 
     return () => {
       script.remove();
+      cleanupWidgets();
     };
-  }, [activeIdx, apiKey, widget.script, isSlideover]);
+  }, [activeIdx, apiKey, widget?.script, isSlideover, isAnnouncement]);
 
   // Clean up slideover artifacts when switching to inline widget
   useEffect(() => {
-    if (isSlideover) return;
+    if (isSlideover || isAnnouncement) return;
     cleanupWidgets();
-  }, [isSlideover]);
+  }, [isSlideover, isAnnouncement]);
 
-  const iframeSrc = `${widget.pagePath}?apiKey=${apiKey}&theme=${theme}&primaryColor=${encodeURIComponent(primaryColor)}`;
+  const iframeSrc = widget ? `${widget.pagePath}?apiKey=${apiKey}&theme=${theme}&primaryColor=${encodeURIComponent(primaryColor)}` : "";
   const iframeBackground = theme === "dark" ? "hsl(224 71% 4%)" : "hsl(220 10% 98%)";
 
   return (
     <>
       <div className={styles.controlsRow}>
         <div className={styles.widgetPicker}>
-          {WIDGETS.map((w, i) => (
+          {TAB_LABELS.map((label, i) => (
             <button
-              key={w.key}
+              key={label}
               className={`${styles.pickerBtn} ${activeIdx === i ? styles.pickerActive : ""}`}
               onClick={() => setActiveIdx(i)}
             >
-              {w.label}
+              {label}
             </button>
           ))}
         </div>
@@ -129,14 +157,29 @@ export default function PreviewContent({
         </div>
       </div>
 
-      {isSlideover ? (
+      {isAnnouncement ? (
+        <div className={styles.previewArea} ref={containerRef}>
+          <div className={styles.mockSite}>
+            <div className={styles.mockNav} />
+            <div className={styles.mockContent}>
+              <div className={styles.mockHeading} />
+              <div className={styles.mockLine} />
+              <div className={styles.mockLine} style={{ width: "80%" }} />
+              <div className={styles.mockLine} style={{ width: "60%" }} />
+            </div>
+          </div>
+          <p className={styles.hint}>
+            Publish an announcement to see it appear here automatically
+          </p>
+        </div>
+      ) : isSlideover ? (
         viewport === "mobile" ? (
           <div className={styles.mobileFrame}>
             <div className={styles.mobileNotch} />
             <iframe
               src={iframeSrc}
               className={styles.mobileIframe}
-              title={`${widget.label} mobile preview`}
+              title={`${widget!.label} mobile preview`}
               style={{ background: iframeBackground }}
             />
           </div>
@@ -162,7 +205,7 @@ export default function PreviewContent({
           <iframe
             src={iframeSrc}
             className={styles.mobileIframe}
-            title={`${widget.label} mobile preview`}
+            title={`${widget!.label} mobile preview`}
             scrolling="no"
             style={{ background: iframeBackground }}
           />
@@ -171,7 +214,7 @@ export default function PreviewContent({
         <iframe
           src={iframeSrc}
           className={styles.inlineIframe}
-          title={`${widget.label} preview`}
+          title={`${widget!.label} preview`}
           scrolling="no"
           style={{ background: iframeBackground }}
         />

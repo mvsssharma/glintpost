@@ -177,6 +177,59 @@ export const feedbackSubmitSchema = z.object({
     .optional(),
 });
 
+// === Announcements ===
+
+export const createAnnouncementSchema = z.object({
+  title: z.string().min(1, "Title is required").max(500),
+  content: z.string().min(1, "Content is required").max(100_000),
+  imageUrl: z.string().url().max(2000).nullable().optional(),
+  videoUrl: z.string().url().max(2000).nullable().optional(),
+  ctaText: z.string().max(100).nullable().optional(),
+  ctaUrl: z.string().max(2000).nullable().optional(),
+  displayType: z.enum(["OVERLAY", "TOP_BANNER"]).default("OVERLAY"),
+  priority: z.number().int().min(0).max(1000).default(0),
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date(),
+  targetingRules: targetingRulesSchema.nullable().optional(),
+  status: z.enum(["DRAFT", "PUBLISHED"]).default("DRAFT"),
+}).refine((d) => d.endDate > d.startDate, {
+  message: "End date must be after start date",
+  path: ["endDate"],
+});
+
+export const updateAnnouncementSchema = z.object({
+  title: z.string().min(1, "Title is required").max(500).optional(),
+  content: z.string().min(1, "Content is required").max(100_000).optional(),
+  imageUrl: z.string().url().max(2000).nullable().optional(),
+  videoUrl: z.string().url().max(2000).nullable().optional(),
+  ctaText: z.string().max(100).nullable().optional(),
+  ctaUrl: z.string().max(2000).nullable().optional(),
+  displayType: z.enum(["OVERLAY", "TOP_BANNER"]).optional(),
+  priority: z.number().int().min(0).max(1000).optional(),
+  startDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().optional(),
+  targetingRules: targetingRulesSchema.nullable().optional(),
+  status: z.enum(["DRAFT", "PUBLISHED"]).optional(),
+});
+
+export const announcementEventSchema = z.object({
+  type: z.enum(["VIEW", "CLICK"], { message: "Invalid event type" }),
+  announcementId: z.string().min(1).max(50),
+  visitorId: z.string().max(200).nullable().optional(),
+  datalayer: z
+    .object({
+      plan: z.string().max(100).optional(),
+      role: z.string().max(100).optional(),
+      region: z.string().max(100).optional(),
+      platform: z.string().max(100).optional(),
+      version: z.string().max(100).optional(),
+      company: z.string().max(200).optional(),
+      locale: z.string().max(20).optional(),
+    })
+    .nullable()
+    .optional(),
+});
+
 // === Helpers ===
 
 /**

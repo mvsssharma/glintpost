@@ -30,7 +30,7 @@ export default function CreateRoadmapItemPage() {
         {state.error && <div className={styles.error}>{state.error}</div>}
 
         <div className={styles.formGroup}>
-          <label htmlFor="title">Title</label>
+          <label htmlFor="title">Title <span style={{ color: "hsl(0 70% 55%)" }}>*</span></label>
           <input
             type="text"
             id="title"
