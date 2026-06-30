@@ -117,6 +117,9 @@ model OrgSettings {
   storageUsedBytes BigInt @default(0)
   storageCapBytes  BigInt @default(52428800) // 50MB default
 
+  // Enabled widgets — which widgets the unified loader activates
+  enabledWidgets String[] @default(["changelog", "roadmap", "feedback", "announcements"])
+
   // AI provider config (Vercel AI SDK BYOK)
   aiProvider String? // "openai" | "anthropic" | "google"
   aiApiKey   String? // Encrypted at app layer

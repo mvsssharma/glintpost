@@ -51,6 +51,17 @@ export function SettingsForm({
   const [allowedDomain, setAllowedDomain] = useState(
     settings?.allowedDomain ?? ""
   );
+  const ALL_WIDGETS = [
+    { key: "changelog", label: "Changelog" },
+    { key: "roadmap", label: "Roadmap" },
+    { key: "feedback", label: "Feedback" },
+    { key: "announcements", label: "Announcements" },
+  ] as const;
+  const [enabledWidgets, setEnabledWidgets] = useState<string[]>(
+    settings?.enabledWidgets?.length
+      ? settings.enabledWidgets
+      : ALL_WIDGETS.map((w) => w.key)
+  );
   const [aiProvider, setAiProvider] = useState(settings?.aiProvider ?? "");
   const [aiModel, setAiModel] = useState(settings?.aiModel ?? "");
   const [aiApiKey, setAiApiKey] = useState("");
@@ -84,6 +95,11 @@ export function SettingsForm({
           <input type="hidden" name="primaryColor" value={primaryColor} />
           <input type="hidden" name="widgetTheme" value={widgetTheme} />
           <input type="hidden" name="allowedDomain" value={allowedDomain} />
+          <input
+            type="hidden"
+            name="enabledWidgets"
+            value={enabledWidgets.join(",")}
+          />
           <input
             type="hidden"
             name="locales"
@@ -207,6 +223,48 @@ export function SettingsForm({
             </span>
           </div>
 
+          <div className={styles.fieldGroup}>
+            <span className={styles.label}>Enabled widgets</span>
+            <span className={styles.hint}>
+              Select which widgets the unified embed snippet activates. Use a single script tag to load all enabled widgets automatically.
+            </span>
+            <div className={styles.localeGrid}>
+              {ALL_WIDGETS.map((w) => (
+                <button
+                  key={w.key}
+                  type="button"
+                  className={`${styles.localeChip} ${enabledWidgets.includes(w.key) ? styles.localeChipActive : ""}`}
+                  onClick={() =>
+                    setEnabledWidgets((prev) =>
+                      prev.includes(w.key)
+                        ? prev.filter((k) => k !== w.key)
+                        : [...prev, w.key]
+                    )
+                  }
+                >
+                  <span
+                    className={`${styles.checkbox} ${enabledWidgets.includes(w.key) ? styles.checkboxActive : ""}`}
+                  >
+                    {enabledWidgets.includes(w.key) && (
+                      <span className={styles.checkmark}>&#10003;</span>
+                    )}
+                  </span>
+                  {w.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.fieldGroup}>
+            <span className={styles.label}>Unified embed snippet</span>
+            <span className={styles.hint}>
+              Add this single script tag to your site. It automatically loads all enabled widgets above.
+            </span>
+            <code className={styles.embedSnippet}>
+              {`<script src="${typeof window !== "undefined" ? window.location.origin : ""}/widget.js" data-api-key="${org.apiKey}" defer></script>`}
+            </code>
+          </div>
+
           <div className={styles.actions}>
             <button
               type="submit"
@@ -240,6 +298,7 @@ export function SettingsForm({
           <input type="hidden" name="widgetTheme" value={widgetTheme} />
           <input type="hidden" name="allowedDomain" value={allowedDomain} />
           <input type="hidden" name="locales" value={selectedLocales.join(",")} />
+          <input type="hidden" name="enabledWidgets" value={enabledWidgets.join(",")} />
           <input type="hidden" name="aiProvider" value={aiProvider} />
           <input type="hidden" name="aiModel" value={aiModel} />
           <input type="hidden" name="aiApiKey" value={aiApiKey} />

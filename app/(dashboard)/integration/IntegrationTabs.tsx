@@ -219,6 +219,12 @@ function getAnnouncementSnippet(appUrl: string, apiKey: string): string {
   return `<!-- GlintPost Announcements -->\n<script\n  src="${appUrl}/announcement-widget.js"\n  data-api-key="${apiKey}"\n  defer\n></script>`;
 }
 
+function getUnifiedSnippet(appUrl: string, apiKey: string): string {
+  return `<!-- GlintPost — loads all enabled widgets automatically -->\n<script\n  src="${appUrl}/widget.js"\n  data-api-key="${apiKey}"\n  defer\n></script>`;
+}
+
+const TAB_LABELS = ["All-in-one", ...WIDGETS_WITH_FEEDBACK.map((w) => w.label), "Announcements"];
+
 export default function IntegrationTabs({
   apiKey,
   appUrl,
@@ -227,31 +233,60 @@ export default function IntegrationTabs({
   appUrl: string;
 }) {
   const [activeIdx, setActiveIdx] = useState(0);
-  const announcementIdx = WIDGETS_WITH_FEEDBACK.length;
+
+  const isUnified = activeIdx === 0;
+  const announcementIdx = WIDGETS_WITH_FEEDBACK.length + 1;
   const isAnnouncements = activeIdx === announcementIdx;
-  const widget = isAnnouncements ? null : WIDGETS_WITH_FEEDBACK[activeIdx];
+  const widget = !isUnified && !isAnnouncements
+    ? WIDGETS_WITH_FEEDBACK[activeIdx - 1]
+    : null;
 
   return (
     <>
       <div className={`${styles.tabs} ${styles.narrow}`}>
-        {WIDGETS_WITH_FEEDBACK.map((w, i) => (
+        {TAB_LABELS.map((label, i) => (
           <button
-            key={w.key}
+            key={label}
             className={`${styles.tab} ${activeIdx === i ? styles.tabActive : ""}`}
             onClick={() => setActiveIdx(i)}
           >
-            {w.label}
+            {label}
           </button>
         ))}
-        <button
-          className={`${styles.tab} ${isAnnouncements ? styles.tabActive : ""}`}
-          onClick={() => setActiveIdx(announcementIdx)}
-        >
-          Announcements
-        </button>
       </div>
 
-      {isAnnouncements ? (
+      {isUnified ? (
+        <>
+          <div className={styles.card}>
+            <div className={styles.cardIntro}>
+              <div className={styles.optionHeader}>
+                <h3>Unified Widget Loader</h3>
+                <span className={styles.recommendedBadge}>Recommended</span>
+              </div>
+              <p>
+                A single script tag that automatically loads all widgets you&apos;ve enabled in Settings.
+                No need to add separate script tags for each widget — enable or disable them from your dashboard.
+              </p>
+            </div>
+            <CopyCodeBlock
+              displayCode={getUnifiedSnippet(appUrl, maskSecret(apiKey))}
+              copyCode={getUnifiedSnippet(appUrl, apiKey)}
+            />
+          </div>
+          <div className={styles.card}>
+            <div className={styles.cardIntro}>
+              <h3>Advanced Config</h3>
+              <p>
+                Pass visitor identity and datalayer variables for targeting. Define this before the widget script loads.
+              </p>
+            </div>
+            <CopyCodeBlock
+              displayCode={`<script>\n  window.GlintPostConfig = {\n    visitorId: "user_123",\n    datalayer: {\n      plan: "pro",\n      role: "admin"\n    }\n  };\n</script>`}
+              copyCode={`<script>\n  window.GlintPostConfig = {\n    visitorId: "user_123",\n    datalayer: {\n      plan: "pro",\n      role: "admin"\n    }\n  };\n</script>`}
+            />
+          </div>
+        </>
+      ) : isAnnouncements ? (
         <>
           <div className={styles.card}>
             <div className={styles.cardIntro}>

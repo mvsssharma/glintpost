@@ -43,6 +43,7 @@ export interface OrgContext {
     defaultLocale: string;
     storageUsedBytes: bigint;
     storageCapBytes: bigint;
+    enabledWidgets: string[];
     aiProvider: string | null;
     aiModel: string | null;
   } | null;

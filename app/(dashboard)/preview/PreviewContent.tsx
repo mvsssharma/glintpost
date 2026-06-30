@@ -36,6 +36,7 @@ function cleanupWidgets() {
   win.GlintPostRoadmapInitialized = false;
   win.GlintPostFeedbackInitialized = false;
   win.GlintPostAnnouncementInitialized = false;
+  win.GlintPostLoaderInitialized = false;
 
   // Reset badge/tab stacking registries — prevents position creep
   win.__glintpost_badges = [];
@@ -44,7 +45,7 @@ function cleanupWidgets() {
   // Remove old widget scripts
   document
     .querySelectorAll(
-      [...WIDGETS.map((w) => `script[src*="${w.script}"]`), 'script[src*="announcement-widget.js"]'].join(", ")
+      [...WIDGETS.map((w) => `script[src*="${w.script}"]`), 'script[src*="announcement-widget.js"]', 'script[src*="widget.js"][data-api-key]'].join(", ")
     )
     .forEach((el) => el.remove());
 

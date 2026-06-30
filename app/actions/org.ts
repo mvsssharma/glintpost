@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
+import { cacheInvalidate } from "@/lib/cache";
 import { generateSlug } from "@/lib/utils";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import { encrypt } from "@/lib/crypto";
@@ -153,12 +154,17 @@ export async function updateOrgSettings(
     aiApiKey = await encrypt(aiApiKeyRaw);
   }
 
+  const enabledWidgets = parsed.data.enabledWidgets
+    ? parsed.data.enabledWidgets.split(",").filter(Boolean)
+    : ["changelog", "roadmap", "feedback", "announcements"];
+
   const settingsData = {
     primaryColor,
     widgetTheme,
     supportedLocales,
     defaultLocale: supportedLocales[0] || "en",
     allowedDomain,
+    enabledWidgets,
     ...(aiProvider !== null && { aiProvider }),
     ...(aiModel !== null && { aiModel }),
     ...(aiApiKey !== undefined && { aiApiKey }),
@@ -183,6 +189,7 @@ export async function updateOrgSettings(
     return { error: "Failed to update settings" };
   }
 
+  cacheInvalidate(user.orgId, "widgetConfig");
   revalidatePath("/settings");
   return { success: "Settings saved." };
 }

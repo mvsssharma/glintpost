@@ -50,12 +50,15 @@ export const createOrgSchema = z.object({
 
 const AI_PROVIDERS = ["openai", "anthropic", "google"] as const;
 
+const WIDGET_KEYS = ["changelog", "roadmap", "feedback", "announcements"] as const;
+
 export const updateOrgSettingsSchema = z.object({
   name: z.string().min(2, "Organization name must be at least 2 characters").max(100),
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   widgetTheme: z.enum(["light", "dark"]).optional(),
   locales: z.string().optional(),
   allowedDomain: z.string().max(255).optional(),
+  enabledWidgets: z.string().optional(),
   aiProvider: z.enum(AI_PROVIDERS).nullable().optional(),
   aiModel: z.string().max(100).nullable().optional(),
   aiApiKey: z.string().max(500).optional(),

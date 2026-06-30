@@ -255,6 +255,20 @@
   background: hsl(var(--bg-surface-hover));
 }
 
+.embedSnippet {
+  display: block;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid hsl(var(--border-light));
+  background: hsl(var(--bg-main));
+  color: hsl(var(--text-main));
+  font-size: 0.8125rem;
+  font-family: var(--font-mono), monospace;
+  word-break: break-all;
+  line-height: 1.5;
+  user-select: all;
+}
+
 .passwordSection .fieldGroup:last-of-type {
   margin-bottom: 0;
 }
