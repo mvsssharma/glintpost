@@ -52,11 +52,11 @@
     window.GlintPostLoaderInitialized = false;
   };
 
-  var configUrl =
-    appUrl + "/api/widgets?apiKey=" + encodeURIComponent(apiKey);
+  var configUrl = appUrl + "/api/widgets";
 
   var xhr = new XMLHttpRequest();
   xhr.open("GET", configUrl, true);
+  xhr.setRequestHeader("x-api-key", apiKey);
   xhr.onerror = function () {
     console.error("GlintPost: Network error loading widget config");
   };

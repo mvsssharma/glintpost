@@ -72,8 +72,9 @@ model Organization {
 
   user        User?
   settings    OrgSettings?
-  posts           Post[]
-  changelogEvents ChangelogEvent[]
+  posts             Post[]
+  postTranslations  PostTranslation[]
+  changelogEvents   ChangelogEvent[]
 
   roadmapItems       RoadmapItem[]
   roadmapSuggestions RoadmapSuggestion[]
@@ -151,9 +152,11 @@ model Post {
 }
 
 model PostTranslation {
-  id     String @id @default(cuid())
-  postId String
-  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  id      String       @id @default(cuid())
+  orgId   String
+  org     Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  postId  String
+  post    Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   locale  String
   title   String
@@ -164,6 +167,7 @@ model PostTranslation {
 
   @@unique([postId, locale])
   @@index([postId])
+  @@index([orgId])
 }
 
 model ChangelogEvent {

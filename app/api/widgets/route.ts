@@ -36,9 +36,9 @@ export async function GET(req: NextRequest) {
   }
 
   const config: WidgetConfig = {
-    widgets: org.settings?.enabledWidgets?.length
-      ? org.settings.enabledWidgets
-      : ALL_WIDGETS,
+    // Only fall back to ALL_WIDGETS when no settings row exists yet.
+    // An explicit empty array means the org disabled every widget.
+    widgets: org.settings?.enabledWidgets ?? ALL_WIDGETS,
     theme: org.settings?.widgetTheme ?? "light",
     primaryColor: org.settings?.primaryColor ?? "#10b981",
   };

@@ -1,5 +1,20 @@
 import { z } from "zod";
 
+// A URL that only allows http/https schemes, blocking javascript:/data: etc.
+const safeUrlSchema = z
+  .string()
+  .max(2000)
+  .refine(
+    (val) => {
+      try {
+        return ["http:", "https:"].includes(new URL(val).protocol);
+      } catch {
+        return false;
+      }
+    },
+    { message: "URL must start with http:// or https://" }
+  );
+
 // === Auth ===
 
 export const signupSchema = z.object({
@@ -188,7 +203,7 @@ export const createAnnouncementSchema = z.object({
   imageUrl: z.string().url().max(2000).nullable().optional(),
   videoUrl: z.string().url().max(2000).nullable().optional(),
   ctaText: z.string().max(100).nullable().optional(),
-  ctaUrl: z.string().max(2000).nullable().optional(),
+  ctaUrl: safeUrlSchema.nullable().optional(),
   displayType: z.enum(["OVERLAY", "TOP_BANNER"]).default("OVERLAY"),
   priority: z.number().int().min(0).max(1000).default(0),
   startDate: z.coerce.date(),
@@ -206,7 +221,7 @@ export const updateAnnouncementSchema = z.object({
   imageUrl: z.string().url().max(2000).nullable().optional(),
   videoUrl: z.string().url().max(2000).nullable().optional(),
   ctaText: z.string().max(100).nullable().optional(),
-  ctaUrl: z.string().max(2000).nullable().optional(),
+  ctaUrl: safeUrlSchema.nullable().optional(),
   displayType: z.enum(["OVERLAY", "TOP_BANNER"]).optional(),
   priority: z.number().int().min(0).max(1000).optional(),
   startDate: z.coerce.date().optional(),

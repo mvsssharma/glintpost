@@ -22,11 +22,12 @@ export function getAllowedOrigins(allowedDomain: string | null): Set<string> {
 }
 
 /**
- * Returns the targetOrigin to use for window.parent.postMessage.
- * If the parent origin is known and in the allowed set, returns it.
- * Falls back to "*" only when the parent origin cannot be determined.
+ * Returns the targetOrigin to use for window.parent.postMessage, or null if
+ * no trusted origin can be determined. Never widens to "*" — a message sent
+ * to an unverified origin could be read by any page that happens to embed
+ * this iframe.
  */
-export function getParentOrigin(allowedOrigins: Set<string>): string {
+export function getParentOrigin(allowedOrigins: Set<string>): string | null {
   try {
     // Same-origin parents: we can read parent.location.origin directly
     const parentOrigin = window.parent.location.origin;
@@ -45,7 +46,26 @@ export function getParentOrigin(allowedOrigins: Set<string>): string {
     // Malformed referrer — ignore
   }
 
-  return "*";
+  // Neither check confirmed the parent's origin. Fall back to the org's
+  // configured custom domain, if any — the one other origin we can trust
+  // to be the legitimate embed target. Otherwise give up rather than guess.
+  for (const origin of allowedOrigins) {
+    if (origin !== APP_ORIGIN && !origin.startsWith("http://localhost")) {
+      return origin;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Posts a message to the parent frame if a trusted target origin is known.
+ * Silently no-ops otherwise instead of falling back to "*".
+ */
+export function postToParent(data: unknown, allowedOrigins: Set<string>): void {
+  const origin = getParentOrigin(allowedOrigins);
+  if (!origin) return;
+  window.parent.postMessage(data, origin);
 }
 
 /**

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { requireOrgApi } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/db";
 import { uploadToStorage } from "@/lib/storage";
 
@@ -15,18 +15,9 @@ const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { orgId: true },
-    });
-    if (!user?.orgId) {
-      return NextResponse.json({ error: "No organization found" }, { status: 403 });
-    }
+    const auth = await requireOrgApi();
+    if (auth.error) return auth.error;
+    const { session } = auth;
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
@@ -45,7 +36,7 @@ export async function POST(req: Request) {
     }
 
     const settings = await prisma.orgSettings.findUnique({
-      where: { orgId: user.orgId },
+      where: { orgId: session.orgId },
       select: { storageUsedBytes: true, storageCapBytes: true },
     });
 
@@ -65,7 +56,7 @@ export async function POST(req: Request) {
 
     if (settings) {
       await prisma.orgSettings.update({
-        where: { orgId: user.orgId },
+        where: { orgId: session.orgId },
         data: { storageUsedBytes: { increment: BigInt(file.size) } },
       });
     }

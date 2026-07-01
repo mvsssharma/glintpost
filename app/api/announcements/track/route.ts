@@ -35,6 +35,14 @@ export async function POST(req: NextRequest) {
     const { type, announcementId, visitorId, datalayer } = parsed.data;
     const db = getOrgPrisma(org.id);
 
+    const announcement = await db.announcement.findUnique({ where: { id: announcementId } });
+    if (!announcement) {
+      return NextResponse.json(
+        { error: "Announcement not found" },
+        { status: 404, headers: cors }
+      );
+    }
+
     const eventData = {
       orgId: org.id,
       announcementId,

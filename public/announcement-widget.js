@@ -17,6 +17,7 @@
   var clientConfig = window.GlintPostConfig || {};
   var visitorDatalayer = clientConfig.datalayer || null;
   var visitorId = clientConfig.visitorId || null;
+  var consentGranted = clientConfig.consent !== false; // default: true
 
   var BASE_URL = new URL(scriptTag.src).origin;
   var SESSION_KEY = "glintpost_ann_session";
@@ -57,8 +58,6 @@
       localStorage.setItem(SEEN_KEY, JSON.stringify(seen));
     } catch (e) {}
   }
-
-  if (isSessionActive()) return;
 
   // --- Targeting ---
   function matchesTargeting(announcement) {
@@ -130,34 +129,46 @@
   // --- Fetch and show ---
   var primaryColor = "#10b981";
   var widgetTheme = "light";
+  var initialized = false;
 
-  fetch(BASE_URL + "/api/config?apiKey=" + encodeURIComponent(apiKey))
-    .then(function (res) { return res.ok ? res.json() : null; })
-    .then(function (config) {
-      if (config) {
-        if (config.primaryColor) primaryColor = config.primaryColor;
-        if (config.widgetTheme) widgetTheme = config.widgetTheme;
-      }
-      return fetch(BASE_URL + "/api/announcements/active", {
-        headers: { "x-api-key": apiKey },
-      });
-    })
-    .then(function (res) { return res.ok ? res.json() : []; })
-    .then(function (announcements) {
-      if (!announcements || !announcements.length) return;
+  // Nothing (visitor ID creation, tracking, fetching) runs until consent is
+  // granted. Mirrors changelog/roadmap/feedback widgets' consent-first design.
+  function init() {
+    if (initialized || !consentGranted) return;
+    initialized = true;
 
-      var seenIds = getSeenIds();
-      var candidates = announcements
-        .filter(matchesTargeting)
-        .filter(function (a) { return seenIds.indexOf(a.id) === -1; });
+    if (isSessionActive()) return;
 
-      if (!candidates.length) return;
+    fetch(BASE_URL + "/api/config", { headers: { "x-api-key": apiKey } })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (config) {
+        if (config) {
+          if (config.primaryColor) primaryColor = config.primaryColor;
+          if (config.widgetTheme) widgetTheme = config.widgetTheme;
+        }
+        return fetch(BASE_URL + "/api/announcements/active", {
+          headers: { "x-api-key": apiKey },
+        });
+      })
+      .then(function (res) { return res.ok ? res.json() : []; })
+      .then(function (announcements) {
+        if (!announcements || !announcements.length) return;
 
-      // Already sorted by priority desc from API
-      var announcement = candidates[0];
-      render(announcement);
-    })
-    .catch(function () {});
+        var seenIds = getSeenIds();
+        var candidates = announcements
+          .filter(matchesTargeting)
+          .filter(function (a) { return seenIds.indexOf(a.id) === -1; });
+
+        if (!candidates.length) return;
+
+        // Already sorted by priority desc from API
+        var announcement = candidates[0];
+        render(announcement);
+      })
+      .catch(function () {});
+  }
+
+  init();
 
   function render(announcement) {
     var isOverlay = announcement.displayType !== "TOP_BANNER";
@@ -366,6 +377,13 @@
   // --- Public API ---
   if (!window.GlintPost) window.GlintPost = {};
 
+  var existingConsent = window.GlintPost.consent;
+  window.GlintPost.consent = function (granted) {
+    consentGranted = !!granted;
+    if (consentGranted) init();
+    if (typeof existingConsent === "function") existingConsent(granted);
+  };
+
   window.GlintPost.destroyAnnouncements = function () {
     try {
       localStorage.removeItem(SESSION_KEY);
@@ -381,5 +399,6 @@
     document.querySelectorAll("style").forEach(function (el) {
       if (el.innerHTML.indexOf("glintpost-announcement") !== -1) el.remove();
     });
+    consentGranted = false;
   };
 })();

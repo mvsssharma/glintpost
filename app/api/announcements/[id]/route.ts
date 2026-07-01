@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import { auth } from "@/auth";
+import { requireOrgApi } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import { updateAnnouncementSchema } from "@/lib/validations";
 import { cacheInvalidate } from "@/lib/cache";
@@ -9,10 +9,9 @@ type Context = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, context: Context) {
   try {
-    const session = await auth();
-    if (!session?.user?.id || !session.orgId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const auth = await requireOrgApi();
+    if (auth.error) return auth.error;
+    const { session } = auth;
 
     const { id } = await context.params;
     const db = getOrgPrisma(session.orgId);
@@ -38,10 +37,9 @@ export async function GET(_req: Request, context: Context) {
 
 export async function PUT(req: Request, context: Context) {
   try {
-    const session = await auth();
-    if (!session?.user?.id || !session.orgId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const auth = await requireOrgApi();
+    if (auth.error) return auth.error;
+    const { session } = auth;
 
     const { id } = await context.params;
     const body = await req.json();
@@ -82,10 +80,9 @@ export async function PUT(req: Request, context: Context) {
 
 export async function DELETE(_req: Request, context: Context) {
   try {
-    const session = await auth();
-    if (!session?.user?.id || !session.orgId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const auth = await requireOrgApi();
+    if (auth.error) return auth.error;
+    const { session } = auth;
 
     const { id } = await context.params;
     const db = getOrgPrisma(session.orgId);

@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import { auth } from "@/auth";
+import { requireOrgApi } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import { createAnnouncementSchema } from "@/lib/validations";
 import { cacheInvalidate } from "@/lib/cache";
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id || !session.orgId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const auth = await requireOrgApi();
+    if (auth.error) return auth.error;
+    const { session } = auth;
 
     const body = await req.json();
     const parsed = createAnnouncementSchema.safeParse(body);

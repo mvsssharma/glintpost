@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import { getVisitorId, getExistingVisitorId } from "@/lib/visitor";
-import { getAllowedOrigins, getParentOrigin, isAllowedOrigin } from "@/lib/post-message";
+import { getAllowedOrigins, postToParent, isAllowedOrigin } from "@/lib/post-message";
 import styles from "./page.module.css";
 
 interface FeedbackQuestion {
@@ -100,9 +100,9 @@ function SurveyContent() {
             primaryColor: config.primaryColor ?? DEFAULT_PRIMARY_COLOR,
             widgetTheme: config.widgetTheme ?? "light",
           });
-          window.parent.postMessage(
+          postToParent(
             { type: "GLINTPOST_FEEDBACK_CONFIG", primaryColor: config.primaryColor },
-            getParentOrigin(origins)
+            origins
           );
         }
       })
@@ -125,12 +125,12 @@ function SurveyContent() {
         setLoading(false);
       });
 
-    window.parent.postMessage({ type: "GLINTPOST_FEEDBACK_LOADED" }, getParentOrigin(allowedOriginsRef.current));
+    postToParent({ type: "GLINTPOST_FEEDBACK_LOADED" }, allowedOriginsRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiKey]);
 
   const closeWidget = () => {
-    window.parent.postMessage({ type: "GLINTPOST_FEEDBACK_CLOSE" }, getParentOrigin(allowedOrigins));
+    postToParent({ type: "GLINTPOST_FEEDBACK_CLOSE" }, allowedOrigins);
   };
 
   async function handleSubmit() {

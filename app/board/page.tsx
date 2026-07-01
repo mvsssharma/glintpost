@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useRoadmap } from "./useRoadmap";
 import { ROADMAP_STATUSES, DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import { getVisitorId, getExistingVisitorId } from "@/lib/visitor";
-import { getAllowedOrigins, getParentOrigin, isAllowedOrigin } from "@/lib/post-message";
+import { getAllowedOrigins, postToParent, isAllowedOrigin } from "@/lib/post-message";
 import styles from "./page.module.css";
 
 const STATUS_FILTERS = [
@@ -49,23 +49,13 @@ function RoadmapContent() {
             primaryColor: config.primaryColor ?? DEFAULT_PRIMARY_COLOR,
             widgetTheme: config.widgetTheme ?? "light",
           });
-          window.parent.postMessage(
+          postToParent(
             { type: "GLINTPOST_ROADMAP_CONFIG", primaryColor: config.primaryColor },
-            getParentOrigin(origins)
+            origins
           );
         }
       })
       .catch(() => {});
-  }, [apiKey]);
-
-  // Track roadmap widget view anonymously (no visitorId)
-  useEffect(() => {
-    if (!apiKey) return;
-    fetch("/api/roadmap/track", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-api-key": apiKey },
-      body: JSON.stringify({}),
-    }).catch(() => {});
   }, [apiKey]);
 
   const [isEmbedded, setIsEmbedded] = useState(false);
@@ -75,19 +65,26 @@ function RoadmapContent() {
   }, []);
 
   const closeWidget = useCallback(() => {
-    window.parent.postMessage({ type: "GLINTPOST_ROADMAP_CLOSE" }, getParentOrigin(allowedOrigins));
+    postToParent({ type: "GLINTPOST_ROADMAP_CLOSE" }, allowedOrigins);
   }, [allowedOrigins]);
 
+  // Track a view only when the widget is actually opened by the user, not
+  // when the slideover widget preloads this iframe ahead of time.
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
       if (!isAllowedOrigin(e.origin, allowedOrigins)) return;
       if (e.data?.type === "GLINTPOST_ROADMAP_OPENED") {
-        // Could trigger data refresh here if needed
+        if (!apiKey) return;
+        fetch("/api/roadmap/track", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-api-key": apiKey },
+          body: JSON.stringify({}),
+        }).catch(() => {});
       }
     };
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [allowedOrigins]);
+  }, [allowedOrigins, apiKey]);
 
   const {
     items,

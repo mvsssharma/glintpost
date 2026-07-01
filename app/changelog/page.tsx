@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import DOMPurify from "isomorphic-dompurify";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import { getVisitorId, getExistingVisitorId } from "@/lib/visitor";
-import { getAllowedOrigins, getParentOrigin, isAllowedOrigin } from "@/lib/post-message";
+import { getAllowedOrigins, postToParent, isAllowedOrigin } from "@/lib/post-message";
 import styles from "./page.module.css";
 
 interface TargetingRule {
@@ -214,9 +214,9 @@ function ChangelogContent() {
             primaryColor: config.primaryColor ?? DEFAULT_PRIMARY_COLOR,
             widgetTheme: config.widgetTheme ?? "light",
           });
-          window.parent.postMessage(
+          postToParent(
             { type: "GLINTPOST_CHANGELOG_CONFIG", primaryColor: config.primaryColor },
-            getParentOrigin(origins)
+            origins
           );
         }
       })
@@ -235,7 +235,7 @@ function ChangelogContent() {
         setLoading(false);
       });
 
-    window.parent.postMessage({ type: "GLINTPOST_CHANGELOG_LOADED" }, getParentOrigin(allowedOriginsRef.current));
+    postToParent({ type: "GLINTPOST_CHANGELOG_LOADED" }, allowedOriginsRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiKey]);
 
@@ -251,7 +251,7 @@ function ChangelogContent() {
   }, [trackEvent, allowedOrigins]);
 
   const closeWidget = () => {
-    window.parent.postMessage({ type: "GLINTPOST_CHANGELOG_CLOSE" }, getParentOrigin(allowedOrigins));
+    postToParent({ type: "GLINTPOST_CHANGELOG_CLOSE" }, allowedOrigins);
   };
 
   if (loading || !theme) return <div className={styles.loading} style={{ background: "transparent" }} />;

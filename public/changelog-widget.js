@@ -264,7 +264,7 @@
   }
 
   // Fetch account config and check for unread posts
-  fetch(BASE_URL + "/api/config?apiKey=" + encodeURIComponent(apiKey))
+  fetch(BASE_URL + "/api/config", { headers: { "x-api-key": apiKey } })
     .then(function (res) { return res.ok ? res.json() : null; })
     .then(function (config) {
       if (config) {
@@ -398,8 +398,10 @@
   // --- Public API ---
   if (!window.GlintPost) window.GlintPost = {};
 
+  var existingConsent = window.GlintPost.consent;
   window.GlintPost.consent = function (granted) {
     consentGranted = !!granted;
+    if (typeof existingConsent === "function") existingConsent(granted);
   };
 
   window.GlintPost.destroy = function () {

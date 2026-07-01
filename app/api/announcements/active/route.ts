@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import DOMPurify from "isomorphic-dompurify";
 import { validateApiKey } from "@/lib/api-key";
 import { getOrgPrisma } from "@/lib/db";
 import { cacheGet, cacheSet } from "@/lib/cache";
@@ -49,7 +50,7 @@ async function fetchAndCacheAnnouncements(orgId: string): Promise<CachedAnnounce
   }) => ({
     id: a.id,
     title: a.title,
-    content: a.content,
+    content: DOMPurify.sanitize(a.content),
     imageUrl: a.imageUrl,
     videoUrl: a.videoUrl,
     ctaText: a.ctaText,
@@ -63,6 +64,16 @@ async function fetchAndCacheAnnouncements(orgId: string): Promise<CachedAnnounce
 
   cacheSet(orgId, "announcements", result);
   return result;
+}
+
+// The cache stores every not-yet-ended announcement so future-scheduled ones
+// don't require a cache invalidation to appear once their startDate arrives.
+// Callers must filter to the currently-active window before returning results.
+function filterActive(announcements: CachedAnnouncement[]): CachedAnnouncement[] {
+  const now = Date.now();
+  return announcements.filter(
+    (a) => new Date(a.startDate).getTime() <= now && new Date(a.endDate).getTime() >= now
+  );
 }
 
 export async function OPTIONS(req: NextRequest) {
@@ -84,17 +95,8 @@ export async function GET(req: NextRequest) {
 
   try {
     const cached = cacheGet<CachedAnnouncement[]>(org.id, "announcements");
-    if (cached) {
-      // Re-filter by date since cache may contain expired entries
-      const now = Date.now();
-      const active = cached.filter(
-        (a) => new Date(a.startDate).getTime() <= now && new Date(a.endDate).getTime() >= now
-      );
-      return NextResponse.json(active, { headers: cors });
-    }
-
-    const result = await fetchAndCacheAnnouncements(org.id);
-    return NextResponse.json(result, { headers: cors });
+    const result = cached ?? (await fetchAndCacheAnnouncements(org.id));
+    return NextResponse.json(filterActive(result), { headers: cors });
   } catch (error) {
     console.error("Failed to fetch active announcements:", error);
     return NextResponse.json(
