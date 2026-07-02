@@ -2,7 +2,9 @@ import Link from "next/link";
 import { requireOrg } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import { ROADMAP_STATUSES } from "@/lib/constants";
+import { roadmapVoteTotals } from "@/lib/roadmap-votes";
 import { RoadmapItemRow } from "./RoadmapItemRow";
+import ImportDialog from "@/app/components/ImportDialog";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -69,6 +71,12 @@ export default async function RoadmapAdminPage() {
         ) : (
           items.map((item) => {
             const statusMeta = ROADMAP_STATUSES.find((s) => s.value === item.status);
+            const totals = roadmapVoteTotals(
+              item.importedUpvotes,
+              item.importedDownvotes,
+              (upMap[item.id] as number) ?? 0,
+              (downMap[item.id] as number) ?? 0,
+            );
             return (
               <RoadmapItemRow
                 key={item.id}
@@ -78,8 +86,8 @@ export default async function RoadmapAdminPage() {
                   description: item.description,
                   status: item.status,
                   createdAt: item.createdAt.toISOString(),
-                  upvotes: (upMap[item.id] as number) ?? 0,
-                  downvotes: (downMap[item.id] as number) ?? 0,
+                  upvotes: totals.upvotes,
+                  downvotes: totals.downvotes,
                 }}
                 statusColor={statusMeta?.color ?? "#6b7280"}
                 statusLabel={statusMeta?.label ?? item.status}
@@ -88,6 +96,8 @@ export default async function RoadmapAdminPage() {
           })
         )}
       </div>
+
+      {items.length < 3 && <ImportDialog type="roadmap" />}
     </div>
   );
 }

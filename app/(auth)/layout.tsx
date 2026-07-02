@@ -16,6 +16,7 @@ export default function AuthLayout({
             width={48}
             height={48}
             className={styles.brandLogo}
+            loading="eager"
           />
           <h1>GlintPost</h1>
           <p>Product communication, simplified.</p>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireOrg } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import AnnouncementActions from "./AnnouncementActions";
+import ImportDialog from "@/app/components/ImportDialog";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -69,6 +70,9 @@ export default async function AnnouncementsPage({
     clicks: (clickMap[a.id] as number) ?? 0,
     isActive: a.status === "PUBLISHED" && a.startDate <= now && a.endDate >= now,
   }));
+
+  // Import is a migration aid — only offer it while the section is nearly empty
+  const showImport = (await db.announcement.count()) < 3;
 
   return (
     <div className={styles.container}>
@@ -148,6 +152,8 @@ export default async function AnnouncementsPage({
           ))
         )}
       </div>
+
+      {showImport && <ImportDialog type="announcements" />}
     </div>
   );
 }

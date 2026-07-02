@@ -1,0 +1,170 @@
+.trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px dashed hsl(var(--border-light));
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.trigger:hover {
+  border-color: hsl(var(--primary));
+  background: hsl(var(--bg-surface-hover) / 0.5);
+}
+
+.triggerTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: hsl(var(--text-main));
+}
+
+.triggerSub {
+  font-size: 0.825rem;
+  color: hsl(var(--text-muted));
+  line-height: 1.45;
+}
+
+.triggerCta {
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: hsl(var(--primary));
+  margin-top: 0.15rem;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.dialog {
+  background: hsl(var(--bg-surface));
+  color: hsl(var(--text-main));
+  border: 1px solid hsl(var(--border-light));
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.dialogHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid hsl(var(--border-light));
+}
+
+.dialogHeader h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  text-transform: capitalize;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: hsl(var(--text-muted));
+  padding: 0.25rem;
+}
+
+.closeBtn:hover {
+  color: hsl(var(--text-main));
+}
+
+.body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: hsl(var(--text-muted));
+  line-height: 1.5;
+}
+
+.templateLink {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  width: fit-content;
+}
+
+.fileLabel {
+  display: block;
+  border: 1px dashed hsl(var(--border-light));
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: hsl(var(--text-muted));
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.fileLabel:hover {
+  border-color: hsl(var(--primary));
+}
+
+.fileLabel input {
+  display: none;
+}
+
+.success {
+  margin: 0;
+  font-size: 0.9rem;
+  color: hsl(var(--primary));
+  font-weight: 600;
+}
+
+.error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: hsl(var(--danger));
+  font-weight: 500;
+}
+
+.errorBox {
+  border: 1px solid hsl(var(--danger) / 0.35);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.errorBox ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.8rem;
+  color: hsl(var(--text-muted));
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}

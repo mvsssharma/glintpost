@@ -10,7 +10,7 @@ export default function AuthLoading() {
         width={64}
         height={64}
         className={styles.logo}
-        priority
+        loading="eager"
       />
       <span className={styles.text}>Loading...</span>
     </div>

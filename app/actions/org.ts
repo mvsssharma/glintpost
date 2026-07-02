@@ -9,6 +9,7 @@ import { encrypt } from "@/lib/crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createOrgSchema, updateOrgSettingsSchema, formDataToObject } from "@/lib/validations";
+import { seedSampleContent } from "@/lib/sample-content";
 
 export interface OnboardingState {
   error?: string;
@@ -74,6 +75,9 @@ export async function createOrganization(
       where: { id: session.user.id },
       data: { orgId: newOrg.id },
     });
+
+    // Sample drafts so the dashboard sections aren't blank on first login
+    await seedSampleContent(tx, newOrg.id);
 
     return newOrg;
   });

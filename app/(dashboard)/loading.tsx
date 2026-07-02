@@ -10,7 +10,7 @@ export default function DashboardLoading() {
         width={48}
         height={48}
         className={styles.logo}
-        priority
+        loading="eager"
       />
       <span className={styles.text}>Loading...</span>
     </div>

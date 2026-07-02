@@ -3,6 +3,7 @@ import { validateApiKey } from "@/lib/api-key";
 import { getOrgPrisma } from "@/lib/db";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { corsHeaders, handlePreflight } from "@/lib/cors";
+import { roadmapVoteTotals } from "@/lib/roadmap-votes";
 
 export const dynamic = "force-dynamic";
 
@@ -46,15 +47,23 @@ async function fetchAndCacheItems(orgId: string): Promise<CachedRoadmapItem[]> {
     downvoteCounts.map((d: { itemId: string; _count: number }) => [d.itemId, d._count]),
   );
 
-  const result: CachedRoadmapItem[] = items.map((item) => ({
-    id: item.id,
-    title: item.title,
-    description: item.description,
-    status: item.status,
-    upvotes: (upMap[item.id] as number) ?? 0,
-    downvotes: (downMap[item.id] as number) ?? 0,
-    createdAt: item.createdAt.toISOString(),
-  }));
+  const result: CachedRoadmapItem[] = items.map((item) => {
+    const totals = roadmapVoteTotals(
+      item.importedUpvotes,
+      item.importedDownvotes,
+      (upMap[item.id] as number) ?? 0,
+      (downMap[item.id] as number) ?? 0,
+    );
+    return {
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      status: item.status,
+      upvotes: totals.upvotes,
+      downvotes: totals.downvotes,
+      createdAt: item.createdAt.toISOString(),
+    };
+  });
 
   cacheSet(orgId, "roadmap-items", result);
   return result;

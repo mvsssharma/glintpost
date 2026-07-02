@@ -234,6 +234,10 @@ model RoadmapItem {
   status      RoadmapItemStatus @default(UNDER_REVIEW)
   sortOrder   Int               @default(0)
 
+  /// Vote counts carried over from a migration import — not tied to visitor IDs.
+  importedUpvotes   Int @default(0)
+  importedDownvotes Int @default(0)
+
   votes       RoadmapVote[]
   suggestions RoadmapSuggestion[]
 

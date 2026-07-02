@@ -18,8 +18,9 @@ export default async function DashboardPage() {
     postDislikes,
     roadmapItemsCount,
     roadmapViews,
-    upvotes,
-    downvotes,
+    visitorUpvotes,
+    visitorDownvotes,
+    importedVoteSums,
     pendingSuggestions,
     feedbackResponses,
     activeFeedbackForms,
@@ -36,6 +37,7 @@ export default async function DashboardPage() {
     db.roadmapView.count(),
     db.roadmapVote.count({ where: { voteType: "UP" } }),
     db.roadmapVote.count({ where: { voteType: "DOWN" } }),
+    db.roadmapItem.aggregate({ _sum: { importedUpvotes: true, importedDownvotes: true } }),
     db.roadmapSuggestion.count({ where: { status: "PENDING" } }),
     db.feedbackResponse.count(),
     db.feedbackForm.count({ where: { enabled: true } }),
@@ -43,6 +45,9 @@ export default async function DashboardPage() {
     db.announcementEvent.count({ where: { type: "VIEW" } }),
     db.announcementEvent.count({ where: { type: "CLICK" } }),
   ]);
+
+  const upvotes = visitorUpvotes + (importedVoteSums._sum.importedUpvotes ?? 0);
+  const downvotes = visitorDownvotes + (importedVoteSums._sum.importedDownvotes ?? 0);
 
   const displayName =
     session.user.name || session.user.email?.split("@")[0] || "there";

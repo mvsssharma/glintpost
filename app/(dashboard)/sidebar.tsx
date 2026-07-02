@@ -44,6 +44,7 @@ export function Sidebar({ orgName, userName }: { orgName: string; userName: stri
             alt="GlintPost"
             width={24}
             height={24}
+            loading="eager"
           />
           <h2>GlintPost</h2>
         </div>

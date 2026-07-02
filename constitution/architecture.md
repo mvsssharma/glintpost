@@ -31,6 +31,7 @@ app/
     roadmap/         # items, vote, suggest, track
     feedback/        # form, submit
     config/          # Widget theme/config
+    internal/        # Session-auth dashboard-only routes (import; AI routes planned)
   board/             # Public roadmap page (iframe target)
   changelog/         # Public changelog page (iframe target)
   survey/            # Public feedback page (iframe target)
@@ -44,6 +45,7 @@ lib/
   widgets.ts         # Widget definitions (WIDGETS, WIDGETS_WITH_FEEDBACK)
   post-message.ts    # postMessage origin validation (getAllowedOrigins, isAllowedOrigin)
   llm.ts             # AI provider factory (encrypted API keys via AES-256-GCM)
+  import-excel.ts    # Excel migration import: templates, parsing, validation (exceljs)
   validations.ts     # Zod schemas
   constants.ts       # Enums, config values
   visitor.ts         # Visitor ID generation
@@ -88,7 +90,7 @@ Widgets communicate via `postMessage` with origin validation. Allowed origins: o
 - **OrgSettings:** Theme, locales, allowedDomain, AI config, storage limits
 - **Post + PostTranslation:** Changelog with multi-language support. Content stored as HTML (Quill output).
 - **ChangelogEvent:** Like/dislike/view tracking with targeting data
-- **RoadmapItem/Vote/Suggestion/View:** Feature voting + AI similarity matching
+- **RoadmapItem/Vote/Suggestion/View:** Feature voting + AI similarity matching. `RoadmapItem.importedUpvotes` / `importedDownvotes` hold migration carry-over counts; displayed totals = visitor votes + imported.
 - **FeedbackForm/Response:** Configurable survey (SELECT/NPS/TEXT, max 3 questions)
 - **Announcement/AnnouncementEvent:** Push notifications with overlay/banner display, scheduling, priority, and VIEW/CLICK tracking
 

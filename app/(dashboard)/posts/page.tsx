@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireOrg } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import PostActions from "./PostActions";
+import ImportDialog from "@/app/components/ImportDialog";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -52,6 +53,9 @@ export default async function PostsPage({
     likes: post._count.changelogEvents,
     dislikes: (dislikeMap[post.id] as number) ?? 0,
   }));
+
+  // Import is a migration aid — only offer it while the section is nearly empty
+  const showImport = (await db.post.count()) < 3;
 
   return (
     <div className={styles.container}>
@@ -124,6 +128,8 @@ export default async function PostsPage({
           })
         )}
       </div>
+
+      {showImport && <ImportDialog type="posts" />}
     </div>
   );
 }
