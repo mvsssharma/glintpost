@@ -4,6 +4,8 @@ import { requireOrgApi } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import { updatePostSchema } from "@/lib/validations";
 import { cacheInvalidate } from "@/lib/cache";
+import { refreshOrgNomenclature } from "@/lib/nomenclature";
+import { htmlToText } from "@/lib/html-segments";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -96,6 +98,13 @@ export async function PUT(req: Request, context: Context) {
     });
 
     cacheInvalidate(session.orgId, "changelog-posts");
+
+    // Background: refresh learned terminology when a post is published. Never blocks/fails the save.
+    if (post.status === "PUBLISHED") {
+      const enText = post.translations.find((t) => t.locale === "en")?.content ?? "";
+      if (enText) void refreshOrgNomenclature(session.orgId, htmlToText(enText));
+    }
+
     return NextResponse.json(post);
   } catch (error) {
     console.error("Failed to update post:", error);

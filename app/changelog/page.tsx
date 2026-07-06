@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, Suspense, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import DOMPurify from "isomorphic-dompurify";
+import { sanitizeRichHtml } from "@/lib/sanitize-html";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import { getVisitorId, getExistingVisitorId } from "@/lib/visitor";
 import { getAllowedOrigins, postToParent, isAllowedOrigin } from "@/lib/post-message";
@@ -291,7 +291,7 @@ function ChangelogContent() {
           <h3 className={styles.detailTitle}>{selectedPost.title}</h3>
           <div
             className={styles.detailContent}
-            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedPost.content) }}
+            dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(selectedPost.content) }}
           />
           <ReactionButtons
             post={selectedPost}
@@ -327,7 +327,7 @@ function ChangelogContent() {
                 <h3 className={styles.title}>{post.title}</h3>
                 <div
                   className={styles.contentPreview}
-                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(post.content) }}
                 />
                 <button
                   className={styles.viewMore}

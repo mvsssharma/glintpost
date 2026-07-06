@@ -126,6 +126,13 @@ model OrgSettings {
   aiApiKey   String? // Encrypted at app layer
   aiModel    String? // e.g. "gpt-4o-mini", "claude-sonnet-4-20250514", "gemini-2.0-flash"
 
+  // Free-text brand/audience context for AI drafting (user-authored, optional)
+  aiWritingContext String?
+
+  // System-managed learned terminology, auto-derived from the org's own content.
+  // JSON: { properNouns: string[], domainTerms: string[], updatedAt: string }
+  nomenclature Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

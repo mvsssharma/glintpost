@@ -4,6 +4,8 @@ import { requireOrgApi } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import { createPostSchema } from "@/lib/validations";
 import { cacheInvalidate } from "@/lib/cache";
+import { refreshOrgNomenclature } from "@/lib/nomenclature";
+import { htmlToText } from "@/lib/html-segments";
 
 export async function POST(req: Request) {
   try {
@@ -43,6 +45,14 @@ export async function POST(req: Request) {
     });
 
     cacheInvalidate(session.orgId, "changelog-posts");
+
+    // Background: learn the org's terminology from its own content — only from PUBLISHED
+    // posts (draft wording shouldn't pollute the glossary or burn LLM calls before it's
+    // final). Mirrors the update path. Never blocks/fails the save.
+    if (status === "PUBLISHED") {
+      void refreshOrgNomenclature(session.orgId, htmlToText(content));
+    }
+
     return NextResponse.json(post, { status: 201 });
   } catch (error) {
     console.error("Failed to create post:", error);

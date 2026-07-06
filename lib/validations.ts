@@ -77,6 +77,7 @@ export const updateOrgSettingsSchema = z.object({
   aiProvider: z.enum(AI_PROVIDERS).nullable().optional(),
   aiModel: z.string().max(100).nullable().optional(),
   aiApiKey: z.string().max(500).optional(),
+  aiWritingContext: z.string().max(2000).nullable().optional(),
 });
 
 // === Posts ===
@@ -107,6 +108,10 @@ export const updatePostSchema = z.object({
   content: z.string().min(1, "Content is required").max(100_000).optional(),
   status: z.enum(["DRAFT", "PUBLISHED"]).optional(),
   targetingRules: targetingRulesSchema.nullable().optional(),
+});
+
+export const aiRefineSchema = z.object({
+  content: z.string().min(1, "Content is required").max(100_000),
 });
 
 // === Engagement ===

@@ -24,6 +24,38 @@ prompting the model to "please keep the HTML intact".
 
 ---
 
+> ## ⚠️ Update — 2026-07-06 (design consolidated; supersedes the Phase-1/Phase-2 split below)
+>
+> The original plan split AI writing into **Rewrite** (Phase 1, polish existing content) and
+> **Draft** (Phase 2, modes A/B from bullets/paste). During implementation we collapsed these into
+> **one action: "Refine with AI"**, because:
+> - There are no PM-tool connectors, so users will realistically **paste** their content into the
+>   editor and refine it — the same editor flow as "rewrite". Asking "write vs paste?" upfront is
+>   needless friction; both just land in the editor.
+> - Pasted content can contain **inline screenshots/video**, so the "draft" path also needs media
+>   preservation — the original markdown-regeneration Phase-2 design would have destroyed media.
+> - "Refine" is clearer to users than "Rewrite"/"Draft"/"Cleanup" when there's only one mode.
+>
+> **What actually shipped (2026-07-06):**
+> - **One feature, "Refine with AI"**, wired into **both** the changelog post editor
+>   (`CreatePostForm.tsx`) and the announcement editor (`CreateAnnouncementForm.tsx`) via the shared
+>   `app/components/AIRefine.tsx`. Route: `POST /api/internal/posts/ai-refine`.
+> - The segment pipeline became a **document-wide token pipeline** (`lib/html-segments.ts`,
+>   `extractBlocks`/`reassembleBlocks`): the whole post is flattened to plain-text **blocks**; links,
+>   media, inline-formatted phrases and code/table blocks become opaque tokens (⟦L#⟧/⟦M#⟧/⟦F#⟧/⟦B#⟧).
+>   The model rewrites holistically (merge/split/reorder/re-type blocks) and repositions tokens by
+>   context; every token must survive **exactly once** or the op aborts. Media is never sent to the
+>   model (no vision cost) and restored byte-identical. `lib/llm.ts` → `rewriteDocument(blocks, cfg)`.
+> - Terminology is **persisted** in `OrgSettings.nomenclature` and background-refreshed
+>   (`lib/nomenclature.ts`), on top of the derive/check functions in `lib/glossary.ts`.
+> - **Phase 2 (standalone Drafting) is dropped** — folded into Refine. Translation (was Phase 3) is
+>   now the single remaining future phase.
+>
+> The Phase 1 / Phase 2 / Phase 3 sections below are kept for historical context; read them through
+> the lens of this consolidation.
+
+---
+
 ## Current State (verified 2026-07-02)
 
 - `OrgSettings` has `aiProvider` / `aiApiKey` (AES-256-GCM encrypted) / `aiModel`; settings UI exists.
@@ -218,17 +250,6 @@ stale detection flips when en is re-edited.
 
 ---
 
-## Phase 4 — Linear Import (mode C)
-
-- `lib/import-sources/` with an `ImportSource` interface (`authorize`, `listIssues`,
-  `fetchIssueContent`) — Linear first, JIRA later follows the same shape.
-- Linear OAuth token stored encrypted (reuse `lib/crypto.ts`), per-org.
-- Issue picker UI in the create-page AI panel → selected issues become mode-B raw input.
-- Schema: `OrgSettings.linearToken String?` (encrypted) or a separate `Integration` model if more
-  providers are near-term — decide at implementation time.
-
----
-
 ## Cross-cutting
 
 - **Tenancy:** every DB touch via `getOrgPrisma`; `PostTranslation` is already in `TENANT_SCOPED_MODELS`.
@@ -250,4 +271,3 @@ stale detection flips when en is re-edited.
 | 1.6 rewrite UI with before/after confirm | M | |
 | 2.x drafting (fn + route + create-page panel) | M | |
 | 3.x translation + serving | L | touches cache keys + widget script + public pages |
-| 4 Linear import | L | independent after Phase 2 |

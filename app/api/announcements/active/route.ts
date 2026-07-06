@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import DOMPurify from "isomorphic-dompurify";
+import { sanitizeRichHtml } from "@/lib/sanitize-html";
 import { validateApiKey } from "@/lib/api-key";
 import { getOrgPrisma } from "@/lib/db";
 import { cacheGet, cacheSet } from "@/lib/cache";
@@ -50,7 +50,7 @@ async function fetchAndCacheAnnouncements(orgId: string): Promise<CachedAnnounce
   }) => ({
     id: a.id,
     title: a.title,
-    content: DOMPurify.sanitize(a.content),
+    content: sanitizeRichHtml(a.content),
     imageUrl: a.imageUrl,
     videoUrl: a.videoUrl,
     ctaText: a.ctaText,

@@ -4,6 +4,8 @@ import { requireOrgApi } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import { createAnnouncementSchema } from "@/lib/validations";
 import { cacheInvalidate } from "@/lib/cache";
+import { refreshOrgNomenclature } from "@/lib/nomenclature";
+import { htmlToText } from "@/lib/html-segments";
 
 export async function POST(req: Request) {
   try {
@@ -33,6 +35,12 @@ export async function POST(req: Request) {
     });
 
     cacheInvalidate(session.orgId, "announcements");
+
+    // Background: learn the org's terminology from published announcements too. Never blocks/fails.
+    if (announcement.status === "PUBLISHED") {
+      void refreshOrgNomenclature(session.orgId, htmlToText(announcement.content));
+    }
+
     return NextResponse.json(announcement, { status: 201 });
   } catch (error) {
     console.error("Failed to create announcement:", error);

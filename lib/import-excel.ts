@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-import DOMPurify from "isomorphic-dompurify";
+import { sanitizeRichHtml } from "./sanitize-html";
 import {
   createPostSchema,
   createRoadmapItemSchema,
@@ -177,7 +177,7 @@ function parseDateValue(value: CellValue): Date | null | "invalid" {
 /** Plain text becomes <p>/<br> HTML; content that already looks like HTML is sanitized as-is. */
 function toHtml(text: string): string {
   if (/<([a-z][a-z0-9]*)\b[^>]*>/i.test(text)) {
-    return DOMPurify.sanitize(text);
+    return sanitizeRichHtml(text);
   }
   const escaped = text
     .replace(/&/g, "&amp;")

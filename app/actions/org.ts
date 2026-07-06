@@ -172,6 +172,11 @@ export async function updateOrgSettings(
     ...(aiProvider !== null && { aiProvider }),
     ...(aiModel !== null && { aiModel }),
     ...(aiApiKey !== undefined && { aiApiKey }),
+    // Only touch aiWritingContext when the submitting form actually carried the field
+    // (empty string clears it; absent leaves it unchanged).
+    ...(parsed.data.aiWritingContext !== undefined && {
+      aiWritingContext: (parsed.data.aiWritingContext ?? "").trim() || null,
+    }),
     // Clear AI fields if provider is removed
     ...(!aiProvider && { aiProvider: null, aiModel: null, aiApiKey: null }),
   };

@@ -4,6 +4,8 @@ import { requireOrgApi } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import { updateAnnouncementSchema } from "@/lib/validations";
 import { cacheInvalidate } from "@/lib/cache";
+import { refreshOrgNomenclature } from "@/lib/nomenclature";
+import { htmlToText } from "@/lib/html-segments";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -71,6 +73,12 @@ export async function PUT(req: Request, context: Context) {
     });
 
     cacheInvalidate(session.orgId, "announcements");
+
+    // Background: learn the org's terminology from published announcements too. Never blocks/fails.
+    if (announcement.status === "PUBLISHED") {
+      void refreshOrgNomenclature(session.orgId, htmlToText(announcement.content));
+    }
+
     return NextResponse.json(announcement);
   } catch (error) {
     console.error("Failed to update announcement:", error);

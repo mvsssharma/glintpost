@@ -75,52 +75,52 @@ Full plan: `.claude/plans/ai-changelog-writing.md` (Phase 3 covers both translat
 
 ---
 
-## Planned: AI Changelog Writing
+## AI Changelog Writing
 
-**Status:** Not started — prerequisite (post edit + draft workflow) is now complete. Implementation plan: `.claude/plans/ai-changelog-writing.md`
+**Status:** "Refine with AI" shipped (2026-07-06) for both changelog posts and announcements. Translation/multi-language serving still planned. Implementation plan: `.claude/plans/ai-changelog-writing.md`
 
 ### Overview
-AI-assisted changelog drafting and translation. Bridges the gap between internal ticket/PR language and customer-facing announcements.
+AI-assisted changelog writing and (future) translation. Bridges the gap between internal ticket/PR language and customer-facing announcements.
 
-### Input Modes
-- **Rewrite (priority — ships first):** User writes rough content directly in the post editor; AI polishes it in place — grammar, clarity, tone. Single language. Media, links, and document structure pass through untouched (segment pipeline).
-- **Mode A — Structured bullets:** User types key changes as bullets; AI expands into polished announcement.
-- **Mode B — Raw paste:** User pastes content from JIRA/Linear/Notion/Slack; AI extracts customer-relevant info and discards internal noise.
-- **Mode C — PM tool integration (last phase):** OAuth to Linear → issue picker UI. Pluggable "import source" interface. Linear first, JIRA follows same pattern.
+### The Feature — one action: "Refine with AI"
+There is a **single** AI writing action, not separate "rewrite" vs "draft" modes. The user gets their content into the editor however they like — typing it, or **pasting** a rough dump from JIRA/Linear/Notion/Slack (with inline screenshots/video) — and clicks **Refine with AI**. The AI reads the whole post and rewrites it holistically: fixes grammar, tightens wording, improves flow, and may merge/split/reorder/re-type blocks (e.g. turn a run-on paragraph into a bullet list). Single language. A before/after modal lets the user apply or discard.
+
+Media, links, inline formatting, and code/table blocks are **never sent to the AI** and are restored byte-identical — the AI only ever sees plain text with opaque placeholder tokens, and decides where each token best fits the reflowed text (see Content Preservation below). This means: your app screenshots stay exactly as uploaded, and the AI spends zero credits "understanding" images.
 
 ### AI Layers
 1. **Style from past posts:** Last 5 published posts passed inline to system prompt as tone examples. No embeddings/vector infra needed.
 2. **Org writing context:** `aiWritingContext String?` field in `OrgSettings`. User-authored free text describing audience, tone, what to avoid.
-3. **Nomenclature (auto-derived, zero config):** the org's taxonomy (e.g. "customer", "partner", "student") is **derived by the system from content the org already wrote** — the source content being processed plus recent published posts. Users are never asked to maintain a glossary. The derived term list is injected into every AI operation; the model must never substitute a synonym for a domain term (a customer is never renamed to "client" or "user"), and proper nouns/product names from the source are preserved verbatim.
+3. **Nomenclature (auto-derived, zero config):** the org's taxonomy (e.g. "customer", "partner", "student") is **derived by the system from content the org already wrote** — the source content being processed plus recent published posts. Users are never asked to maintain a glossary. It is persisted in `OrgSettings.nomenclature` and refreshed in the background (LLM-refined, fire-and-forget, 10-min debounce) when posts are created/published (`lib/nomenclature.ts`). The effective term list is injected into every AI operation; the model must never substitute a synonym for a domain term (a customer is never renamed to "client" or "user"), and proper nouns/product names from the source are preserved verbatim.
 4. **Auto-translation (deprioritized — last content phase):** "Translate" button on post editor generates `PostTranslation` records for all enabled locales via LLM. Manual/on-demand — not automatic on publish. Derived proper nouns/product names are kept verbatim in translations; domain terms must translate consistently.
 
 ### Schema Changes
-- `OrgSettings.aiWritingContext String?` — free-text brand/audience context for AI drafting (optional)
+- `OrgSettings.aiWritingContext String?` — free-text brand/audience context for AI (optional)
+- `OrgSettings.nomenclature Json?` — persisted auto-derived terminology (proper nouns + domain terms)
 
-### New API Routes (dashboard-only, not public API)
-- `POST /api/internal/posts/ai-rewrite` — takes `{ postId }` or `{ content }`, rewrites text segments of existing post content, returns polished HTML. Structure/media/links untouched.
-- `POST /api/internal/posts/ai-draft` — takes `{ mode, rawInput }`, returns `{ title, content }`. Fetches AI config + last 5 posts + writing context server-side.
-- `POST /api/internal/posts/ai-translate` — takes `{ postId, locales[] }`, writes `PostTranslation` records.
+### API Routes (dashboard-only, not public API)
+- `POST /api/internal/posts/ai-refine` — takes `{ content }` (unsaved editor HTML), holistically rewrites it in one language, returns `{ content, terminologyWarnings[] }`. Media/links/formatting/code untouched. **Shipped.**
+- `POST /api/internal/posts/ai-translate` *(future)* — takes `{ postId, locales[] }`, writes `PostTranslation` records.
 
-### New lib/llm.ts Functions
-- `rewriteSegments(segments, derivedTerms, orgContext, ...)` — polish text segments in place (single language)
-- `draftChangelog(input, mode, pastPosts, orgContext, derivedTerms, ...)` — main generation function
-- `translateSegments(segments, targetLocale, derivedTerms, ...)` — reuses existing provider infrastructure
+### lib/llm.ts Functions
+- `llmComplete({ provider, apiKey, model, system, user, ... })` — shared per-provider completion (OpenAI / Anthropic / Google). **Shipped.**
+- `rewriteDocument(blocks, cfg)` — holistic block-level rewrite of an existing post, terminology-aware. **Shipped.**
+- `translateSegments(...)` *(future)* — reuses the same block pipeline + provider infrastructure for translation.
 
 ### Content Format
-- AI generates **markdown** (natural LLM output) → `marked` library converts to HTML → loads into Quill editor
-- Do NOT prompt AI to output HTML — markdown is more reliable and token-efficient
-- Do NOT migrate editor away from Quill — DB stores HTML, format change would require data migration
-- **Drafts must stay within Quill-supported formats** (headings, bold/italic, lists, links, blockquotes, code blocks) — Quill strips unsupported HTML (e.g. tables) on load
+- Refine works on the **stored HTML** directly via the block pipeline — no markdown round-trip. The AI returns a typed JSON of blocks (plain text + tokens); we render the HTML ourselves and sanitize. The AI never emits HTML or markdown.
+- Do NOT migrate editor away from Quill — DB stores HTML.
+- Output stays within Quill-supported constructs (headings, lists, blockquotes, paragraphs) plus verbatim-restored code/tables.
 
-### Content Preservation (hard rules for any AI operation on existing content)
-- **Media and links are never touched:** `<img src>`, `<a href>`, iframe embeds, and all other attributes pass through byte-identical. Only human-readable text is rewritten/translated (anchor text yes, the URL never).
-- **Structure carries forward:** a table stays a table, a bullet list stays a bullet list, headings stay headings. Achieved by construction — rewrite and translation both operate on extracted text segments and reinsert them into the original DOM; the AI never regenerates HTML.
-- **Nomenclature carries forward:** domain taxonomy (customer, partner, student, …) is never renamed — terminology auto-derived from the org's own content (zero user config) and injected into every prompt, plus output validation that flags terms that vanished from the output.
-- Implemented via a shared segment pipeline (`lib/html-segments.ts`): parse stored HTML → extract text nodes → LLM transforms segments as JSON → validate → reinsert → sanitize. See plan for details.
+### Content Preservation (hard rules — enforced by construction, not prompting)
+- **The AI never sees media or links.** `<img>`, `<video>`, `<iframe>`, `<a href>`, code blocks and tables are replaced by opaque tokens (⟦M#⟧/⟦L#⟧/⟦B#⟧) before anything is sent; their href/src never reach the model, so they cost no vision credits and are restored byte-identical.
+- **The AI may restructure text but never invent media.** It rewrites the plain text holistically (merge/split/reorder blocks) and repositions each token by surrounding-text context. Every token must survive **exactly once** — no drops, duplicates, or invented tokens — or the whole operation aborts and the content is left unchanged.
+- **Inline formatting is preserved:** bold/italic/underline/code phrases (and styled spans) are tokenized (⟦F#⟧) and restored verbatim.
+- **Nomenclature carries forward:** domain taxonomy (customer, partner, student, …) is never renamed — terminology auto-derived from the org's own content (zero user config), injected into every prompt, plus output validation that flags terms that vanished from the output (with one corrective retry).
+- Implemented via the document-wide token pipeline (`lib/html-segments.ts`): parse stored HTML → `extractBlocks` (plain-text blocks + token map) → LLM returns restructured blocks as JSON → `reassembleBlocks` validates tokens + renders HTML → sanitize.
 
 ### Key Decisions
-- **Single-language first:** rewrite/draft in the post's language ships before any translation work — multi-language is explicitly deprioritized
+- **One action, not modes:** "rewrite existing content" and "draft from a paste" collapsed into a single **Refine with AI** — the user always works in the editor (typed or pasted), and Refine handles both, media intact. No separate "Draft"/"Rewrite" buttons, no upfront "write vs paste" prompt.
+- **Single-language first:** refine in the post's language ships before any translation work — multi-language is explicitly deprioritized
 - **Nomenclature consistency is a hard requirement:** domain terms (customer, partner, student, …) must survive every AI operation unchanged — terminology is **auto-derived from the org's own content (never user-maintained)** and enforced via prompt + output validation, not left to model discretion
 - No streaming — drafts are short enough for simple fetch + loading state
 - No auto-translate on publish — manual to avoid surprise API costs
@@ -131,7 +131,5 @@ AI-assisted changelog drafting and translation. Bridges the gap between internal
 | Phase | Scope | Depends On |
 |-------|-------|------------|
 | 0 | Post edit page + draft/publish workflow | — ✓ Done |
-| 1 | Foundations (`aiWritingContext`, terminology derivation in `lib/glossary.ts`, `llmComplete` refactor) + segment pipeline (`lib/html-segments.ts`) + **`ai-rewrite` API + "Rewrite with AI" in post editor** (single language) | Phase 0 |
-| 2 | `ai-draft` API, "Draft with AI" toggle in create post (modes A + B) | Phase 1 |
-| 3 | `ai-translate` API, "Translate" button in post editor with per-locale status, translation **serving** (`?locale=` on public API, widget `data-locale`) | Phase 1 |
-| 4 | Linear OAuth import source (pluggable pattern) | Phase 2 |
+| 1 | Foundations (`aiWritingContext`, `OrgSettings.nomenclature`, terminology in `lib/glossary.ts` + `lib/nomenclature.ts`, `llmComplete` refactor) + document-wide token pipeline (`lib/html-segments.ts`) + **`ai-refine` API + "Refine with AI" in changelog post + announcement editors** (single language) | — ✓ Done (2026-07-06) |
+| 2 | `ai-translate` API, "Translate" button in post editor with per-locale status, translation **serving** (`?locale=` on public API, widget `data-locale`) | Phase 1 |

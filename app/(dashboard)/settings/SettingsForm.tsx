@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useState, useEffect, useActionState } from "react";
 import {
   updateOrgSettings,
   type SettingsState,
@@ -65,6 +65,13 @@ export function SettingsForm({
   const [aiProvider, setAiProvider] = useState(settings?.aiProvider ?? "");
   const [aiModel, setAiModel] = useState(settings?.aiModel ?? "");
   const [aiApiKey, setAiApiKey] = useState("");
+  const [aiWritingContext, setAiWritingContext] = useState(
+    settings?.aiWritingContext ?? ""
+  );
+  // Populated after mount so the first client render matches the server (avoids
+  // a hydration mismatch — window.location.origin is unavailable during SSR).
+  const [origin, setOrigin] = useState("");
+  useEffect(() => setOrigin(window.location.origin), []);
 
   const [settingsState, settingsAction, settingsPending] = useActionState<
     SettingsState,
@@ -261,7 +268,7 @@ export function SettingsForm({
               Add this single script tag to your site. It automatically loads all enabled widgets above.
             </span>
             <code className={styles.embedSnippet}>
-              {`<script src="${typeof window !== "undefined" ? window.location.origin : ""}/widget.js" data-api-key="${org.apiKey}" defer></script>`}
+              {`<script src="${origin}/widget.js" data-api-key="${org.apiKey}" defer></script>`}
             </code>
           </div>
 
@@ -302,6 +309,7 @@ export function SettingsForm({
           <input type="hidden" name="aiProvider" value={aiProvider} />
           <input type="hidden" name="aiModel" value={aiModel} />
           <input type="hidden" name="aiApiKey" value={aiApiKey} />
+          <input type="hidden" name="aiWritingContext" value={aiWritingContext} />
 
           <div className={styles.fieldGroup}>
             <label htmlFor="aiProvider" className={styles.label}>
@@ -361,6 +369,21 @@ export function SettingsForm({
               </div>
             </>
           )}
+
+          <div className={styles.fieldGroup}>
+            <label htmlFor="aiWritingContext" className={styles.label}>
+              AI writing context <span style={{ fontWeight: 400, opacity: 0.7 }}>(optional)</span>
+            </label>
+            <textarea
+              id="aiWritingContext"
+              value={aiWritingContext}
+              onChange={(e) => setAiWritingContext(e.target.value)}
+              className={styles.inputField}
+              rows={3}
+              maxLength={2000}
+              placeholder="Describe your audience, tone, and anything the AI should avoid — used when rewriting or drafting changelog posts."
+            />
+          </div>
 
           <div className={styles.actions}>
             <button
