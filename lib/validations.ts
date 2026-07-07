@@ -74,9 +74,14 @@ export const updateOrgSettingsSchema = z.object({
   locales: z.string().optional(),
   allowedDomain: z.string().max(255).optional(),
   enabledWidgets: z.string().optional(),
-  aiProvider: z.enum(AI_PROVIDERS).nullable().optional(),
+  // "" (the "None" option) → null means "clear AI config"; absent (undefined) means the
+  // submitting form didn't carry AI fields, so leave existing config untouched.
+  aiProvider: z.preprocess(
+    (v) => (v === "" ? null : v),
+    z.enum(AI_PROVIDERS).nullable().optional(),
+  ),
   aiModel: z.string().max(100).nullable().optional(),
-  aiApiKey: z.string().max(500).optional(),
+  aiApiKey: z.string().max(500, "API key looks too long — please double-check it.").optional(),
   aiWritingContext: z.string().max(2000).nullable().optional(),
 });
 

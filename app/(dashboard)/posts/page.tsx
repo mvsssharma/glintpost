@@ -18,26 +18,36 @@ export default async function PostsPage({
 
   const activeFilter = statusFilter === "PUBLISHED" ? "PUBLISHED" : statusFilter === "DRAFT" ? "DRAFT" : "ALL";
 
-  const rawPosts = (await db.post.findMany({
-    orderBy: { createdAt: "desc" },
-    ...(activeFilter !== "ALL" && { where: { status: activeFilter } }),
-    include: {
-      translations: { where: { locale: "en" }, take: 1 },
-      _count: {
-        select: {
-          changelogEvents: { where: { type: "LIKE" } },
+  // These two are independent — fetch them in parallel to avoid a request waterfall.
+  // Import is a migration aid — only offer it while the section is nearly empty.
+  const [rawPosts, postCount] = (await Promise.all([
+    db.post.findMany({
+      orderBy: { createdAt: "desc" },
+      ...(activeFilter !== "ALL" && { where: { status: activeFilter } }),
+      include: {
+        translations: { where: { locale: "en" }, take: 1 },
+        _count: {
+          select: {
+            changelogEvents: { where: { type: "LIKE" } },
+          },
         },
       },
-    },
-  })) as Array<{
-    id: string;
-    status: string;
-    createdAt: Date;
-    translations: Array<{ title: string; content: string }>;
-    _count: { changelogEvents: number };
-  }>;
+    }),
+    db.post.count(),
+  ])) as [
+    Array<{
+      id: string;
+      status: string;
+      createdAt: Date;
+      translations: Array<{ title: string; content: string }>;
+      _count: { changelogEvents: number };
+    }>,
+    number,
+  ];
+  const showImport = postCount < 3;
 
-  // _count only supports one filter per relation, so query dislikes separately
+  // _count only supports one filter per relation, so query dislikes separately.
+  // This depends on the fetched post IDs, so it stays sequential.
   const postIds = rawPosts.map((p) => p.id);
   const dislikeCounts = await db.changelogEvent.groupBy({
     by: ["postId"],
@@ -53,9 +63,6 @@ export default async function PostsPage({
     likes: post._count.changelogEvents,
     dislikes: (dislikeMap[post.id] as number) ?? 0,
   }));
-
-  // Import is a migration aid — only offer it while the section is nearly empty
-  const showImport = (await db.post.count()) < 3;
 
   return (
     <div className={styles.container}>

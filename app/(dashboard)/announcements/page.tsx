@@ -26,33 +26,42 @@ export default async function AnnouncementsPage({
 
   const now = new Date();
 
-  const announcements = (await db.announcement.findMany({
-    orderBy: { createdAt: "desc" },
-    ...(activeFilter === "PUBLISHED"
-      ? { where: { status: "PUBLISHED" } }
-      : activeFilter === "DRAFT"
-        ? { where: { status: "DRAFT" } }
-        : activeFilter === "ACTIVE"
-          ? { where: { status: "PUBLISHED", startDate: { lte: now }, endDate: { gte: now } } }
-          : {}),
-    include: {
-      _count: {
-        select: {
-          events: { where: { type: "VIEW" } },
+  // The list query and the count are independent — run them in parallel to avoid a waterfall.
+  const [announcements, announcementCount] = (await Promise.all([
+    db.announcement.findMany({
+      orderBy: { createdAt: "desc" },
+      ...(activeFilter === "PUBLISHED"
+        ? { where: { status: "PUBLISHED" } }
+        : activeFilter === "DRAFT"
+          ? { where: { status: "DRAFT" } }
+          : activeFilter === "ACTIVE"
+            ? { where: { status: "PUBLISHED", startDate: { lte: now }, endDate: { gte: now } } }
+            : {}),
+      include: {
+        _count: {
+          select: {
+            events: { where: { type: "VIEW" } },
+          },
         },
       },
-    },
-  })) as Array<{
-    id: string;
-    title: string;
-    displayType: string;
-    priority: number;
-    status: string;
-    startDate: Date;
-    endDate: Date;
-    createdAt: Date;
-    _count: { events: number };
-  }>;
+    }),
+    db.announcement.count(),
+  ])) as [
+    Array<{
+      id: string;
+      title: string;
+      displayType: string;
+      priority: number;
+      status: string;
+      startDate: Date;
+      endDate: Date;
+      createdAt: Date;
+      _count: { events: number };
+    }>,
+    number,
+  ];
+  // Import is a migration aid — only offer it while the section is nearly empty.
+  const showImport = announcementCount < 3;
 
   const annIds = announcements.map((a) => a.id);
   const clickCounts = await db.announcementEvent.groupBy({
@@ -70,9 +79,6 @@ export default async function AnnouncementsPage({
     clicks: (clickMap[a.id] as number) ?? 0,
     isActive: a.status === "PUBLISHED" && a.startDate <= now && a.endDate >= now,
   }));
-
-  // Import is a migration aid — only offer it while the section is nearly empty
-  const showImport = (await db.announcement.count()) < 3;
 
   return (
     <div className={styles.container}>

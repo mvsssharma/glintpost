@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useActionState } from "react";
+import { useState, useEffect, useActionState, useTransition } from "react";
 import {
   updateOrgSettings,
   type SettingsState,
@@ -68,6 +68,7 @@ export function SettingsForm({
   const [aiWritingContext, setAiWritingContext] = useState(
     settings?.aiWritingContext ?? ""
   );
+
   // Populated after mount so the first client render matches the server (avoids
   // a hydration mismatch — window.location.origin is unavailable during SSR).
   const [origin, setOrigin] = useState("");
@@ -77,6 +78,17 @@ export function SettingsForm({
     SettingsState,
     FormData
   >(updateOrgSettings, {});
+
+  // The AI-configuration form runs the same server action through its own submit handler
+  // so its success/error feedback shows on this form (not the org form). The selected
+  // provider/model are held in local state, so they simply persist after a save.
+  const [aiState, setAiState] = useState<SettingsState>({});
+  const [aiPending, startAiTransition] = useTransition();
+  const saveAiSettings = (formData: FormData) => {
+    startAiTransition(async () => {
+      setAiState(await updateOrgSettings({}, formData));
+    });
+  };
 
   const [passwordState, passwordAction, passwordPending] = useActionState<
     ChangePasswordState,
@@ -299,7 +311,7 @@ export function SettingsForm({
           Configure an LLM provider to enable semantic duplicate detection for
           roadmap suggestions. Without this, basic keyword matching is used.
         </p>
-        <form action={settingsAction}>
+        <form action={saveAiSettings}>
           <input type="hidden" name="name" value={orgName} />
           <input type="hidden" name="primaryColor" value={primaryColor} />
           <input type="hidden" name="widgetTheme" value={widgetTheme} />
@@ -310,6 +322,9 @@ export function SettingsForm({
           <input type="hidden" name="aiModel" value={aiModel} />
           <input type="hidden" name="aiApiKey" value={aiApiKey} />
           <input type="hidden" name="aiWritingContext" value={aiWritingContext} />
+
+          {aiState.error && <div className={styles.error}>{aiState.error}</div>}
+          {aiState.success && <div className={styles.success}>{aiState.success}</div>}
 
           <div className={styles.fieldGroup}>
             <label htmlFor="aiProvider" className={styles.label}>
@@ -388,10 +403,10 @@ export function SettingsForm({
           <div className={styles.actions}>
             <button
               type="submit"
-              disabled={settingsPending}
+              disabled={aiPending}
               className="btn-primary"
             >
-              {settingsPending ? "Saving..." : "Save AI settings"}
+              {aiPending ? "Saving..." : "Save AI settings"}
             </button>
           </div>
         </form>

@@ -1,38 +1,43 @@
+import { cache } from "react";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 import { prisma } from "./db";
 import type { Session } from "next-auth";
 
+// These page-facing guards run in Server Components and are typically called more than
+// once per request (dashboard layout + the page + occasionally generateMetadata). Wrapping
+// them in React `cache()` dedupes the `auth()` call and the org query to once per request.
+
 /**
  * Require an authenticated user. Redirects to /login if not authenticated.
  */
-export async function requireAuth() {
+export const requireAuth = cache(async () => {
   const session = await auth();
   if (!session?.user?.id) {
     redirect("/login");
   }
   return session;
-}
+});
 
 /**
  * Require an authenticated user with a verified email.
  * Redirects to /login if not authenticated, /verify-email if not verified.
  */
-export async function requireVerified() {
+export const requireVerified = cache(async () => {
   const session = await requireAuth();
   if (!session.emailVerified) {
     redirect("/verify-email");
   }
   return session;
-}
+});
 
 /**
  * Require an authenticated user with an organization.
  * Redirects to /login if not authenticated, /verify-email if not verified,
  * /onboarding if no org.
  */
-export async function requireOrg() {
+export const requireOrg = cache(async () => {
   const session = await requireVerified();
   if (!session.orgId) {
     redirect("/onboarding");
@@ -52,7 +57,7 @@ export async function requireOrg() {
   }
 
   return { session, org };
-}
+});
 
 type ApiAuthResult =
   | { session: Session & { orgId: string }; error?: undefined }

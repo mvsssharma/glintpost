@@ -45,3 +45,8 @@ next-env.d.ts
 /app/generated/prisma
 dev.db
 dev.db-journal
+
+# agent skills (installed locally, not committed)
+.agents/
+.claude/skills/
+skills-lock.json

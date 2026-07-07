@@ -124,9 +124,6 @@ export async function updateOrgSettings(
     ? parsed.data.locales.split(",").filter(Boolean)
     : ["en"];
 
-  const aiProvider = parsed.data.aiProvider ?? null;
-  const aiModel = parsed.data.aiModel ?? null;
-  const aiApiKeyRaw = parsed.data.aiApiKey || "";
 
   // Validate allowed domain — must be a valid origin, no regex/wildcards
   const allowedDomainRaw = (parsed.data.allowedDomain || "").trim().replace(/\/+$/, "");
@@ -152,15 +149,28 @@ export async function updateOrgSettings(
     return { error: "English must be included in supported languages" };
   }
 
-  // Encrypt AI API key if provided
-  let aiApiKey: string | undefined;
-  if (aiApiKeyRaw) {
-    aiApiKey = await encrypt(aiApiKeyRaw);
-  }
-
   const enabledWidgets = parsed.data.enabledWidgets
     ? parsed.data.enabledWidgets.split(",").filter(Boolean)
     : ["changelog", "roadmap", "feedback", "announcements"];
+
+  // AI fields are only carried by the AI-configuration form. When absent (undefined) —
+  // e.g. the org-settings form was submitted — leave existing AI config untouched. When
+  // provider is explicitly null ("None" selected) clear it; otherwise set it, keeping the
+  // stored key if the key field was left blank.
+  let aiData: Record<string, unknown> = {};
+  const providerField = parsed.data.aiProvider; // undefined | null | "openai" | …
+  if (providerField !== undefined) {
+    if (providerField === null) {
+      aiData = { aiProvider: null, aiModel: null, aiApiKey: null };
+    } else {
+      const aiApiKeyRaw = parsed.data.aiApiKey || "";
+      aiData = {
+        aiProvider: providerField,
+        aiModel: parsed.data.aiModel || null,
+        ...(aiApiKeyRaw && { aiApiKey: await encrypt(aiApiKeyRaw) }),
+      };
+    }
+  }
 
   const settingsData = {
     primaryColor,
@@ -169,16 +179,12 @@ export async function updateOrgSettings(
     defaultLocale: supportedLocales[0] || "en",
     allowedDomain,
     enabledWidgets,
-    ...(aiProvider !== null && { aiProvider }),
-    ...(aiModel !== null && { aiModel }),
-    ...(aiApiKey !== undefined && { aiApiKey }),
+    ...aiData,
     // Only touch aiWritingContext when the submitting form actually carried the field
     // (empty string clears it; absent leaves it unchanged).
     ...(parsed.data.aiWritingContext !== undefined && {
       aiWritingContext: (parsed.data.aiWritingContext ?? "").trim() || null,
     }),
-    // Clear AI fields if provider is removed
-    ...(!aiProvider && { aiProvider: null, aiModel: null, aiApiKey: null }),
   };
 
   try {
