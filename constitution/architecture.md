@@ -11,6 +11,8 @@
 - **Validation:** Zod 4
 - **AI:** BYO keys with pluggable providers (OpenAI, Anthropic, Google) via direct API calls
 - **Rich Text:** Quill editor (react-quill-new) — stores HTML in database
+- **Client data fetching:** SWR (public/widget pages) — dedup + caching
+- **Logging:** pino (structured; pino-pretty in dev)
 
 ## Directory Structure
 
@@ -98,6 +100,9 @@ Widgets communicate via `postMessage` with origin validation. Allowed origins: o
 
 - **Widget definitions:** `WIDGETS` (changelog + roadmap) vs `WIDGETS_WITH_FEEDBACK` (all three) in `lib/widgets.ts`. Dashboard preview uses `WIDGETS_WITH_FEEDBACK`.
 - **Cache invalidation:** Explicit — call cache invalidation after mutations, no TTL.
-- **AI keys:** Encrypted at rest with AES-256-GCM, key derived from `AUTH_SECRET`.
+- **API errors:** Typed error classes in `lib/errors.ts` (`ApiError` + `Validation`/`NotFound`/`Unauthorized`/`Forbidden`). Routes `throw` them inside a `try/catch`; the catch maps `instanceof ApiError` → `{ error, statusCode }`, else 500. Migration is partial — apply to new/edited routes.
+- **Logging:** pino `logger` in `lib/logger.ts` (`logger.error({ err }, "…")`) instead of `console.*`; level via `LOG_LEVEL`.
+- **Public data fetching:** SWR hooks (e.g. `app/board/useRoadmap.ts`) with `[url, apiKey]` keys for dedup/caching on widget pages, subject to the no-request-loop rule.
+- **AI keys:** Encrypted at rest with AES-256-GCM, key derived from `AUTH_SECRET`. Never serialized to the client — the settings page redacts `aiApiKey` to a sentinel (only "is a key saved?" reaches the browser).
 - **Locales:** en, hi, ta, te, kn, mr, bn, gu.
 - **Billing states:** trialing → active → past_due → canceled → inactive.
