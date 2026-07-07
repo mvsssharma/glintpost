@@ -5,29 +5,29 @@ import { findSimilarItems } from "@/lib/llm";
 import { SIMILARITY_THRESHOLD_DUPLICATE } from "@/lib/constants";
 import { suggestSchema } from "@/lib/validations";
 import { corsHeaders, handlePreflight } from "@/lib/cors";
+import { logger } from "@/lib/logger";
+import { UnauthorizedError, ValidationError, ApiError } from "@/lib/errors";
 
 export async function OPTIONS(req: NextRequest) {
   return handlePreflight(req);
 }
 
 export async function POST(req: NextRequest) {
-  const org = await validateApiKey(req);
-  if (!org) {
-    return NextResponse.json({ error: "Invalid or missing API key" }, { status: 401 });
-  }
-
-  const origin = req.headers.get("origin");
-  const cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
-
+  let cors: HeadersInit = {};
   try {
+    const org = await validateApiKey(req);
+    if (!org) {
+      throw new UnauthorizedError("Invalid or missing API key");
+    }
+
+    const origin = req.headers.get("origin");
+    cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
+
     const body = await req.json();
     const parsed = suggestSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
-        { status: 400, headers: cors },
-      );
+      throw new ValidationError(parsed.error.issues[0]?.message ?? "Invalid input");
     }
 
     const { text, visitorId } = parsed.data;
@@ -90,7 +90,10 @@ export async function POST(req: NextRequest) {
       { status: 201, headers: cors },
     );
   } catch (error) {
-    console.error("Suggestion error:", error);
+    logger.error({ err: error }, "Roadmap suggestion error");
+    if (error instanceof ApiError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode, headers: cors });
+    }
     return NextResponse.json({ error: "Failed to submit suggestion" }, { status: 500, headers: cors });
   }
 }

@@ -6,6 +6,8 @@ import { updatePostSchema } from "@/lib/validations";
 import { cacheInvalidate } from "@/lib/cache";
 import { refreshOrgNomenclature } from "@/lib/nomenclature";
 import { htmlToText } from "@/lib/html-segments";
+import { logger } from "@/lib/logger";
+import { ValidationError, NotFoundError, ApiError } from "@/lib/errors";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -24,12 +26,15 @@ export async function GET(_req: Request, context: Context) {
     });
 
     if (!post) {
-      return NextResponse.json({ error: "Post not found" }, { status: 404 });
+      throw new NotFoundError("Post not found");
     }
 
     return NextResponse.json(post);
   } catch (error) {
-    console.error("Failed to fetch post:", error);
+    logger.error({ err: error }, "Failed to fetch post");
+    if (error instanceof ApiError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     return NextResponse.json({ error: "Failed to fetch post" }, { status: 500 });
   }
 }
@@ -45,10 +50,7 @@ export async function PUT(req: Request, context: Context) {
     const parsed = updatePostSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
-        { status: 400 }
-      );
+      throw new ValidationError(parsed.error.issues[0]?.message ?? "Invalid input");
     }
 
     const { title, content, status, targetingRules } = parsed.data;
@@ -56,7 +58,7 @@ export async function PUT(req: Request, context: Context) {
 
     const existing = await db.post.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: "Post not found" }, { status: 404 });
+      throw new NotFoundError("Post not found");
     }
 
     // Build post update data
@@ -107,7 +109,10 @@ export async function PUT(req: Request, context: Context) {
 
     return NextResponse.json(post);
   } catch (error) {
-    console.error("Failed to update post:", error);
+    logger.error({ err: error }, "Failed to update post");
+    if (error instanceof ApiError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     return NextResponse.json({ error: "Failed to update post" }, { status: 500 });
   }
 }
@@ -123,7 +128,7 @@ export async function DELETE(_req: Request, context: Context) {
 
     const existing = await db.post.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: "Post not found" }, { status: 404 });
+      throw new NotFoundError("Post not found");
     }
 
     await db.post.delete({ where: { id } });
@@ -131,7 +136,10 @@ export async function DELETE(_req: Request, context: Context) {
     cacheInvalidate(session.orgId, "changelog-posts");
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Failed to delete post:", error);
+    logger.error({ err: error }, "Failed to delete post");
+    if (error instanceof ApiError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     return NextResponse.json({ error: "Failed to delete post" }, { status: 500 });
   }
 }

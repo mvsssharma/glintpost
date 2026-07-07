@@ -3,6 +3,8 @@ import { validateApiKey } from "@/lib/api-key";
 import { getOrgPrisma } from "@/lib/db";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { corsHeaders, handlePreflight } from "@/lib/cors";
+import { logger } from "@/lib/logger";
+import { UnauthorizedError, ApiError } from "@/lib/errors";
 
 export const dynamic = "force-dynamic";
 
@@ -69,19 +71,16 @@ export async function OPTIONS(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const org = await validateApiKey(req);
-
-  if (!org) {
-    return NextResponse.json(
-      { error: "Invalid or missing API key" },
-      { status: 401 }
-    );
-  }
-
-  const origin = req.headers.get("origin");
-  const cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
-
+  let cors: HeadersInit = {};
   try {
+    const org = await validateApiKey(req);
+    if (!org) {
+      throw new UnauthorizedError("Invalid or missing API key");
+    }
+
+    const origin = req.headers.get("origin");
+    cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
+
     const cached = cacheGet<CachedChangelogPost[]>(org.id, "changelog-posts");
     if (cached) {
       return NextResponse.json(cached, { headers: cors });
@@ -90,7 +89,10 @@ export async function GET(req: NextRequest) {
     const result = await fetchAndCachePosts(org.id);
     return NextResponse.json(result, { headers: cors });
   } catch (error) {
-    console.error("Failed to fetch widget posts:", error);
+    logger.error({ err: error }, "Failed to fetch widget posts");
+    if (error instanceof ApiError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode, headers: cors });
+    }
     return NextResponse.json(
       { error: "Failed to fetch posts" },
       { status: 500, headers: cors }

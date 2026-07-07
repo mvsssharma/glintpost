@@ -4,6 +4,8 @@ import { getOrgPrisma } from "@/lib/db";
 import { changelogEventSchema } from "@/lib/validations";
 import { cacheUpdate } from "@/lib/cache";
 import { corsHeaders, handlePreflight } from "@/lib/cors";
+import { logger } from "@/lib/logger";
+import { UnauthorizedError, ValidationError, ApiError } from "@/lib/errors";
 import type { CachedChangelogPost } from "@/app/api/changelog/posts/route";
 
 export async function OPTIONS(req: NextRequest) {
@@ -11,27 +13,21 @@ export async function OPTIONS(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const org = await validateApiKey(req);
-
-  if (!org) {
-    return NextResponse.json(
-      { error: "Invalid or missing API key" },
-      { status: 401 }
-    );
-  }
-
-  const origin = req.headers.get("origin");
-  const cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
-
+  let cors: HeadersInit = {};
   try {
+    const org = await validateApiKey(req);
+    if (!org) {
+      throw new UnauthorizedError("Invalid or missing API key");
+    }
+
+    const origin = req.headers.get("origin");
+    cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
+
     const body = await req.json();
     const parsed = changelogEventSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
-        { status: 400, headers: cors }
-      );
+      throw new ValidationError(parsed.error.issues[0]?.message ?? "Invalid input");
     }
 
     const { type, postId, visitorId, datalayer } = parsed.data;
@@ -40,16 +36,10 @@ export async function POST(req: NextRequest) {
     // LIKE/DISLIKE require visitorId for deduplication
     if (type !== "VIEW") {
       if (!visitorId) {
-        return NextResponse.json(
-          { error: "visitorId is required for LIKE/DISLIKE events" },
-          { status: 400, headers: cors }
-        );
+        throw new ValidationError("visitorId is required for LIKE/DISLIKE events");
       }
       if (!postId) {
-        return NextResponse.json(
-          { error: "postId is required for LIKE/DISLIKE events" },
-          { status: 400, headers: cors }
-        );
+        throw new ValidationError("postId is required for LIKE/DISLIKE events");
       }
 
       // Check for existing event of the same type (toggle off)
@@ -128,7 +118,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ action: "created", type }, { status: 201, headers: cors });
   } catch (error) {
-    console.error("Tracking error:", error);
+    logger.error({ err: error }, "Changelog tracking error");
+    if (error instanceof ApiError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode, headers: cors });
+    }
     return NextResponse.json(
       { error: "Failed to track event" },
       { status: 500, headers: cors }

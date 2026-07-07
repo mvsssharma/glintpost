@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { requireOrgApi } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/db";
 import { uploadToStorage } from "@/lib/storage";
+import { logger } from "@/lib/logger";
+import { ValidationError, ApiError } from "@/lib/errors";
 
 const ALLOWED_TYPES = new Set([
   "image/jpeg",
@@ -23,16 +25,13 @@ export async function POST(req: Request) {
     const file = formData.get("file") as File | null;
 
     if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+      throw new ValidationError("No file provided");
     }
     if (!ALLOWED_TYPES.has(file.type)) {
-      return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
+      throw new ValidationError("Invalid file type");
     }
     if (file.size > MAX_SIZE) {
-      return NextResponse.json(
-        { error: "File too large (max 5MB)" },
-        { status: 400 }
-      );
+      throw new ValidationError("File too large (max 5MB)");
     }
 
     const settings = await prisma.orgSettings.findUnique({
@@ -44,9 +43,8 @@ export async function POST(req: Request) {
       const used = Number(settings.storageUsedBytes);
       const cap = Number(settings.storageCapBytes);
       if (used + file.size > cap) {
-        return NextResponse.json(
-          { error: `Storage limit exceeded (${Math.round(cap / 1024 / 1024)}MB). Delete unused images or upgrade your plan.` },
-          { status: 400 }
+        throw new ValidationError(
+          `Storage limit exceeded (${Math.round(cap / 1024 / 1024)}MB). Delete unused images or upgrade your plan.`
         );
       }
     }
@@ -63,7 +61,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ url });
   } catch (error) {
-    console.error("Upload failed:", error);
+    logger.error({ err: error }, "Upload failed");
+    if (error instanceof ApiError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }

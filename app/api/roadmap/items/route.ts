@@ -109,7 +109,7 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json(result, { headers: cors });
-  } catch (error: any) {
+  } catch (error) {
     logger.error({ err: error }, "Failed to fetch roadmap items");
     if (error instanceof ApiError) {
       return NextResponse.json({ error: error.message }, { status: error.statusCode, headers: cors });

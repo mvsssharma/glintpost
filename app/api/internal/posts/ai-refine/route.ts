@@ -8,6 +8,7 @@ import { sanitizeRichHtml } from "@/lib/sanitize-html";
 import { getEffectiveTerms, checkTerms } from "@/lib/glossary";
 import { getRecentPostTexts, readNomenclature } from "@/lib/nomenclature";
 import { rewriteDocument } from "@/lib/llm";
+import { logger } from "@/lib/logger";
 
 /**
  * "Refine with AI" — dashboard-only. Holistically rewrites the current editor HTML in a
@@ -76,7 +77,7 @@ export async function POST(req: Request) {
   try {
     transformed = await rewriteDocument(blocks, cfg);
   } catch (err) {
-    console.error("ai-refine provider error:", err);
+    logger.error({ err }, "ai-refine provider error");
     return NextResponse.json({ error: "The AI provider could not be reached. Please try again." }, { status: 502 });
   }
 
@@ -88,7 +89,7 @@ export async function POST(req: Request) {
   try {
     content = reassembleBlocks(ctx, transformed);
   } catch (err) {
-    console.error("ai-refine reassembly failed:", err);
+    logger.error({ err }, "ai-refine reassembly failed");
     return NextResponse.json(
       { error: "AI response could not be applied safely — your content was not changed." },
       { status: 502 },
@@ -111,7 +112,7 @@ export async function POST(req: Request) {
         warnings = retryWarnings;
       }
     } catch (err) {
-      console.error("ai-refine terminology retry failed:", err);
+      logger.error({ err }, "ai-refine terminology retry failed");
       // keep the first result + its warnings
     }
   }

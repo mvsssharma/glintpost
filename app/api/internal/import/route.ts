@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { requireOrgApi } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import { cacheInvalidate } from "@/lib/cache";
+import { logger } from "@/lib/logger";
+import { ValidationError, ApiError } from "@/lib/errors";
 import {
   parseImportFile,
   IMPORT_TYPES,
@@ -31,20 +33,19 @@ export async function POST(req: Request) {
     const file = formData.get("file");
 
     if (typeof type !== "string" || !IMPORT_TYPES.includes(type as ImportType)) {
-      return NextResponse.json({ error: "Invalid import type" }, { status: 400 });
+      throw new ValidationError("Invalid import type");
     }
     if (!(file instanceof File)) {
-      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+      throw new ValidationError("No file uploaded");
     }
     if (file.size > MAX_IMPORT_FILE_BYTES) {
-      return NextResponse.json(
-        { error: `File too large. The limit is ${Math.round(MAX_IMPORT_FILE_BYTES / 1024 / 1024)}MB.` },
-        { status: 400 }
+      throw new ValidationError(
+        `File too large. The limit is ${Math.round(MAX_IMPORT_FILE_BYTES / 1024 / 1024)}MB.`
       );
     }
     const fileError = validateImportUpload(file);
     if (fileError) {
-      return NextResponse.json({ error: fileError }, { status: 400 });
+      throw new ValidationError(fileError);
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -62,7 +63,10 @@ export async function POST(req: Request) {
     cacheInvalidate(orgId, CACHE_KEYS[parsed.type]);
     return NextResponse.json({ imported: parsed.rows.length });
   } catch (error) {
-    console.error("Import failed:", error);
+    logger.error({ err: error }, "Import failed");
+    if (error instanceof ApiError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     return NextResponse.json({ error: "Import failed. Nothing was saved." }, { status: 500 });
   }
 }

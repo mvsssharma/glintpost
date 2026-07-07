@@ -6,6 +6,8 @@ import { updateAnnouncementSchema } from "@/lib/validations";
 import { cacheInvalidate } from "@/lib/cache";
 import { refreshOrgNomenclature } from "@/lib/nomenclature";
 import { htmlToText } from "@/lib/html-segments";
+import { logger } from "@/lib/logger";
+import { ValidationError, NotFoundError, ApiError } from "@/lib/errors";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -21,7 +23,7 @@ export async function GET(_req: Request, context: Context) {
     const announcement = await db.announcement.findUnique({ where: { id } });
 
     if (!announcement) {
-      return NextResponse.json({ error: "Announcement not found" }, { status: 404 });
+      throw new NotFoundError("Announcement not found");
     }
 
     // Fetch analytics
@@ -32,7 +34,10 @@ export async function GET(_req: Request, context: Context) {
 
     return NextResponse.json({ ...announcement, views: viewCount, clicks: clickCount });
   } catch (error) {
-    console.error("Failed to fetch announcement:", error);
+    logger.error({ err: error }, "Failed to fetch announcement");
+    if (error instanceof ApiError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     return NextResponse.json({ error: "Failed to fetch announcement" }, { status: 500 });
   }
 }
@@ -48,17 +53,14 @@ export async function PUT(req: Request, context: Context) {
     const parsed = updateAnnouncementSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
-        { status: 400 }
-      );
+      throw new ValidationError(parsed.error.issues[0]?.message ?? "Invalid input");
     }
 
     const db = getOrgPrisma(session.orgId);
 
     const existing = await db.announcement.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: "Announcement not found" }, { status: 404 });
+      throw new NotFoundError("Announcement not found");
     }
 
     const { targetingRules, ...rest } = parsed.data;
@@ -81,7 +83,10 @@ export async function PUT(req: Request, context: Context) {
 
     return NextResponse.json(announcement);
   } catch (error) {
-    console.error("Failed to update announcement:", error);
+    logger.error({ err: error }, "Failed to update announcement");
+    if (error instanceof ApiError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     return NextResponse.json({ error: "Failed to update announcement" }, { status: 500 });
   }
 }
@@ -97,7 +102,7 @@ export async function DELETE(_req: Request, context: Context) {
 
     const existing = await db.announcement.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: "Announcement not found" }, { status: 404 });
+      throw new NotFoundError("Announcement not found");
     }
 
     await db.announcement.delete({ where: { id } });
@@ -105,7 +110,10 @@ export async function DELETE(_req: Request, context: Context) {
     cacheInvalidate(session.orgId, "announcements");
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Failed to delete announcement:", error);
+    logger.error({ err: error }, "Failed to delete announcement");
+    if (error instanceof ApiError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     return NextResponse.json({ error: "Failed to delete announcement" }, { status: 500 });
   }
 }

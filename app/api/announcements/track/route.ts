@@ -3,33 +3,29 @@ import { validateApiKey } from "@/lib/api-key";
 import { getOrgPrisma } from "@/lib/db";
 import { announcementEventSchema } from "@/lib/validations";
 import { corsHeaders, handlePreflight } from "@/lib/cors";
+import { logger } from "@/lib/logger";
+import { UnauthorizedError, ValidationError, NotFoundError, ApiError } from "@/lib/errors";
 
 export async function OPTIONS(req: NextRequest) {
   return handlePreflight(req);
 }
 
 export async function POST(req: NextRequest) {
-  const org = await validateApiKey(req);
-
-  if (!org) {
-    return NextResponse.json(
-      { error: "Invalid or missing API key" },
-      { status: 401 }
-    );
-  }
-
-  const origin = req.headers.get("origin");
-  const cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
-
+  let cors: HeadersInit = {};
   try {
+    const org = await validateApiKey(req);
+    if (!org) {
+      throw new UnauthorizedError("Invalid or missing API key");
+    }
+
+    const origin = req.headers.get("origin");
+    cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
+
     const body = await req.json();
     const parsed = announcementEventSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
-        { status: 400, headers: cors }
-      );
+      throw new ValidationError(parsed.error.issues[0]?.message ?? "Invalid input");
     }
 
     const { type, announcementId, visitorId, datalayer } = parsed.data;
@@ -37,10 +33,7 @@ export async function POST(req: NextRequest) {
 
     const announcement = await db.announcement.findUnique({ where: { id: announcementId } });
     if (!announcement) {
-      return NextResponse.json(
-        { error: "Announcement not found" },
-        { status: 404, headers: cors }
-      );
+      throw new NotFoundError("Announcement not found");
     }
 
     const eventData = {
@@ -75,7 +68,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ action: "created", type }, { status: 201, headers: cors });
   } catch (error) {
-    console.error("Announcement tracking error:", error);
+    logger.error({ err: error }, "Announcement tracking error");
+    if (error instanceof ApiError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode, headers: cors });
+    }
     return NextResponse.json(
       { error: "Failed to track event" },
       { status: 500, headers: cors }

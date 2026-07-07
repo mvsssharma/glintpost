@@ -6,6 +6,8 @@ import { createAnnouncementSchema } from "@/lib/validations";
 import { cacheInvalidate } from "@/lib/cache";
 import { refreshOrgNomenclature } from "@/lib/nomenclature";
 import { htmlToText } from "@/lib/html-segments";
+import { logger } from "@/lib/logger";
+import { ValidationError, ApiError } from "@/lib/errors";
 
 export async function POST(req: Request) {
   try {
@@ -17,10 +19,7 @@ export async function POST(req: Request) {
     const parsed = createAnnouncementSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
-        { status: 400 }
-      );
+      throw new ValidationError(parsed.error.issues[0]?.message ?? "Invalid input");
     }
 
     const { targetingRules, ...rest } = parsed.data;
@@ -43,7 +42,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json(announcement, { status: 201 });
   } catch (error) {
-    console.error("Failed to create announcement:", error);
+    logger.error({ err: error }, "Failed to create announcement");
+    if (error instanceof ApiError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
+    }
     return NextResponse.json(
       { error: "Failed to create announcement" },
       { status: 500 }

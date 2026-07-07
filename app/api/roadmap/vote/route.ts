@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json({ action: "created", voteType }, { status: 201, headers: cors });
-  } catch (error: any) {
+  } catch (error) {
     logger.error({ err: error }, "Vote error");
     if (error instanceof ApiError) {
       return NextResponse.json({ error: error.message }, { status: error.statusCode, headers: cors });
