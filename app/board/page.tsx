@@ -2,11 +2,18 @@
 
 import { Suspense, useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import useSWR from "swr";
 import { useRoadmap } from "./useRoadmap";
 import { ROADMAP_STATUSES, DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import { getVisitorId, getExistingVisitorId } from "@/lib/visitor";
 import { getAllowedOrigins, postToParent, isAllowedOrigin } from "@/lib/post-message";
 import styles from "./page.module.css";
+
+const fetcher = ([url, apiKey]: [string, string]) =>
+  fetch(url, { headers: { "x-api-key": apiKey } }).then((res) => {
+    if (!res.ok) throw new Error("Fetch failed");
+    return res.json();
+  });
 
 const STATUS_FILTERS = [
   { value: "ALL", label: "All" },
@@ -20,17 +27,27 @@ function RoadmapContent() {
   const themeParam = searchParams.get("theme");
   const primaryColorParam = searchParams.get("primaryColor");
   const [visitorId, setVisitorId] = useState("");
-  const [allowedOrigins, setAllowedOrigins] = useState<Set<string>>(() => getAllowedOrigins(null));
-  const [theme, setTheme] = useState<{ primaryColor: string; widgetTheme: string } | null>(
-    themeParam ? { primaryColor: primaryColorParam ?? DEFAULT_PRIMARY_COLOR, widgetTheme: themeParam } : null
+  
+  const { data: config } = useSWR<{ primaryColor?: string; widgetTheme?: string; allowedDomain?: string | null }>(
+    apiKey ? ["/api/config", apiKey] : null,
+    fetcher
   );
 
-  // Lazy visitorId: only read existing ID on mount, never create on page load
+  const theme = themeParam
+    ? { primaryColor: primaryColorParam ?? DEFAULT_PRIMARY_COLOR, widgetTheme: themeParam }
+    : config
+    ? {
+        primaryColor: config.primaryColor ?? DEFAULT_PRIMARY_COLOR,
+        widgetTheme: config.widgetTheme ?? "light",
+      }
+    : null;
+
+  const allowedOrigins = config ? getAllowedOrigins(config.allowedDomain ?? null) : getAllowedOrigins(null);
+
   useEffect(() => {
     setVisitorId(getExistingVisitorId(visitorIdParam));
   }, [visitorIdParam]);
 
-  // Ensure visitorId exists (create if needed) — only call on user interaction
   const ensureVisitorId = useCallback((): string => {
     const id = getVisitorId(visitorIdParam);
     setVisitorId(id);
@@ -38,25 +55,13 @@ function RoadmapContent() {
   }, [visitorIdParam]);
 
   useEffect(() => {
-    if (!apiKey) return;
-    fetch("/api/config", { headers: { "x-api-key": apiKey } })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((config: { primaryColor?: string; widgetTheme?: string; allowedDomain?: string | null } | null) => {
-        if (config) {
-          const origins = getAllowedOrigins(config.allowedDomain ?? null);
-          setAllowedOrigins(origins);
-          setTheme({
-            primaryColor: config.primaryColor ?? DEFAULT_PRIMARY_COLOR,
-            widgetTheme: config.widgetTheme ?? "light",
-          });
-          postToParent(
-            { type: "GLINTPOST_ROADMAP_CONFIG", primaryColor: config.primaryColor },
-            origins
-          );
-        }
-      })
-      .catch(() => {});
-  }, [apiKey]);
+    if (config) {
+      postToParent(
+        { type: "GLINTPOST_ROADMAP_CONFIG", primaryColor: config.primaryColor },
+        allowedOrigins
+      );
+    }
+  }, [config, allowedOrigins]);
 
   const [isEmbedded, setIsEmbedded] = useState(false);
 
@@ -68,8 +73,6 @@ function RoadmapContent() {
     postToParent({ type: "GLINTPOST_ROADMAP_CLOSE" }, allowedOrigins);
   }, [allowedOrigins]);
 
-  // Track a view only when the widget is actually opened by the user, not
-  // when the slideover widget preloads this iframe ahead of time.
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
       if (!isAllowedOrigin(e.origin, allowedOrigins)) return;

@@ -3,6 +3,8 @@ import { validateApiKey } from "@/lib/api-key";
 import { getOrgPrisma, prisma } from "@/lib/db";
 import { feedbackSubmitSchema } from "@/lib/validations";
 import { corsHeaders, handlePreflight } from "@/lib/cors";
+import { logger } from "@/lib/logger";
+import { UnauthorizedError, ValidationError, NotFoundError, ApiError } from "@/lib/errors";
 import type { FeedbackQuestion } from "@/types";
 
 export async function OPTIONS(req: NextRequest) {
@@ -10,60 +12,45 @@ export async function OPTIONS(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const org = await validateApiKey(req);
-
-  if (!org) {
-    return NextResponse.json(
-      { error: "Invalid or missing API key" },
-      { status: 401 }
-    );
-  }
-
-  const origin = req.headers.get("origin");
-  const cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
-
+  let cors: HeadersInit = {};
   try {
+    const org = await validateApiKey(req);
+
+    if (!org) {
+      throw new UnauthorizedError("Invalid or missing API key");
+    }
+
+    const origin = req.headers.get("origin");
+    cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
     const body = await req.json();
     const parsed = feedbackSubmitSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
-        { status: 400, headers: cors }
-      );
+      throw new ValidationError(parsed.error.issues[0]?.message ?? "Invalid input");
     }
 
     const { formId, visitorId, answers, datalayer } = parsed.data;
 
-    // Verify the form exists and belongs to this org
     const form = await prisma.feedbackForm.findUnique({
       where: { id: formId, orgId: org.id },
     });
 
     if (!form || !form.enabled) {
-      return NextResponse.json(
-        { error: "Feedback form not found or disabled" },
-        { status: 404, headers: cors }
-      );
+      throw new NotFoundError("Feedback form not found or disabled");
     }
 
-    // Validate answers match form questions
     const questions = form.questions as unknown as FeedbackQuestion[];
     for (const q of questions) {
       if (q.required) {
         const answer = answers.find((a) => a.questionId === q.id);
         if (!answer || (typeof answer.value === "string" && !answer.value.trim())) {
-          return NextResponse.json(
-            { error: `Answer required for: ${q.text}` },
-            { status: 400, headers: cors }
-          );
+          throw new ValidationError(`Answer required for: ${q.text}`);
         }
       }
     }
 
     const db = getOrgPrisma(org.id);
 
-    // Check for existing response (dedup by visitorId)
     const existing = await db.feedbackResponse.findFirst({
       where: { formId, visitorId },
     });
@@ -95,8 +82,11 @@ export async function POST(req: NextRequest) {
       { action: "created" },
       { status: 201, headers: cors }
     );
-  } catch (error) {
-    console.error("Feedback submit error:", error);
+  } catch (error: any) {
+    logger.error({ err: error }, "Feedback submit error");
+    if (error instanceof ApiError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode, headers: cors });
+    }
     return NextResponse.json(
       { error: "Failed to submit feedback" },
       { status: 500, headers: cors }

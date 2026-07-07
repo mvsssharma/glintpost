@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
+import useSWR from "swr";
 import type { PublicRoadmapItem } from "@/types/roadmap";
 
 interface UseRoadmapReturn {
@@ -16,40 +17,32 @@ interface UseRoadmapReturn {
   }>;
 }
 
+const fetcher = ([url, apiKey]: [string, string]) =>
+  fetch(url, { headers: { "x-api-key": apiKey } }).then((res) => {
+    if (!res.ok) throw new Error("Fetch failed");
+    return res.json();
+  });
+
 export function useRoadmap(
   apiKey: string | null,
   visitorId: string,
   ensureVisitorId?: () => string,
 ): UseRoadmapReturn {
-  const [items, setItems] = useState<PublicRoadmapItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("ALL");
   const [sortBy, setSortBy] = useState<"votes" | "newest">("votes");
 
-  const fetchItems = useCallback(async () => {
-    if (!apiKey) return;
-    try {
-      const params = new URLSearchParams();
-      if (visitorId) params.set("visitorId", visitorId);
-      if (filter !== "ALL") params.set("status", filter);
-      const res = await fetch(`/api/roadmap/items?${params}`, {
-        headers: { "x-api-key": apiKey },
-      });
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data: PublicRoadmapItem[] = await res.json();
-      setItems(data);
-      setError(null);
-    } catch {
-      setError("Failed to load roadmap items");
-    } finally {
-      setLoading(false);
-    }
-  }, [apiKey, visitorId, filter]);
+  const params = new URLSearchParams();
+  if (visitorId) params.set("visitorId", visitorId);
+  if (filter !== "ALL") params.set("status", filter);
 
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
+  const { data: itemsData, error: swrError, mutate } = useSWR<PublicRoadmapItem[]>(
+    apiKey ? [`/api/roadmap/items?${params.toString()}`, apiKey] : null,
+    fetcher
+  );
+
+  const items = itemsData || [];
+  const loading = !itemsData && !swrError;
+  const error = swrError ? "Failed to load roadmap items" : null;
 
   const sortedItems = [...items].sort((a, b) => {
     if (sortBy === "votes") {
@@ -62,40 +55,39 @@ export function useRoadmap(
     async (itemId: string, voteType: "UP" | "DOWN") => {
       if (!apiKey) return;
 
-      // Lazy visitorId creation on first interaction
       const effectiveVisitorId = ensureVisitorId ? ensureVisitorId() : visitorId;
 
-      // Optimistic update
-      setItems((prev) =>
-        prev.map((item) => {
-          if (item.id !== itemId) return item;
-          const wasVoted = item.myVote;
-          if (wasVoted === voteType) {
-            // Toggle off
+      mutate(
+        (prev) =>
+          (prev || []).map((item) => {
+            if (item.id !== itemId) return item;
+            const wasVoted = item.myVote;
+            if (wasVoted === voteType) {
+              return {
+                ...item,
+                myVote: null,
+                upvotes: voteType === "UP" ? item.upvotes - 1 : item.upvotes,
+                downvotes: voteType === "DOWN" ? item.downvotes - 1 : item.downvotes,
+              };
+            }
             return {
               ...item,
-              myVote: null,
-              upvotes: voteType === "UP" ? item.upvotes - 1 : item.upvotes,
-              downvotes: voteType === "DOWN" ? item.downvotes - 1 : item.downvotes,
+              myVote: voteType,
+              upvotes:
+                voteType === "UP"
+                  ? item.upvotes + 1
+                  : wasVoted === "UP"
+                    ? item.upvotes - 1
+                    : item.upvotes,
+              downvotes:
+                voteType === "DOWN"
+                  ? item.downvotes + 1
+                  : wasVoted === "DOWN"
+                    ? item.downvotes - 1
+                    : item.downvotes,
             };
-          }
-          return {
-            ...item,
-            myVote: voteType,
-            upvotes:
-              voteType === "UP"
-                ? item.upvotes + 1
-                : wasVoted === "UP"
-                  ? item.upvotes - 1
-                  : item.upvotes,
-            downvotes:
-              voteType === "DOWN"
-                ? item.downvotes + 1
-                : wasVoted === "DOWN"
-                  ? item.downvotes - 1
-                  : item.downvotes,
-          };
-        }),
+          }),
+        false
       );
 
       try {
@@ -105,20 +97,18 @@ export function useRoadmap(
           body: JSON.stringify({ itemId, visitorId: effectiveVisitorId, voteType }),
         });
         if (!res.ok) {
-          // Revert on error
-          await fetchItems();
+          await mutate();
         }
       } catch {
-        await fetchItems();
+        await mutate();
       }
     },
-    [apiKey, visitorId, ensureVisitorId, fetchItems],
+    [apiKey, visitorId, ensureVisitorId, mutate],
   );
 
   const submitSuggestion = useCallback(
     async (text: string) => {
       if (!apiKey) throw new Error("No API key");
-      // Lazy visitorId creation on suggestion submit
       const effectiveVisitorId = ensureVisitorId ? ensureVisitorId() : visitorId;
       const res = await fetch("/api/roadmap/suggest", {
         method: "POST",
@@ -130,11 +120,10 @@ export function useRoadmap(
         throw new Error(err.error || "Failed to submit");
       }
       const data = await res.json();
-      // Refresh items after suggestion
-      await fetchItems();
+      await mutate();
       return data;
     },
-    [apiKey, visitorId, ensureVisitorId, fetchItems],
+    [apiKey, visitorId, ensureVisitorId, mutate],
   );
 
   return {

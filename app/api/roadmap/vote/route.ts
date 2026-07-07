@@ -4,6 +4,8 @@ import { getOrgPrisma } from "@/lib/db";
 import { voteSchema } from "@/lib/validations";
 import { cacheUpdate } from "@/lib/cache";
 import { corsHeaders, handlePreflight } from "@/lib/cors";
+import { logger } from "@/lib/logger";
+import { UnauthorizedError, ValidationError, NotFoundError, ApiError } from "@/lib/errors";
 import type { CachedRoadmapItem } from "@/app/api/roadmap/items/route";
 
 export async function OPTIONS(req: NextRequest) {
@@ -11,44 +13,37 @@ export async function OPTIONS(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const org = await validateApiKey(req);
-  if (!org) {
-    return NextResponse.json({ error: "Invalid or missing API key" }, { status: 401 });
-  }
-
-  const origin = req.headers.get("origin");
-  const cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
-
+  let cors: HeadersInit = {};
   try {
+    const org = await validateApiKey(req);
+    if (!org) {
+      throw new UnauthorizedError("Invalid or missing API key");
+    }
+
+    const origin = req.headers.get("origin");
+    cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
     const body = await req.json();
     const parsed = voteSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
-        { status: 400, headers: cors },
-      );
+      throw new ValidationError(parsed.error.issues[0]?.message ?? "Invalid input");
     }
 
     const { itemId, visitorId, voteType } = parsed.data;
     const db = getOrgPrisma(org.id);
 
-    // Verify item belongs to this org
     const item = await db.roadmapItem.findFirst({
       where: { id: itemId },
     });
     if (!item) {
-      return NextResponse.json({ error: "Item not found" }, { status: 404, headers: cors });
+      throw new NotFoundError("Item not found");
     }
-
-    // Check for existing vote
     const existingVote = await db.roadmapVote.findFirst({
       where: { itemId, visitorId },
     });
 
     if (existingVote) {
       if (existingVote.voteType === voteType) {
-        // Toggle off — remove vote
         await db.roadmapVote.delete({ where: { id: existingVote.id } });
         const field = voteType === "UP" ? "upvotes" : "downvotes";
         cacheUpdate<CachedRoadmapItem[]>(org.id, "roadmap-items", (items) =>
@@ -56,7 +51,6 @@ export async function POST(req: NextRequest) {
         );
         return NextResponse.json({ action: "removed", voteType: null }, { headers: cors });
       } else {
-        // Switch vote type (UP→DOWN or DOWN→UP)
         await db.roadmapVote.update({
           where: { id: existingVote.id },
           data: { voteType },
@@ -70,7 +64,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // New vote
     await db.roadmapVote.create({
       data: { orgId: org.id, itemId, visitorId, voteType },
     });
@@ -80,8 +73,11 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json({ action: "created", voteType }, { status: 201, headers: cors });
-  } catch (error) {
-    console.error("Vote error:", error);
+  } catch (error: any) {
+    logger.error({ err: error }, "Vote error");
+    if (error instanceof ApiError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode, headers: cors });
+    }
     return NextResponse.json({ error: "Failed to process vote" }, { status: 500, headers: cors });
   }
 }

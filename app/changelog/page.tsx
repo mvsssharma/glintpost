@@ -2,11 +2,18 @@
 
 import { useEffect, useState, useMemo, Suspense, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import useSWR from "swr";
 import { sanitizeRichHtml } from "@/lib/sanitize-html";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import { getVisitorId, getExistingVisitorId } from "@/lib/visitor";
 import { getAllowedOrigins, postToParent, isAllowedOrigin } from "@/lib/post-message";
 import styles from "./page.module.css";
+
+const fetcher = ([url, apiKey]: [string, string]) =>
+  fetch(url, { headers: { "x-api-key": apiKey } }).then((res) => {
+    if (!res.ok) throw new Error("Fetch failed");
+    return res.json();
+  });
 
 interface TargetingRule {
   param: string;
@@ -107,12 +114,29 @@ function ChangelogContent() {
     catch { return null; }
   }, [datalayerParam]);
 
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [theme, setTheme] = useState<{ primaryColor: string; widgetTheme: string } | null>(
-    themeParam ? { primaryColor: primaryColorParam ?? DEFAULT_PRIMARY_COLOR, widgetTheme: themeParam } : null
+  const { data: config } = useSWR<{ primaryColor?: string; widgetTheme?: string; allowedDomain?: string | null }>(
+    apiKey ? ["/api/config", apiKey] : null,
+    fetcher
   );
-  const [allowedOrigins, setAllowedOrigins] = useState<Set<string>>(() => getAllowedOrigins(null));
+
+  const { data: postsData, error: postsError } = useSWR<Post[]>(
+    apiKey ? ["/api/changelog/posts", apiKey] : null,
+    fetcher
+  );
+
+  const posts = Array.isArray(postsData) ? postsData : [];
+  const loading = (!postsData && !postsError) || !config;
+
+  const theme = themeParam
+    ? { primaryColor: primaryColorParam ?? DEFAULT_PRIMARY_COLOR, widgetTheme: themeParam }
+    : config
+    ? {
+        primaryColor: config.primaryColor ?? DEFAULT_PRIMARY_COLOR,
+        widgetTheme: config.widgetTheme ?? "light",
+      }
+    : null;
+
+  const allowedOrigins = config ? getAllowedOrigins(config.allowedDomain ?? null) : getAllowedOrigins(null);
   const allowedOriginsRef = useRef(allowedOrigins);
   allowedOriginsRef.current = allowedOrigins;
   const [interactedPosts, setInteractedPosts] = useState<
@@ -120,12 +144,10 @@ function ChangelogContent() {
   >({});
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
-  // Lazy visitorId: only read existing ID on mount, never create on page load
   useEffect(() => {
     setVisitorId(getExistingVisitorId(visitorIdParam));
   }, [visitorIdParam]);
 
-  // Ensure visitorId exists (create if needed) — only call on user interaction
   const ensureVisitorId = useCallback((): string => {
     const id = getVisitorId(visitorIdParam);
     setVisitorId(id);
@@ -139,28 +161,23 @@ function ChangelogContent() {
     ) => {
       if (!postId && type !== "VIEW") return;
 
-      // For interactions, ensure visitorId exists (lazy creation)
       const effectiveVisitorId = type !== "VIEW" ? ensureVisitorId() : visitorId;
 
-      // Optimistic update for LIKE/DISLIKE
       const prevInteractions = { ...interactedPosts };
       if (postId && type !== "VIEW") {
         const alreadyInteracted = interactedPosts[postId];
         if (alreadyInteracted === type) {
-          // Toggle off
           const updated = { ...interactedPosts };
           delete updated[postId];
           setInteractedPosts(updated);
           localStorage.setItem("glintpost_interactions", JSON.stringify(updated));
         } else {
-          // Toggle on
           const updated = { ...interactedPosts, [postId]: type as "LIKE" | "DISLIKE" };
           setInteractedPosts(updated);
           localStorage.setItem("glintpost_interactions", JSON.stringify(updated));
         }
       }
 
-      // Only include datalayer on user interactions, not passive views
       let datalayer: Record<string, string> | undefined;
       if (type !== "VIEW" && datalayerParam) {
         try {
@@ -179,7 +196,6 @@ function ChangelogContent() {
             datalayer,
           }),
         });
-        // Revert optimistic update on server error
         if (!res.ok && postId && type !== "VIEW") {
           setInteractedPosts(prevInteractions);
           localStorage.setItem("glintpost_interactions", JSON.stringify(prevInteractions));
@@ -201,43 +217,22 @@ function ChangelogContent() {
         setInteractedPosts(JSON.parse(stored));
       } catch { }
     }
+  }, []);
 
-    if (!apiKey) return;
+  useEffect(() => {
+    if (config) {
+      postToParent(
+        { type: "GLINTPOST_CHANGELOG_CONFIG", primaryColor: config.primaryColor },
+        allowedOriginsRef.current
+      );
+    }
+  }, [config]);
 
-    fetch("/api/config", { headers: { "x-api-key": apiKey } })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((config: { primaryColor?: string; widgetTheme?: string; allowedDomain?: string | null } | null) => {
-        if (config) {
-          const origins = getAllowedOrigins(config.allowedDomain ?? null);
-          setAllowedOrigins(origins);
-          setTheme({
-            primaryColor: config.primaryColor ?? DEFAULT_PRIMARY_COLOR,
-            widgetTheme: config.widgetTheme ?? "light",
-          });
-          postToParent(
-            { type: "GLINTPOST_CHANGELOG_CONFIG", primaryColor: config.primaryColor },
-            origins
-          );
-        }
-      })
-      .catch(() => { });
-
-    fetch("/api/changelog/posts", { headers: { "x-api-key": apiKey } })
-      .then((res) => res.json())
-      .then((data: Post[]) => {
-        if (Array.isArray(data)) {
-          setPosts(data);
-        }
-        setLoading(false);
-      })
-      .catch((err: unknown) => {
-        console.error(err);
-        setLoading(false);
-      });
-
-    postToParent({ type: "GLINTPOST_CHANGELOG_LOADED" }, allowedOriginsRef.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiKey]);
+  useEffect(() => {
+    if (postsData) {
+      postToParent({ type: "GLINTPOST_CHANGELOG_LOADED" }, allowedOriginsRef.current);
+    }
+  }, [postsData]);
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {

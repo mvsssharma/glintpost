@@ -22,15 +22,12 @@ const WIDGET_DOM_SELECTOR = [
 ].join(", ");
 
 function cleanupWidgets() {
-  // Remove all widget DOM elements (badges, tabs, slide-over containers)
   document.querySelectorAll(WIDGET_DOM_SELECTOR).forEach((el) => el.remove());
 
-  // Remove widget-injected <style> tags (they contain .glintpost- rules)
   document.querySelectorAll("style").forEach((el) => {
     if (el.innerHTML.includes("glintpost-")) el.remove();
   });
 
-  // Reset initialization flags so scripts can re-run
   const win = window as unknown as Record<string, unknown>;
   win.GlintPostChangelogInitialized = false;
   win.GlintPostRoadmapInitialized = false;
@@ -38,18 +35,15 @@ function cleanupWidgets() {
   win.GlintPostAnnouncementInitialized = false;
   win.GlintPostLoaderInitialized = false;
 
-  // Reset badge/tab stacking registries — prevents position creep
   win.__glintpost_badges = [];
   win.__glintpost_tabs = [];
 
-  // Remove old widget scripts
   document
     .querySelectorAll(
       [...WIDGETS.map((w) => `script[src*="${w.script}"]`), 'script[src*="announcement-widget.js"]', 'script[src*="widget.js"][data-api-key]'].join(", ")
     )
     .forEach((el) => el.remove());
 
-  // Clear announcement session/seen storage so preview always shows
   try {
     localStorage.removeItem("glintpost_ann_session");
     localStorage.removeItem("glintpost_ann_seen");
@@ -109,7 +103,6 @@ export default function PreviewContent({
     };
   }, [activeIdx, apiKey, widget?.script, isSlideover, isAnnouncement]);
 
-  // Clean up slideover artifacts when switching to inline widget
   useEffect(() => {
     if (isSlideover || isAnnouncement) return;
     cleanupWidgets();

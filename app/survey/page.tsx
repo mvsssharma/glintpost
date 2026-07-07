@@ -2,10 +2,17 @@
 
 import { useEffect, useState, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import useSWR from "swr";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import { getVisitorId, getExistingVisitorId } from "@/lib/visitor";
 import { getAllowedOrigins, postToParent, isAllowedOrigin } from "@/lib/post-message";
 import styles from "./page.module.css";
+
+const fetcher = ([url, apiKey]: [string, string]) =>
+  fetch(url, { headers: { "x-api-key": apiKey } }).then((res) => {
+    if (!res.ok) throw new Error("Fetch failed");
+    return res.json();
+  });
 
 interface FeedbackQuestion {
   id: string;
@@ -68,66 +75,58 @@ function SurveyContent() {
   const primaryColorParam = searchParams.get("primaryColor");
 
   const [visitorId, setVisitorId] = useState("");
-  const [form, setForm] = useState<FormData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [theme, setTheme] = useState<{ primaryColor: string; widgetTheme: string } | null>(
-    themeParam ? { primaryColor: primaryColorParam ?? DEFAULT_PRIMARY_COLOR, widgetTheme: themeParam } : null
-  );
   const [answers, setAnswers] = useState<Record<string, string | number>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
-  const [allowedOrigins, setAllowedOrigins] = useState<Set<string>>(() => getAllowedOrigins(null));
+  
+  const { data: config } = useSWR<{ primaryColor?: string; widgetTheme?: string; allowedDomain?: string | null }>(
+    apiKey ? ["/api/config", apiKey] : null,
+    fetcher
+  );
+
+  const formUrl = formIdParam
+    ? `/api/feedback/form?formId=${encodeURIComponent(formIdParam)}`
+    : "/api/feedback/form";
+
+  const { data: form, error: formError } = useSWR<FormData>(
+    apiKey ? [formUrl, apiKey] : null,
+    fetcher
+  );
+
+  const loading = (!form && !formError) || (!config);
+
+  const theme = themeParam
+    ? { primaryColor: primaryColorParam ?? DEFAULT_PRIMARY_COLOR, widgetTheme: themeParam }
+    : config
+    ? {
+        primaryColor: config.primaryColor ?? DEFAULT_PRIMARY_COLOR,
+        widgetTheme: config.widgetTheme ?? "light",
+      }
+    : null;
+
+  const allowedOrigins = config ? getAllowedOrigins(config.allowedDomain ?? null) : getAllowedOrigins(null);
   const allowedOriginsRef = useRef(allowedOrigins);
   allowedOriginsRef.current = allowedOrigins;
 
-  // Lazy visitorId: only read existing ID on mount, never create on page load
   useEffect(() => {
     setVisitorId(getExistingVisitorId(visitorIdParam));
   }, [visitorIdParam]);
 
   useEffect(() => {
-    if (!apiKey) return;
+    if (config) {
+      postToParent(
+        { type: "GLINTPOST_FEEDBACK_CONFIG", primaryColor: config.primaryColor },
+        allowedOriginsRef.current
+      );
+    }
+  }, [config]);
 
-    // Fetch config
-    fetch("/api/config", { headers: { "x-api-key": apiKey } })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((config: { primaryColor?: string; widgetTheme?: string; allowedDomain?: string | null } | null) => {
-        if (config) {
-          const origins = getAllowedOrigins(config.allowedDomain ?? null);
-          setAllowedOrigins(origins);
-          setTheme({
-            primaryColor: config.primaryColor ?? DEFAULT_PRIMARY_COLOR,
-            widgetTheme: config.widgetTheme ?? "light",
-          });
-          postToParent(
-            { type: "GLINTPOST_FEEDBACK_CONFIG", primaryColor: config.primaryColor },
-            origins
-          );
-        }
-      })
-      .catch(() => {});
-
-    // Fetch form
-    const formUrl = formIdParam
-      ? `/api/feedback/form?formId=${encodeURIComponent(formIdParam)}`
-      : "/api/feedback/form";
-    fetch(formUrl, { headers: { "x-api-key": apiKey } })
-      .then((res) => {
-        if (!res.ok) throw new Error("No form");
-        return res.json();
-      })
-      .then((data: FormData) => {
-        setForm(data);
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
-
-    postToParent({ type: "GLINTPOST_FEEDBACK_LOADED" }, allowedOriginsRef.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiKey]);
+  useEffect(() => {
+    if (form) {
+      postToParent({ type: "GLINTPOST_FEEDBACK_LOADED" }, allowedOriginsRef.current);
+    }
+  }, [form]);
 
   const closeWidget = () => {
     postToParent({ type: "GLINTPOST_FEEDBACK_CLOSE" }, allowedOrigins);
@@ -137,7 +136,6 @@ function SurveyContent() {
     if (!form || !apiKey) return;
     setError("");
 
-    // Validate required
     for (const q of form.questions) {
       if (q.required) {
         const val = answers[q.id];
@@ -150,7 +148,6 @@ function SurveyContent() {
 
     setSubmitting(true);
 
-    // Lazy visitorId creation — only generated when user explicitly submits
     const effectiveVisitorId = getVisitorId(visitorIdParam);
     setVisitorId(effectiveVisitorId);
 
@@ -195,7 +192,6 @@ function SurveyContent() {
     }
   }
 
-  // Check if already submitted
   useEffect(() => {
     if (form) {
       const stored = localStorage.getItem(`glintpost_feedback_${form.id}`);

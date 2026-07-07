@@ -4,6 +4,8 @@ import { getOrgPrisma } from "@/lib/db";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { corsHeaders, handlePreflight } from "@/lib/cors";
 import { roadmapVoteTotals } from "@/lib/roadmap-votes";
+import { logger } from "@/lib/logger";
+import { UnauthorizedError, ApiError } from "@/lib/errors";
 
 export const dynamic = "force-dynamic";
 
@@ -74,23 +76,20 @@ export async function OPTIONS(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const org = await validateApiKey(req);
-  if (!org) {
-    return NextResponse.json({ error: "Invalid or missing API key" }, { status: 401 });
-  }
-
-  const origin = req.headers.get("origin");
-  const cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
-  const visitorId = req.nextUrl.searchParams.get("visitorId");
-
+  let cors: HeadersInit = {};
   try {
-    // Get items from cache or DB
+    const org = await validateApiKey(req);
+    if (!org) {
+      throw new UnauthorizedError("Invalid or missing API key");
+    }
+
+    const origin = req.headers.get("origin");
+    cors = corsHeaders(origin, org.settings?.allowedDomain ?? null);
+    const visitorId = req.nextUrl.searchParams.get("visitorId");
     let items = cacheGet<CachedRoadmapItem[]>(org.id, "roadmap-items");
     if (!items) {
       items = await fetchAndCacheItems(org.id);
     }
-
-    // myVote is visitor-specific — always queried from DB (fast indexed lookup)
     let visitorVotes: Record<string, string> = {};
     if (visitorId && items.length > 0) {
       const db = getOrgPrisma(org.id);
@@ -104,15 +103,17 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Merge cached items with visitor-specific votes
     const result = items.map((item) => ({
       ...item,
       myVote: visitorVotes[item.id] ?? null,
     }));
 
     return NextResponse.json(result, { headers: cors });
-  } catch (error) {
-    console.error("Failed to fetch roadmap items:", error);
+  } catch (error: any) {
+    logger.error({ err: error }, "Failed to fetch roadmap items");
+    if (error instanceof ApiError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode, headers: cors });
+    }
     return NextResponse.json({ error: "Failed to fetch roadmap items" }, { status: 500, headers: cors });
   }
 }
