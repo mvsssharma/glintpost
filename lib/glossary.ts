@@ -11,6 +11,7 @@
  *  - checkTerms(): flags terms that were in the source but vanished from the output.
  */
 import { llmComplete } from "./llm";
+import { logger } from "./logger";
 
 export interface DerivedTerms {
   properNouns: string[];
@@ -188,7 +189,7 @@ export async function refineNomenclature(input: {
       deriveTerms({ sourceText: newText, recentPosts }),
     );
   } catch (err) {
-    console.error("refineNomenclature failed, using deterministic fallback:", err);
+    logger.error({ err }, "refineNomenclature failed, using deterministic fallback");
     return deterministic();
   }
 }

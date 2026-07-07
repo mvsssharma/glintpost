@@ -2,6 +2,7 @@ import { decrypt } from "./crypto";
 import type { OrgSettings } from "@prisma/client";
 import type { Block, OutBlock } from "./html-segments";
 import type { DerivedTerms } from "./glossary";
+import { logger } from "./logger";
 
 interface SimilarityResult {
   itemId: string;
@@ -40,7 +41,7 @@ export async function findSimilarItems(
       settings.aiModel,
     );
   } catch (error) {
-    console.error("LLM similarity check failed, using fallback:", error);
+    logger.error({ err: error }, "LLM similarity check failed, using fallback");
     return fallbackWordOverlap(suggestion, existingItems);
   }
 }

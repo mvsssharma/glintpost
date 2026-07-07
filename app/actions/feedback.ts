@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma, getOrgPrisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { feedbackFormSchema, formDataToObject } from "@/lib/validations";
+import { logger } from "@/lib/logger";
 
 export interface FeedbackFormState {
   error?: string;
@@ -83,7 +84,7 @@ export async function saveFeedbackForm(
       });
     }
   } catch (err) {
-    console.error("Failed to save feedback form:", err);
+    logger.error({ err }, "Failed to save feedback form");
     return { error: "Failed to save feedback form" };
   }
 
@@ -119,7 +120,7 @@ export async function deleteFeedbackForm(
   try {
     await db.feedbackForm.delete({ where: { id: formId } });
   } catch (err) {
-    console.error("Failed to delete feedback form:", err);
+    logger.error({ err }, "Failed to delete feedback form");
     return { error: "Failed to delete feedback form" };
   }
 

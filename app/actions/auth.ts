@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 import { sendVerificationEmail } from "@/app/actions/email-verification";
 import { signupSchema, loginSchema, changePasswordSchema, formDataToObject } from "@/lib/validations";
+import { logger } from "@/lib/logger";
 
 export interface AuthState {
   error?: string;
@@ -45,8 +46,8 @@ export async function signup(
   // Send verification email (don't block signup if this fails)
   try {
     await sendVerificationEmail(email);
-  } catch {
-    console.error("[GlintPost] Failed to send verification email during signup");
+  } catch (err) {
+    logger.error({ err }, "Failed to send verification email during signup");
   }
 
   // Sign in immediately after signup

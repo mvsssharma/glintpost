@@ -10,6 +10,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createOrgSchema, updateOrgSettingsSchema, formDataToObject } from "@/lib/validations";
 import { seedSampleContent } from "@/lib/sample-content";
+import { logger } from "@/lib/logger";
 
 export interface OnboardingState {
   error?: string;
@@ -200,7 +201,7 @@ export async function updateOrgSettings(
       }),
     ]);
   } catch (err) {
-    console.error("Failed to update settings:", err);
+    logger.error({ err }, "Failed to update settings");
     return { error: "Failed to update settings" };
   }
 

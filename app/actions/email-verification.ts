@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db";
 import { randomBytes } from "crypto";
 import { auth } from "@/auth";
+import { logger } from "@/lib/logger";
 
 const VERIFICATION_IDENTIFIER_PREFIX = "email-verify:";
 const TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -74,11 +75,11 @@ export async function sendVerificationEmail(
         `,
       });
       if (error) {
-        console.error("[GlintPost] Resend error:", error);
+        logger.error({ err: error }, "Resend error sending verification email");
         return { error: "Failed to send verification email. Please try again." };
       }
     } else {
-      console.log(`\n[GlintPost] Email verification link for ${email}:\n${verifyUrl}\n`);
+      logger.info({ email, verifyUrl }, "Email verification link (dev — no email sent)");
       return {
         success:
           "In development: no email was sent. Check your server console for the verification link.",

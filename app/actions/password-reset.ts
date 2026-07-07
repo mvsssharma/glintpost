@@ -8,6 +8,7 @@ import {
   resetPasswordSchema,
   formDataToObject,
 } from "@/lib/validations";
+import { logger } from "@/lib/logger";
 
 const PASSWORD_RESET_PREFIX = "password-reset:";
 
@@ -18,7 +19,7 @@ export interface PasswordResetState {
 
 /**
  * Request a password reset. Creates a token and (in production) sends an email.
- * In dev, logs the reset link to the console.
+ * In dev, logs the reset link via the logger.
  */
 export async function requestPasswordReset(
   _prevState: PasswordResetState,
@@ -69,9 +70,9 @@ export async function requestPasswordReset(
         subject: "Reset your password",
         html: `<p>Click <a href="${resetUrl}">here</a> to reset your password. This link expires in 1 hour.</p>`,
       });
-      if (error) console.error("[GlintPost] Resend error:", error);
+      if (error) logger.error({ err: error }, "Resend error sending password reset email");
     } else {
-      console.log(`\n[GlintPost] Password reset link for ${email}:\n${resetUrl}\n`);
+      logger.info({ email, resetUrl }, "Password reset link (dev — no email sent)");
     }
   } catch {
     // Swallow errors to avoid leaking info

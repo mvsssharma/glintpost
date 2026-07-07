@@ -6,6 +6,7 @@ import { getOrgPrisma } from "./db";
 import { decrypt } from "./crypto";
 import { htmlToText } from "./html-segments";
 import { refineNomenclature, type DerivedTerms, type StoredNomenclature } from "./glossary";
+import { logger } from "./logger";
 
 // Skip an LLM refresh if the glossary was updated within this window (cost guard).
 const DEBOUNCE_MS = 10 * 60 * 1000;
@@ -80,6 +81,6 @@ export async function refreshOrgNomenclature(orgId: string, newPlainText: string
     const value: StoredNomenclature = { ...refined, updatedAt: new Date().toISOString() };
     await db.orgSettings.update({ where: { orgId }, data: { nomenclature: value } });
   } catch (err) {
-    console.error("refreshOrgNomenclature failed:", err);
+    logger.error({ err }, "refreshOrgNomenclature failed");
   }
 }
