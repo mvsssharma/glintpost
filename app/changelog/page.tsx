@@ -137,9 +137,8 @@ function ChangelogContent() {
     : null;
 
   const allowedOrigins = config ? getAllowedOrigins(config.allowedDomain ?? null) : getAllowedOrigins(null);
-  // "Latest value" ref for the postMessage handler — updated after commit (writing a
-  // ref during render is unsafe with concurrent rendering). Plain assignment, no
-  // setState → cannot cause render/request loops on this iframe page.
+  // Latest-value ref for the postMessage handler; updated after commit (ref writes
+  // during render are unsafe with concurrent rendering). No setState → no loops.
   const allowedOriginsRef = useRef(allowedOrigins);
   useEffect(() => {
     allowedOriginsRef.current = allowedOrigins;

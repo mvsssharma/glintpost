@@ -81,10 +81,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "The AI provider could not be reached. Please try again." }, { status: 502 });
   }
 
-  // Reassemble first so the terminology check runs against the FINAL rendered text
-  // (link anchors, bold spans, etc. restored) rather than opaque ⟦…⟧ tokens — otherwise
-  // terms that live only inside a link/format span would look "vanished" and trigger a
-  // needless retry. Reassembly is also the token-integrity gate; failure = leave unchanged.
+  // Reassemble BEFORE the terminology check so it sees restored link/format text, not
+  // opaque tokens (else those terms look "vanished" → needless retry). Failure = no changes.
   let content: string;
   try {
     content = reassembleBlocks(ctx, transformed);

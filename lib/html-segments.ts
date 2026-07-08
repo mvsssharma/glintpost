@@ -1,24 +1,14 @@
 /**
- * Document-wide token pipeline for the "Refine with AI" operation on stored post HTML.
+ * Document-wide token pipeline for "Refine with AI". The model never sees HTML or media:
+ * the post is parsed into ordered plain-text BLOCKS, and links, media, inline-formatted
+ * phrases, and code/tables become opaque tokens (⟦L0⟧/⟦M0⟧/⟦F0⟧/⟦B0⟧) mapped server-side.
+ * The model may rewrite/merge/split/reorder blocks freely, but every token must survive
+ * EXACTLY ONCE; we render the returned blocks to HTML ourselves and restore each token
+ * byte-identical. So media/links can't change (by construction, not prompting) and cost
+ * no vision tokens; the model places them by surrounding-text context.
  *
- * The model never sees or returns HTML, and it never sees media. We parse the post into
- * an ordered list of plain-text BLOCKS; anything the model must not touch — links,
- * images/video/iframes, inline-formatted phrases, and opaque blocks like code/tables —
- * is replaced by an opaque token (⟦L0⟧, ⟦M0⟧, ⟦F0⟧, ⟦B0⟧) whose mapping to the original
- * element is kept server-side. The model may rewrite, merge, split, reorder and re-type
- * blocks freely, but every token must survive EXACTLY ONCE. On the way back we render the
- * returned blocks to HTML ourselves and restore each token byte-identical.
- *
- * Consequences (by construction, not by prompting):
- *  - Media/links can never change: their href/src never reach the model.
- *  - The model works from surrounding text alone, so image "understanding" costs nothing.
- *  - The model decides where each media/link token best fits the reflowed text.
- *
- * Intentional tradeoff: a link and an inline-formatted phrase are tokenized *whole*, so
- * their VISIBLE text is opaque too — the model can reposition a link but cannot rewrite
- * "click here" → "read the docs", nor reword a bolded phrase. This is a deliberate safety
- * choice (URLs/formatting stay byte-identical). A future refinement could split a link into
- * ⟦L#⟧ + separately-rewritable anchor text.
+ * Tradeoff: links/formatted phrases are tokenized whole, so their visible text can be
+ * repositioned but not reworded — a deliberate safety choice.
  */
 import * as cheerio from "cheerio";
 import type { AnyNode, Element as DomElement } from "domhandler";

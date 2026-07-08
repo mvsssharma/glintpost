@@ -31,7 +31,7 @@
       if (!raw) return false;
       var session = JSON.parse(raw);
       return session.shown && (Date.now() - session.timestamp < SESSION_TIMEOUT);
-    } catch (e) {
+    } catch {
       return false;
     }
   }
@@ -39,14 +39,14 @@
   function markSessionShown() {
     try {
       localStorage.setItem(SESSION_KEY, JSON.stringify({ timestamp: Date.now(), shown: true }));
-    } catch (e) {}
+    } catch {}
   }
 
   function getSeenIds() {
     try {
       var raw = localStorage.getItem(SEEN_KEY);
       return raw ? JSON.parse(raw) : [];
-    } catch (e) {
+    } catch {
       return [];
     }
   }
@@ -56,7 +56,7 @@
       var seen = getSeenIds();
       if (seen.indexOf(id) === -1) seen.push(id);
       localStorage.setItem(SEEN_KEY, JSON.stringify(seen));
-    } catch (e) {}
+    } catch {}
   }
 
   // --- Targeting ---
@@ -94,15 +94,15 @@
   function getVisitorId() {
     if (visitorId) return visitorId;
     var stored = null;
-    try { stored = localStorage.getItem("glintpost_visitor_id"); } catch (e) {}
+    try { stored = localStorage.getItem("glintpost_visitor_id"); } catch {}
     if (stored) return stored;
     var id;
     try {
       id = "v_" + crypto.randomUUID();
-    } catch (e) {
+    } catch {
       id = "v_" + Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
     }
-    try { localStorage.setItem("glintpost_visitor_id", id); } catch (e) {}
+    try { localStorage.setItem("glintpost_visitor_id", id); } catch {}
     return id;
   }
 
@@ -388,7 +388,7 @@
     try {
       localStorage.removeItem(SESSION_KEY);
       localStorage.removeItem(SEEN_KEY);
-    } catch (e) {}
+    } catch {}
     var hadBanner = document.querySelector(".glintpost-announcement-banner");
     if (hadBanner) {
       document.body.style.paddingTop = "";

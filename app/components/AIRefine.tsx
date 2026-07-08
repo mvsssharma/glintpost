@@ -89,9 +89,8 @@ export function RefinePreview({
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
-  // Open as a modal on mount → native focus trapping, Escape handling and backdrop.
-  // Explicitly close on unmount so a nested/replaced dialog can't leave the top-layer
-  // in a stale state.
+  // showModal() gives native focus-trapping/Escape/backdrop; close on unmount so a
+  // replaced dialog can't leave the top-layer stale.
   useEffect(() => {
     const dlg = dialogRef.current;
     if (dlg && !dlg.open) dlg.showModal();

@@ -41,13 +41,11 @@ export async function sendVerificationEmail(
       return { success: "Email is already verified." };
     }
 
-    // Delete existing verification tokens for this email
     const identifier = `${VERIFICATION_IDENTIFIER_PREFIX}${email}`;
     await prisma.verificationToken.deleteMany({
       where: { identifier },
     });
 
-    // Create new token
     const token = randomBytes(32).toString("hex");
     await prisma.verificationToken.create({
       data: {

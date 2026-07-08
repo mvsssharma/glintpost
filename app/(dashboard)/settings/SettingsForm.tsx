@@ -69,9 +69,7 @@ export function SettingsForm({
     settings?.aiWritingContext ?? ""
   );
 
-  // Build-time constant (inlined by Next), identical on server and client — no
-  // hydration mismatch and no effect needed. Also keeps the snippet canonical
-  // (the configured app URL) rather than whatever host the dashboard runs on.
+  // Build-time constant, identical on server and client — no hydration effect needed.
   const origin = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
   const [settingsState, settingsAction, settingsPending] = useActionState<
@@ -79,9 +77,8 @@ export function SettingsForm({
     FormData
   >(updateOrgSettings, {});
 
-  // The AI-configuration form runs the same server action through its own submit handler
-  // so its success/error feedback shows on this form (not the org form). The selected
-  // provider/model are held in local state, so they simply persist after a save.
+  // Same server action, own submit handler — so this form's feedback renders here,
+  // not on the org form.
   const [aiState, setAiState] = useState<SettingsState>({});
   const [aiPending, startAiTransition] = useTransition();
   const saveAiSettings = (formData: FormData) => {

@@ -5,9 +5,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "./db";
 import type { Session } from "next-auth";
 
-// These page-facing guards run in Server Components and are typically called more than
-// once per request (dashboard layout + the page + occasionally generateMetadata). Wrapping
-// them in React `cache()` dedupes the `auth()` call and the org query to once per request.
+// Wrapped in React cache(): layout + page both call these, so dedupe the auth()
+// call and org query to once per request.
 
 /**
  * Require an authenticated user. Redirects to /login if not authenticated.

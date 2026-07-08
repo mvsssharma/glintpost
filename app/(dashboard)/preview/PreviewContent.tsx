@@ -47,7 +47,7 @@ function cleanupWidgets() {
   try {
     localStorage.removeItem("glintpost_ann_session");
     localStorage.removeItem("glintpost_ann_seen");
-  } catch (e) {}
+  } catch {}
 }
 
 type ViewportMode = "desktop" | "mobile";
@@ -70,6 +70,7 @@ export default function PreviewContent({
   const isAnnouncement = activeIdx === ANNOUNCEMENT_IDX;
   const widget = isAnnouncement ? null : WIDGETS[activeIdx];
   const isSlideover = widget ? hasSlideover(widget) : false;
+  const widgetScript = widget?.script ?? null;
 
   useEffect(() => {
     if (isAnnouncement) {
@@ -87,12 +88,12 @@ export default function PreviewContent({
       };
     }
 
-    if (!isSlideover || !widget) return;
+    if (!isSlideover || !widgetScript) return;
 
     cleanupWidgets();
 
     const script = document.createElement("script");
-    script.src = `/${widget.script}`;
+    script.src = `/${widgetScript}`;
     script.setAttribute("data-api-key", apiKey);
     script.defer = true;
     document.body.appendChild(script);
@@ -101,7 +102,7 @@ export default function PreviewContent({
       script.remove();
       cleanupWidgets();
     };
-  }, [activeIdx, apiKey, widget?.script, isSlideover, isAnnouncement]);
+  }, [activeIdx, apiKey, widgetScript, isSlideover, isAnnouncement]);
 
   useEffect(() => {
     if (isSlideover || isAnnouncement) return;

@@ -25,7 +25,6 @@ export async function createOrganization(
     return { error: "Not authenticated" };
   }
 
-  // Check if user already has an org
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { orgId: true },
@@ -45,7 +44,6 @@ export async function createOrganization(
     ? parsed.data.locales.split(",").filter(Boolean)
     : ["en"];
 
-  // Generate a unique slug
   let slug = generateSlug(name);
   const existingSlug = await prisma.organization.findUnique({
     where: { slug },
@@ -54,7 +52,6 @@ export async function createOrganization(
     slug = `${slug}-${Date.now().toString(36)}`;
   }
 
-  // Create org + settings + link to user in a transaction
   const org = await prisma.$transaction(async (tx) => {
     const newOrg = await tx.organization.create({
       data: {
@@ -125,7 +122,6 @@ export async function updateOrgSettings(
     ? parsed.data.locales.split(",").filter(Boolean)
     : ["en"];
 
-
   // Validate allowed domain — must be a valid origin, no regex/wildcards
   const allowedDomainRaw = (parsed.data.allowedDomain || "").trim().replace(/\/+$/, "");
   let allowedDomain: string | null = null;
@@ -154,10 +150,8 @@ export async function updateOrgSettings(
     ? parsed.data.enabledWidgets.split(",").filter(Boolean)
     : ["changelog", "roadmap", "feedback", "announcements"];
 
-  // AI fields are only carried by the AI-configuration form. When absent (undefined) —
-  // e.g. the org-settings form was submitted — leave existing AI config untouched. When
-  // provider is explicitly null ("None" selected) clear it; otherwise set it, keeping the
-  // stored key if the key field was left blank.
+  // AI fields only arrive from the AI-configuration form: absent = leave config
+  // untouched, null ("None") = clear, set = update (blank key keeps the stored one).
   let aiData: Record<string, unknown> = {};
   const providerField = parsed.data.aiProvider; // undefined | null | "openai" | …
   if (providerField !== undefined) {

@@ -42,7 +42,6 @@ export async function GET(req: NextRequest) {
       data: { emailVerified: new Date() },
     });
 
-    // Delete the used token
     await prisma.verificationToken.delete({
       where: { identifier_token: { identifier, token } },
     });

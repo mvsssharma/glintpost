@@ -4,8 +4,8 @@ import { useEffect, useState, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
-import { getVisitorId, getExistingVisitorId } from "@/lib/visitor";
-import { getAllowedOrigins, postToParent, isAllowedOrigin } from "@/lib/post-message";
+import { getVisitorId } from "@/lib/visitor";
+import { getAllowedOrigins, postToParent } from "@/lib/post-message";
 import styles from "./page.module.css";
 
 const fetcher = ([url, apiKey]: [string, string]) =>
@@ -74,7 +74,6 @@ function SurveyContent() {
   const themeParam = searchParams.get("theme");
   const primaryColorParam = searchParams.get("primaryColor");
 
-  const [visitorId, setVisitorId] = useState("");
   const [answers, setAnswers] = useState<Record<string, string | number>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -106,17 +105,12 @@ function SurveyContent() {
     : null;
 
   const allowedOrigins = config ? getAllowedOrigins(config.allowedDomain ?? null) : getAllowedOrigins(null);
-  // "Latest value" ref for the postMessage handler — updated after commit (writing a
-  // ref during render is unsafe with concurrent rendering). Plain assignment, no
-  // setState → cannot cause render/request loops on this iframe page.
+  // Latest-value ref for the postMessage handler; updated after commit (ref writes
+  // during render are unsafe with concurrent rendering). No setState → no loops.
   const allowedOriginsRef = useRef(allowedOrigins);
   useEffect(() => {
     allowedOriginsRef.current = allowedOrigins;
   });
-
-  useEffect(() => {
-    setVisitorId(getExistingVisitorId(visitorIdParam));
-  }, [visitorIdParam]);
 
   useEffect(() => {
     if (config) {
@@ -154,7 +148,6 @@ function SurveyContent() {
     setSubmitting(true);
 
     const effectiveVisitorId = getVisitorId(visitorIdParam);
-    setVisitorId(effectiveVisitorId);
 
     let datalayer: Record<string, string> | undefined;
     if (datalayerParam) {

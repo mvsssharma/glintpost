@@ -26,7 +26,6 @@ export async function GET(_req: Request, context: Context) {
       throw new NotFoundError("Announcement not found");
     }
 
-    // Fetch analytics
     const [viewCount, clickCount] = await Promise.all([
       db.announcementEvent.count({ where: { announcementId: id, type: "VIEW" } }),
       db.announcementEvent.count({ where: { announcementId: id, type: "CLICK" } }),

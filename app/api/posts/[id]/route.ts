@@ -61,7 +61,6 @@ export async function PUT(req: Request, context: Context) {
       throw new NotFoundError("Post not found");
     }
 
-    // Build post update data
     const postUpdate: Record<string, unknown> = {};
     if (status) {
       postUpdate.status = status;
@@ -73,7 +72,6 @@ export async function PUT(req: Request, context: Context) {
       postUpdate.targetingRules = targetingRules === null ? Prisma.DbNull : targetingRules;
     }
 
-    // Update post + translation in a transaction
     const post = await db.$transaction(async (tx: Parameters<Parameters<typeof db.$transaction>[0]>[0]) => {
       if (title !== undefined || content !== undefined) {
         await tx.postTranslation.upsert({

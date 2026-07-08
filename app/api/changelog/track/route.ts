@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
         throw new ValidationError("postId is required for LIKE/DISLIKE events");
       }
 
-      // Check for existing event of the same type (toggle off)
+      // Same-type event again = toggle off
       const existing = await db.changelogEvent.findFirst({
         where: { postId, visitorId, type },
       });
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ action: "removed", type: null }, { headers: cors });
       }
 
-      // Remove opposite reaction if present (switch from LIKE→DISLIKE or vice versa)
+      // Switching reaction (LIKE↔DISLIKE) removes the opposite one
       const oppositeType = type === "LIKE" ? "DISLIKE" : "LIKE";
       const opposite = await db.changelogEvent.findFirst({
         where: { postId, visitorId, type: oppositeType },

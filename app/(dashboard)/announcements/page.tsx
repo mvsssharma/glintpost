@@ -26,7 +26,7 @@ export default async function AnnouncementsPage({
 
   const now = new Date();
 
-  // The list query and the count are independent — run them in parallel to avoid a waterfall.
+  // Independent queries — parallelize to avoid a waterfall.
   const [announcements, announcementCount] = (await Promise.all([
     db.announcement.findMany({
       orderBy: { createdAt: "desc" },
@@ -60,7 +60,7 @@ export default async function AnnouncementsPage({
     }>,
     number,
   ];
-  // Import is a migration aid — only offer it while the section is nearly empty.
+  // Import is a migration aid — only offered while the section is nearly empty
   const showImport = announcementCount < 3;
 
   const annIds = announcements.map((a) => a.id);

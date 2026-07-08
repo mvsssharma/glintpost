@@ -277,7 +277,7 @@
           localStorage.removeItem(key);
         }
       }
-    } catch (e) {}
+    } catch {}
     if (trigger.parentNode) trigger.parentNode.removeChild(trigger);
     if (container.parentNode) container.parentNode.removeChild(container);
     consentGranted = false;

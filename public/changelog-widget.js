@@ -51,7 +51,6 @@
 
   // --- Unread tracking ---
   var LAST_SEEN_KEY = "glintpost_changelog_last_seen";
-  var unreadCount = 0;
 
   var style = document.createElement("style");
 
@@ -247,7 +246,6 @@
   document.body.appendChild(container);
 
   function updateUnreadBadge(count) {
-    unreadCount = count;
     if (count > 0) {
       unreadDot.textContent = count > 9 ? "9+" : String(count);
       unreadDot.style.display = "flex";
@@ -259,7 +257,7 @@
   function markAsSeen() {
     try {
       localStorage.setItem(LAST_SEEN_KEY, new Date().toISOString());
-    } catch (e) {}
+    } catch {}
     updateUnreadBadge(0);
   }
 
@@ -327,7 +325,7 @@
       var lastSeen;
       try {
         lastSeen = localStorage.getItem(LAST_SEEN_KEY);
-      } catch (e) {}
+      } catch {}
       if (!lastSeen) {
         // First visit — don't show a dot, just set the timestamp
         markAsSeen();
@@ -415,7 +413,7 @@
           localStorage.removeItem(key);
         }
       }
-    } catch (e) {}
+    } catch {}
     // Remove DOM elements
     if (trigger.parentNode) trigger.parentNode.removeChild(trigger);
     if (container.parentNode) container.parentNode.removeChild(container);

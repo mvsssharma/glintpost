@@ -199,7 +199,7 @@
           localStorage.removeItem(key);
         }
       }
-    } catch (e) {}
+    } catch {}
     if (badge.parentNode) badge.parentNode.removeChild(badge);
     if (container.parentNode) container.parentNode.removeChild(container);
     consentGranted = false;

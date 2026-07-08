@@ -24,7 +24,6 @@ export async function GET(req: NextRequest) {
 
     let form;
     if (formId) {
-      // Fetch specific form by ID
       form = await prisma.feedbackForm.findUnique({
         where: { id: formId, orgId: org.id },
       });

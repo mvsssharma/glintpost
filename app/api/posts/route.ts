@@ -45,9 +45,8 @@ export async function POST(req: Request) {
 
     cacheInvalidate(session.orgId, "changelog-posts");
 
-    // Background: learn the org's terminology from its own content — only from PUBLISHED
-    // posts (draft wording shouldn't pollute the glossary or burn LLM calls before it's
-    // final). Mirrors the update path. Never blocks/fails the save.
+    // Learn org terminology in the background — published posts only, so draft wording
+    // never pollutes the glossary or burns LLM calls.
     if (status === "PUBLISHED") {
       after(() => refreshOrgNomenclature(session.orgId, htmlToText(content)));
     }

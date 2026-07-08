@@ -42,13 +42,11 @@ export async function requestPasswordReset(
       return { success: successMessage };
     }
 
-    // Delete any existing password-reset tokens for this email
     const identifier = `${PASSWORD_RESET_PREFIX}${email}`;
     await prisma.verificationToken.deleteMany({
       where: { identifier },
     });
 
-    // Create a new token (expires in 1 hour)
     const token = randomBytes(32).toString("hex");
     await prisma.verificationToken.create({
       data: {
@@ -114,14 +112,12 @@ export async function resetPassword(
       return { error: "Reset link has expired. Please request a new one." };
     }
 
-    // Update password
     const passwordHash = await bcrypt.hash(password, 12);
     await prisma.user.update({
       where: { email },
       data: { passwordHash },
     });
 
-    // Delete the used token
     await prisma.verificationToken.delete({
       where: { identifier_token: { identifier, token } },
     });

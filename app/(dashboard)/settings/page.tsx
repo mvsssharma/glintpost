@@ -6,9 +6,8 @@ export const dynamic = "force-dynamic";
 export default async function SettingsPage() {
   const { org } = await requireOrg();
 
-  // Don't serialize the (encrypted) AI API key to the client — the form only needs to
-  // know whether a key is saved. Redact it to a non-sensitive sentinel in BOTH the
-  // `settings` prop and the nested `org.settings` that ships with the `org` prop.
+  // Never serialize the encrypted AI API key to the client — redact to a sentinel in
+  // both props; the form only needs to know whether a key is saved.
   const settings = org.settings
     ? { ...org.settings, aiApiKey: org.settings.aiApiKey ? "__saved__" : null }
     : null;
