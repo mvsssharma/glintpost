@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { Prisma } from "@prisma/client";
 import { requireOrgApi } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
 
     // Background: learn the org's terminology from published announcements too. Never blocks/fails.
     if (announcement.status === "PUBLISHED") {
-      void refreshOrgNomenclature(session.orgId, htmlToText(announcement.content));
+      after(() => refreshOrgNomenclature(session.orgId, htmlToText(announcement.content)));
     }
 
     return NextResponse.json(announcement, { status: 201 });

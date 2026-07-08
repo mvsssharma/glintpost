@@ -7,12 +7,21 @@ const publicPaths = [
   "/forgot-password",
   "/reset-password",
   "/verify-email",
+  // Public widget API routes (API-key auth, called cross-origin by embedded widgets).
+  // Dashboard CRUD (e.g. POST /api/announcements, /api/announcements/[id]) is intentionally
+  // NOT listed — those stay session-protected here and via requireOrgApi.
   "/api/auth",
   "/api/config",
+  "/api/widgets",
   "/api/changelog",
   "/api/roadmap",
+  "/api/announcements/active",
+  "/api/announcements/track",
+  "/api/feedback",
+  // Public iframe pages embedded on customer sites.
   "/changelog",
   "/board",
+  "/survey",
 ];
 
 function isPublicPath(pathname: string) {

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { Prisma } from "@prisma/client";
 import { requireOrgApi } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
@@ -104,7 +104,7 @@ export async function PUT(req: Request, context: Context) {
     // Background: refresh learned terminology when a post is published. Never blocks/fails the save.
     if (post.status === "PUBLISHED") {
       const enText = post.translations.find((t) => t.locale === "en")?.content ?? "";
-      if (enText) void refreshOrgNomenclature(session.orgId, htmlToText(enText));
+      if (enText) after(() => refreshOrgNomenclature(session.orgId, htmlToText(enText)));
     }
 
     return NextResponse.json(post);

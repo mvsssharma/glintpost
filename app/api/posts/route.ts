@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { Prisma } from "@prisma/client";
 import { requireOrgApi } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     // posts (draft wording shouldn't pollute the glossary or burn LLM calls before it's
     // final). Mirrors the update path. Never blocks/fails the save.
     if (status === "PUBLISHED") {
-      void refreshOrgNomenclature(session.orgId, htmlToText(content));
+      after(() => refreshOrgNomenclature(session.orgId, htmlToText(content)));
     }
 
     return NextResponse.json(post, { status: 201 });
