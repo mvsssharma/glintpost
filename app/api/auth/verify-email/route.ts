@@ -46,8 +46,9 @@ export async function GET(req: NextRequest) {
       where: { identifier_token: { identifier, token } },
     });
 
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.AUTH_URL || req.url;
     return NextResponse.redirect(
-      new URL("/login?verified=true", req.url)
+      new URL("/onboarding", baseUrl)
     );
   } catch {
     return NextResponse.redirect(

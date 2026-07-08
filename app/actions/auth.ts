@@ -37,6 +37,7 @@ export async function signup(
         name,
         email,
         passwordHash,
+        emailVerified: process.env.NEXT_PUBLIC_REQUIRE_EMAIL_VERIFICATION === "true" ? null : new Date(),
       },
     });
   } catch {
@@ -96,8 +97,16 @@ export async function login(
     select: { emailVerified: true },
   });
   if (user && !user.emailVerified) {
-    await sendVerificationEmail(email);
-    redirect("/verify-email");
+    if (process.env.NEXT_PUBLIC_REQUIRE_EMAIL_VERIFICATION !== "true") {
+      // Auto-verify if verification is not strictly required
+      await prisma.user.update({
+        where: { email },
+        data: { emailVerified: new Date() },
+      });
+    } else {
+      await sendVerificationEmail(email);
+      redirect("/verify-email");
+    }
   }
 
   redirect("/");

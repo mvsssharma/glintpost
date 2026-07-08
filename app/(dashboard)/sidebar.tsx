@@ -63,10 +63,12 @@ export function Sidebar({ orgName, userName }: { orgName: string; userName: stri
         ))}
       </nav>
       <div className={styles.sidebarFooter}>
-        <Link href="/settings/billing" className={styles.navLink}>
-          <CreditCard size={18} className={styles.navIcon} />
-          Billing
-        </Link>
+        {process.env.NEXT_PUBLIC_ENABLE_BILLING !== "false" && (
+          <Link href="/settings/billing" className={styles.navLink}>
+            <CreditCard size={18} className={styles.navIcon} />
+            Billing
+          </Link>
+        )}
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           className={styles.logoutBtn}

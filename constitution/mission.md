@@ -18,6 +18,11 @@ Glintpost takes the opposite approach: **a lightweight product communication lay
 - **AI-powered content:** Changelog writing assistance + auto-translation (8 Indian languages) with BYO AI keys (encrypted at rest). Competitors offer manual multi-language at best.
 - **Flat pricing, no per-seat:** Built for teams <5 seats sharing credentials. No tracked-user billing traps (Canny), no per-seat add-ons (Featurebase), no MAU caps (Beamer).
 
+## Dual-Distribution Strategy
+
+Glintpost is designed with a single codebase that seamlessly powers two distinct environments through 12-factor feature flags:
+1. **Multi-Tenant Cloud (SaaS):** Hosted on Vercel, this mode strictly enforces email verification, enables Stripe/Razorpay billing, and uses a centralized email provider (Resend) to securely isolate tenants.
+2. **Self-Hosted Open Source (Docker):** A frictionless, "single-player" mode. By simply flipping feature flags (e.g., `NEXT_PUBLIC_REQUIRE_EMAIL_VERIFICATION=false`), email verification is bypassed, billing is disabled, and password resets gracefully fallback to console logs. This allows self-hosters to spin up Glintpost instantly without wrestling with third-party email configurations or paying for external API keys.
 ## Competitive Positioning
 
 - **Not competing on:** Analytics depth, support inbox, AI chatbots (Featurebase's direction)
@@ -27,7 +32,8 @@ Glintpost takes the opposite approach: **a lightweight product communication lay
 
 ## Key Product Decisions
 
-- No per-seat pricing — this limits revenue ceiling intentionally; the target market is small teams
-- Razorpay billing — Indian market focus, not USD/Stripe only
-- BYO AI keys — users control their own AI costs, encrypted with AES-256-GCM
-- Consent-first design — lazy visitorId, consent API, anonymous passive tracking (GDPR-conscious)
+- Open-Source First — Built for frictionless self-hosting via Docker, with optional feature-flagged billing for cloud deployments.
+- No per-seat pricing — this limits revenue ceiling intentionally for the cloud version; the target market is small teams.
+- Razorpay billing (Optional) — Indian market focus for the cloud-hosted version, hidden by default in open-source.
+- BYO AI keys — users control their own AI costs, encrypted with AES-256-GCM.
+- Consent-first design — lazy visitorId, consent API, anonymous passive tracking (GDPR-conscious).

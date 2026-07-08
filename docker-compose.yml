@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://glintpost:password@db:5432/glintpost
+      - DIRECT_DATABASE_URL=postgresql://glintpost:password@db:5432/glintpost
+      - NEXT_PUBLIC_ENABLE_BILLING=false
+      - NEXT_PUBLIC_REQUIRE_EMAIL_VERIFICATION=false
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - AUTH_SECRET=dev-secret-change-in-production-abc123
+      - AUTH_URL=http://localhost:3000
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: glintpost
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: glintpost
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U glintpost -d glintpost"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

@@ -4,10 +4,11 @@
 
 - **Framework:** Next.js 16 (App Router, Turbopack), React 19, TypeScript 5
 - **Database:** PostgreSQL via Prisma 7 (PrismaPg adapter, max 2 connections)
+- **Deployment:** Docker (standalone Next.js + Postgres) for self-hosting; Vercel for cloud.
 - **Auth:** NextAuth v5 (credentials provider, JWT sessions, bcrypt)
 - **Email:** Resend
 - **Storage:** S3/Cloudflare R2 for file uploads
-- **Billing:** Razorpay subscriptions
+- **Billing:** Optional Razorpay subscriptions (hidden by default via `NEXT_PUBLIC_ENABLE_BILLING` feature flag).
 - **Validation:** Zod 4
 - **AI:** BYO keys with pluggable providers (OpenAI, Anthropic, Google) via direct API calls
 - **Rich Text:** Quill editor (react-quill-new) — stores HTML in database

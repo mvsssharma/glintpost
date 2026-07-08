@@ -1,10 +1,15 @@
 import { requireOrg } from "@/lib/auth-helpers";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import styles from "../page.module.css";
 
 export const dynamic = "force-dynamic";
 
 export default async function BillingPage() {
+  if (process.env.NEXT_PUBLIC_ENABLE_BILLING === "false") {
+    notFound();
+  }
+
   await requireOrg();
 
   return (

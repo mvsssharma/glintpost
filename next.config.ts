@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
+  serverExternalPackages: ["isomorphic-dompurify"],
+
   // --- Production hardening ---
 
   // Remove x-powered-by header (don't advertise tech stack)

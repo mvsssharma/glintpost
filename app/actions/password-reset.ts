@@ -32,9 +32,10 @@ export async function requestPasswordReset(
 
   const { email } = parsed.data;
 
-  // Always return success to avoid email enumeration
-  const successMessage =
-    "If an account exists with that email, you will receive a reset link.";
+  // Always return success to avoid email enumeration. Tell the user to check logs if no email provider is configured.
+  const successMessage = process.env.RESEND_API_KEY
+    ? "If an account exists with that email, you will receive a reset link."
+    : "No email provider configured. If the account exists, the reset link has been printed to the server console.";
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
