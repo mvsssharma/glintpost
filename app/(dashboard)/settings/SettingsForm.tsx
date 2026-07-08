@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useActionState, useTransition } from "react";
+import { useState, useActionState, useTransition } from "react";
 import {
   updateOrgSettings,
   type SettingsState,
@@ -69,10 +69,10 @@ export function SettingsForm({
     settings?.aiWritingContext ?? ""
   );
 
-  // Populated after mount so the first client render matches the server (avoids
-  // a hydration mismatch — window.location.origin is unavailable during SSR).
-  const [origin, setOrigin] = useState("");
-  useEffect(() => setOrigin(window.location.origin), []);
+  // Build-time constant (inlined by Next), identical on server and client — no
+  // hydration mismatch and no effect needed. Also keeps the snippet canonical
+  // (the configured app URL) rather than whatever host the dashboard runs on.
+  const origin = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
   const [settingsState, settingsAction, settingsPending] = useActionState<
     SettingsState,

@@ -11,6 +11,7 @@ const publicPaths = [
   // Dashboard CRUD (e.g. POST /api/announcements, /api/announcements/[id]) is intentionally
   // NOT listed — those stay session-protected here and via requireOrgApi.
   "/api/auth",
+  "/api/health",
   "/api/config",
   "/api/widgets",
   "/api/changelog",

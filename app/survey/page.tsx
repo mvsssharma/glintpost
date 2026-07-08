@@ -106,8 +106,13 @@ function SurveyContent() {
     : null;
 
   const allowedOrigins = config ? getAllowedOrigins(config.allowedDomain ?? null) : getAllowedOrigins(null);
+  // "Latest value" ref for the postMessage handler — updated after commit (writing a
+  // ref during render is unsafe with concurrent rendering). Plain assignment, no
+  // setState → cannot cause render/request loops on this iframe page.
   const allowedOriginsRef = useRef(allowedOrigins);
-  allowedOriginsRef.current = allowedOrigins;
+  useEffect(() => {
+    allowedOriginsRef.current = allowedOrigins;
+  });
 
   useEffect(() => {
     setVisitorId(getExistingVisitorId(visitorIdParam));
