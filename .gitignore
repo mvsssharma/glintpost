@@ -49,7 +49,7 @@ dev.db-journal
 # local upload storage (STORAGE_DRIVER=local)
 /data
 
-# agent skills (installed locally, not committed)
+# agent skills + local Claude Code working dir (not committed)
 .agents/
-.claude/skills/
+.claude/
 skills-lock.json

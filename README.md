@@ -136,9 +136,12 @@ If you want to contribute or run the app manually using Node.js:
    ```
 2. **Setup your environment:**
    Create a `.env` file from `.env.example` and ensure `DATABASE_URL` points to a valid PostgreSQL instance.
-3. **Run migrations and start the dev server:**
+3. **Apply database migrations:**
    ```bash
-   npm run build      # Generates Prisma client and runs migrations
+   npx prisma migrate deploy   # Creates the schema (use `migrate dev` if you're changing it)
+   ```
+4. **Start the dev server:**
+   ```bash
    npm run dev        # Starts server at http://localhost:3000
    ```
 
