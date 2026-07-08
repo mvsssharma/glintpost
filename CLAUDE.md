@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Glintpost
 
-Product communication SaaS — changelog, roadmap voting, and feedback widgets that embed into customer sites.
+**The ultimate product marketing platform** — changelog, roadmap voting, and feedback widgets that embed into customer sites.
 
 **Domain:** glintpost.com | **App:** app.glintpost.com
 

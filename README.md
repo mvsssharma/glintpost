@@ -1,19 +1,33 @@
 # GlintPost 🌟
 
-GlintPost is an open-source, multi-tenant product communication platform. It provides unified widgets for **Changelogs, Roadmaps, and User Feedback** that you can embed directly into your customer-facing websites. 
+> **The ultimate product marketing platform.**
 
-Whether you are a solo founder or an agency managing multiple products, GlintPost helps you keep your users in the loop and gather valuable insights.
+Open-source, multi-tenant widgets for **Changelogs, Roadmaps, and Feedback** that drop into your site in minutes — so your users actually find out about all the stuff you shipped at 2am.
+
+🌐 **[glintpost.com](https://glintpost.com)** — bridge the gap between product and go-to-market.
+
+---
+
+## 🤔 Why does this exist?
+
+You spent three weeks building a feature. You shipped it. And then… crickets. 🦗 Nobody noticed. Support is still fielding "hey, can you build X?" tickets for the X you launched last month.
+
+The usual fix is bolting on Yet Another Tool — a separate changelog site, a separate roadmap portal, a separate feedback box — each with its own login, its own subdomain, and its own monthly invoice. Congratulations, you now run a small SaaS zoo. 🦒
+
+GlintPost is the boring-in-a-good-way alternative: **one** lightweight layer for changelogs, roadmaps, and feedback that embeds straight into your product, plugs into your existing data stack (GTM, datalayer) instead of starting a new silo, and doesn't make your users go somewhere else to hear what's new. Ship it, announce it, watch people vote on what's next. That's the whole pitch.
+
+And since it's open source, you can run the entire thing on your own box with a single `docker compose up` — no per-seat pricing, no "book a demo," no cloud account required. Your data, your server, your rules.
 
 ---
 
 ## 🚀 Features
 
-- **Multi-Tenant Architecture:** Manage multiple products or organizations from a single dashboard.
-- **Changelog Widget:** Keep users updated with rich-text product announcements and updates.
-- **Interactive Roadmaps:** Let your users suggest and vote on upcoming features.
-- **Feedback Collection:** Gather context-rich feedback directly from your app.
-- **Next.js & Prisma:** Built on a modern, blazing-fast tech stack.
-- **Frictionless Self-Hosting:** Deploy anywhere in minutes with Docker.
+- **Changelog Widget:** Rich-text "look what we shipped" posts your users see without leaving your app.
+- **Interactive Roadmaps:** Let people suggest and upvote features — free product prioritization, courtesy of the folks who actually use the thing.
+- **Feedback Collection:** Context-rich feedback captured right where the frustration happens.
+- **Multi-Tenant:** Run many products or clients from one dashboard. Great for founders, agencies, and serial side-project offenders.
+- **Modern Stack:** Next.js + Prisma + Postgres. Fast, typed, and unsurprising.
+- **Frictionless Self-Hosting:** One command, zero external accounts to get started. Bring your own DB and storage whenever you're ready.
 
 ---
 
