@@ -46,6 +46,9 @@ next-env.d.ts
 dev.db
 dev.db-journal
 
+# local upload storage (STORAGE_DRIVER=local)
+/data
+
 # agent skills (installed locally, not committed)
 .agents/
 .claude/skills/

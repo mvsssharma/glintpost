@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
+import { getAppUrl } from "@/lib/app-url";
 
 const VERIFICATION_IDENTIFIER_PREFIX = "email-verify:";
 
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
       where: { identifier_token: { identifier, token } },
     });
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.AUTH_URL || req.url;
+    const baseUrl = getAppUrl();
     return NextResponse.redirect(
       new URL("/onboarding", baseUrl)
     );

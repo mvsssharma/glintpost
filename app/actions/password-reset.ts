@@ -9,6 +9,7 @@ import {
   formDataToObject,
 } from "@/lib/validations";
 import { logger } from "@/lib/logger";
+import { getAppUrl } from "@/lib/app-url";
 
 const PASSWORD_RESET_PREFIX = "password-reset:";
 
@@ -57,7 +58,7 @@ export async function requestPasswordReset(
       },
     });
 
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
+    const resetUrl = `${getAppUrl()}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
 
     // In dev, log the link. In production, send via Resend.
     if (process.env.RESEND_API_KEY) {

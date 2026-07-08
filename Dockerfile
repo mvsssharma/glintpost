@@ -51,6 +51,10 @@ RUN chmod +x docker-entrypoint.sh
 # Install prisma in the runner image so `npx prisma migrate deploy` works smoothly
 RUN npm install prisma @prisma/client
 
+# Local upload storage (used when no S3 is configured). Create + own the dir so
+# the mounted volume inherits nextjs ownership on first run.
+RUN mkdir -p /app/data/uploads && chown -R nextjs:nodejs /app/data
+
 USER nextjs
 
 EXPOSE 3000

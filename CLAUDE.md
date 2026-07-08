@@ -19,7 +19,7 @@ Deep context lives in `constitution/` — read these before making architectural
 
 ```bash
 npm run dev        # Dev server (Turbopack)
-npm run build      # prisma generate → prisma migrate deploy → next build
+npm run build      # prisma generate → next build (migrations run separately: docker-entrypoint.sh, or `prisma migrate deploy`)
 npm run start      # Production server
 npm run lint       # ESLint
 npx prisma migrate dev --name <name>   # Create a new migration
@@ -27,6 +27,23 @@ npx prisma studio                       # Visual DB browser
 ```
 
 **Always run `npm run build` locally before pushing to main/staging.**
+
+### Release sanity checklist (run before every release/push that touches build, Docker, deps, env, or migrations)
+
+Glintpost ships as **two distributions** — Vercel (cloud) and a self-hosted Docker image. A green `next build` only proves the Vercel path. Also verify the Docker path:
+
+1. **`npm run build`** — TypeScript + Next build (the Vercel/cloud path).
+2. **Docker image builds:** `docker build -t glintpost:sanity .` — catches Dockerfile / standalone-output / in-container `next build` breakage.
+3. **Clean self-host boot:** from a fresh DB volume, confirm migrations apply and the app serves:
+   ```bash
+   docker compose down -v                 # wipe volumes for a true fresh-install test
+   docker compose up -d --build
+   docker compose logs web                # expect all migrations "Applying…" then "Ready"
+   curl -so /dev/null -w "%{http_code}\n" http://localhost:3000/api/health   # expect 200
+   ```
+   (If host port 5432 is taken by a local Postgres, remap the db port via a compose override — the app reaches it internally as `db:5432` regardless.)
+
+Both build **and** clean-boot must pass — the Docker path can break while the cloud build is green (e.g. runtime-only env vars, `output: standalone` file tracing, entrypoint migrations).
 
 ## Critical Rules
 
@@ -49,11 +66,18 @@ npx prisma studio                       # Visual DB browser
 
 ```
 DATABASE_URL              # PostgreSQL connection string
+DIRECT_DATABASE_URL       # Direct (non-pooled) connection for migrations; falls back to DATABASE_URL
 AUTH_SECRET               # JWT + encryption secret
 AUTH_URL                  # NextAuth redirect base URL
 RESEND_API_KEY            # Email (optional in dev — logs to console)
+STORAGE_DRIVER            # "local" (disk) or "s3"; auto-selects "s3" when S3_ENDPOINT set (see lib/storage.ts)
+UPLOAD_DIR                # Local driver upload dir (default ./data/uploads); served by app/uploads/[key]
 S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_PUBLIC_URL
 RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_PLAN_ID, RAZORPAY_WEBHOOK_SECRET
-NEXT_PUBLIC_APP_URL       # Public app URL
+APP_URL                   # Public app base URL (runtime, server-side; see lib/app-url.ts)
 LOG_LEVEL                 # pino log level (default "info")
+ENABLE_BILLING            # "false" hides billing (self-host); default enabled
+REQUIRE_EMAIL_VERIFICATION # "true" forces email verification before login; default off
 ```
+
+**Dual-distribution env note:** Config that must differ between the Vercel cloud build and the self-hosted Docker image (`APP_URL`, `ENABLE_BILLING`, `REQUIRE_EMAIL_VERIFICATION`) uses **plain, non-`NEXT_PUBLIC_` names** so it is read at *runtime*. `NEXT_PUBLIC_*` values are inlined at build time and frozen — a prebuilt Docker image can't honor them at runtime. For client components, resolve these server-side (`lib/app-url.ts`) and pass down as props, or derive from `window.location.origin`.

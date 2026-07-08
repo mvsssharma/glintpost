@@ -32,9 +32,11 @@ function toggleLocale(
 export function SettingsForm({
   org,
   settings,
+  appUrl,
 }: {
   org: Organization;
   settings: OrgSettings | null;
+  appUrl: string;
 }) {
   const [orgName, setOrgName] = useState(org.name);
   const [primaryColor, setPrimaryColor] = useState(
@@ -69,8 +71,8 @@ export function SettingsForm({
     settings?.aiWritingContext ?? ""
   );
 
-  // Build-time constant, identical on server and client — no hydration effect needed.
-  const origin = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  // Passed from the server (runtime APP_URL), identical on server and client — no hydration effect needed.
+  const origin = appUrl;
 
   const [settingsState, settingsAction, settingsPending] = useActionState<
     SettingsState,

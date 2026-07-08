@@ -1,4 +1,14 @@
-const APP_ORIGIN = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+/**
+ * The app's own origin. These iframe pages are always served *from* the app
+ * origin, so `window.location.origin` is the source of truth at runtime — this
+ * works on any domain without a build-time env var (important for a single
+ * prebuilt Docker image deployed to arbitrary hosts). Falls back to a runtime
+ * env var only during SSR, where `window` is undefined.
+ */
+function getAppOrigin(): string {
+  if (typeof window !== "undefined") return window.location.origin;
+  return process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+}
 
 /**
  * Builds the set of origins trusted for postMessage communication.
@@ -6,7 +16,7 @@ const APP_ORIGIN = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
  * and the org's configured allowedDomain if set.
  */
 export function getAllowedOrigins(allowedDomain: string | null): Set<string> {
-  const origins = new Set<string>([APP_ORIGIN]);
+  const origins = new Set<string>([getAppOrigin()]);
 
   // Allow localhost on any port for development
   if (typeof window !== "undefined" && window.location.origin.startsWith("http://localhost")) {
@@ -49,8 +59,9 @@ export function getParentOrigin(allowedOrigins: Set<string>): string | null {
   // Neither check confirmed the parent's origin. Fall back to the org's
   // configured custom domain, if any — the one other origin we can trust
   // to be the legitimate embed target. Otherwise give up rather than guess.
+  const appOrigin = getAppOrigin();
   for (const origin of allowedOrigins) {
-    if (origin !== APP_ORIGIN && !origin.startsWith("http://localhost")) {
+    if (origin !== appOrigin && !origin.startsWith("http://localhost")) {
       return origin;
     }
   }

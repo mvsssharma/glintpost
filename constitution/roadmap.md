@@ -42,7 +42,7 @@
 - Org settings: theme, locales, allowed domain, AI provider/key/model
 - Widget embed code generator with per-mode code snippets
 - Live widget preview (iframe-based with preloaded iframes)
-- Feature-flagged Razorpay billing integration (`NEXT_PUBLIC_ENABLE_BILLING`)
+- Feature-flagged Razorpay billing integration (`ENABLE_BILLING`)
 - Storage tracking (used/cap bytes per org)
 - Docker support for instant self-hosting (Next.js standalone + Postgres)
 

@@ -27,7 +27,7 @@ const navItems = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-export function Sidebar({ orgName, userName }: { orgName: string; userName: string }) {
+export function Sidebar({ orgName, userName, billingEnabled }: { orgName: string; userName: string; billingEnabled: boolean }) {
   const pathname = usePathname();
 
   function isActive(href: string) {
@@ -63,7 +63,7 @@ export function Sidebar({ orgName, userName }: { orgName: string; userName: stri
         ))}
       </nav>
       <div className={styles.sidebarFooter}>
-        {process.env.NEXT_PUBLIC_ENABLE_BILLING !== "false" && (
+        {billingEnabled && (
           <Link href="/settings/billing" className={styles.navLink}>
             <CreditCard size={18} className={styles.navIcon} />
             Billing

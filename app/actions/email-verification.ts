@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { randomBytes } from "crypto";
 import { auth } from "@/auth";
 import { logger } from "@/lib/logger";
+import { getAppUrl } from "@/lib/app-url";
 
 const VERIFICATION_IDENTIFIER_PREFIX = "email-verify:";
 const TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -55,7 +56,7 @@ export async function sendVerificationEmail(
       },
     });
 
-    const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
+    const verifyUrl = `${getAppUrl()}/api/auth/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
 
     if (process.env.RESEND_API_KEY) {
       const { Resend } = await import("resend");

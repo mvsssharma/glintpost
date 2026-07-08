@@ -22,7 +22,7 @@ Glintpost takes the opposite approach: **a lightweight product communication lay
 
 Glintpost is designed with a single codebase that seamlessly powers two distinct environments through 12-factor feature flags:
 1. **Multi-Tenant Cloud (SaaS):** Hosted on Vercel, this mode strictly enforces email verification, enables Stripe/Razorpay billing, and uses a centralized email provider (Resend) to securely isolate tenants.
-2. **Self-Hosted Open Source (Docker):** A frictionless, "single-player" mode. By simply flipping feature flags (e.g., `NEXT_PUBLIC_REQUIRE_EMAIL_VERIFICATION=false`), email verification is bypassed, billing is disabled, and password resets gracefully fallback to console logs. This allows self-hosters to spin up Glintpost instantly without wrestling with third-party email configurations or paying for external API keys.
+2. **Self-Hosted Open Source (Docker):** A frictionless, "single-player" mode. By simply flipping feature flags (e.g., `REQUIRE_EMAIL_VERIFICATION=false`), email verification is bypassed, billing is disabled, and password resets gracefully fallback to console logs. This allows self-hosters to spin up Glintpost instantly without wrestling with third-party email configurations or paying for external API keys.
 ## Competitive Positioning
 
 - **Not competing on:** Analytics depth, support inbox, AI chatbots (Featurebase's direction)

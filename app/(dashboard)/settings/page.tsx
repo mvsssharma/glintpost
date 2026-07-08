@@ -1,4 +1,5 @@
 import { requireOrg } from "@/lib/auth-helpers";
+import { getAppUrl } from "@/lib/app-url";
 import { SettingsForm } from "./SettingsForm";
 
 export const dynamic = "force-dynamic";
@@ -13,5 +14,5 @@ export default async function SettingsPage() {
     : null;
   const safeOrg = { ...org, settings };
 
-  return <SettingsForm org={safeOrg} settings={settings} />;
+  return <SettingsForm org={safeOrg} settings={settings} appUrl={getAppUrl()} />;
 }

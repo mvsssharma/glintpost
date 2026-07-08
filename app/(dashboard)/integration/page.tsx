@@ -1,12 +1,13 @@
 import { requireOrg } from "@/lib/auth-helpers";
 import IntegrationTabs from "./IntegrationTabs";
 import { ApiKeyDisplay } from "./ApiKeyDisplay";
+import { getAppUrl } from "@/lib/app-url";
 import styles from "./page.module.css";
 
 export default async function IntegrationPage() {
   const { org } = await requireOrg();
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const appUrl = getAppUrl();
 
   return (
     <div className={styles.container}>

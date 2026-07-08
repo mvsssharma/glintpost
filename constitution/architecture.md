@@ -7,8 +7,8 @@
 - **Deployment:** Docker (standalone Next.js + Postgres) for self-hosting; Vercel for cloud.
 - **Auth:** NextAuth v5 (credentials provider, JWT sessions, bcrypt)
 - **Email:** Resend
-- **Storage:** S3/Cloudflare R2 for file uploads
-- **Billing:** Optional Razorpay subscriptions (hidden by default via `NEXT_PUBLIC_ENABLE_BILLING` feature flag).
+- **Storage:** Pluggable via `STORAGE_DRIVER` (`lib/storage.ts`) — `local` filesystem (default self-host; served by `app/uploads/[key]`) or `s3` (Cloudflare R2 / AWS S3 / any S3-compatible store). Auto-selects `s3` when `S3_ENDPOINT` is set.
+- **Billing:** Optional Razorpay subscriptions (hidden via the runtime `ENABLE_BILLING` feature flag; set `ENABLE_BILLING=false` to hide).
 - **Validation:** Zod 4
 - **AI:** BYO keys with pluggable providers (OpenAI, Anthropic, Google) via direct API calls
 - **Rich Text:** Quill editor (react-quill-new) — stores HTML in database

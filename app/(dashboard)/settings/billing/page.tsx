@@ -6,7 +6,7 @@ import styles from "../page.module.css";
 export const dynamic = "force-dynamic";
 
 export default async function BillingPage() {
-  if (process.env.NEXT_PUBLIC_ENABLE_BILLING === "false") {
+  if (process.env.ENABLE_BILLING === "false") {
     notFound();
   }
 
