@@ -1,0 +1,29 @@
+version: 2
+updates:
+  # App dependencies (npm). Security updates come automatically from alerts;
+  # this adds grouped weekly version-update PRs so we don't drift.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # One PR for all non-major bumps to keep review noise low.
+      minor-and-patch:
+        update-types: [minor, patch]
+    labels: [dependencies]
+
+  # Keep GitHub Actions (checkout, setup-node, …) current — also clears the
+  # "Node 20 action runtime is deprecated" warnings over time.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    labels: [dependencies, ci]
+
+  # Keep the Docker base image (node:20-alpine) patched.
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+    labels: [dependencies, docker]
