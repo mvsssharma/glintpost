@@ -33,4 +33,9 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    ignore:
+      # Stay on the pinned Node LTS major (24). Dependabot otherwise proposes
+      # non-LTS "current" majors (25, ...). We move to the next LTS (26) by hand.
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
     labels: [dependencies, docker]
