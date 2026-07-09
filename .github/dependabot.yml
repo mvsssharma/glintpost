@@ -11,6 +11,13 @@ updates:
       # One PR for all non-major bumps to keep review noise low.
       minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # Majors are handled manually. The ESLint stack (eslint-config-next,
+      # typescript-eslint) routinely lags eslint/typescript majors and breaks
+      # `npm run lint`, so speculative major PRs just churn red CI. Security-
+      # driven majors still arrive via security alerts, independent of this.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     labels: [dependencies]
 
   # Keep GitHub Actions (checkout, setup-node, …) current — also clears the
@@ -21,7 +28,7 @@ updates:
       interval: weekly
     labels: [dependencies, ci]
 
-  # Keep the Docker base image (node:20-alpine) patched.
+  # Keep the Docker base image (node:24-alpine) patched.
   - package-ecosystem: docker
     directory: "/"
     schedule:
