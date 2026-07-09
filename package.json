@@ -42,7 +42,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "prisma": "^7.4.2",
-    "typescript": "^5",
+    "typescript": "^7",
     "vitest": "^4.1.10"
   },
   "//engines": "Node >=20.19 required: jsdom's CJS deps (via isomorphic-dompurify, e.g. @asamuzakjp/css-color -> @csstools/css-calc.mjs) do nested require() of ESM, which only works with Node's require(ESM) interop (unflagged since 20.19 / 22.12). On older Node (e.g. 18) these crash the function with ERR_REQUIRE_ESM -> FUNCTION_INVOCATION_FAILED on any sanitize path (e.g. GET /api/posts/[id]). Matches Dockerfile node:20-alpine + CI node 20. NOTE: also set the Vercel Project Node.js Version to 20.x/22.x — the dashboard setting governs the Functions runtime.",
