@@ -46,11 +46,13 @@
     "vitest": "^4.1.10"
   },
   "//overrides": "Force patched versions of transitive deps flagged by Dependabot (they can't be bumped via a direct dependency).",
+  "//overrides-jsdom": "Pin jsdom to 27.3.0 (last release before it adopted ESM-only @exodus/bytes). isomorphic-dompurify's newer jsdom (28+/29+) require()s @exodus/bytes, which Turbopack's externalized CJS loader can't load at runtime -> ERR_REQUIRE_ESM / FUNCTION_INVOCATION_FAILED on any sanitize path (e.g. GET /api/posts/[id]). Must stay exact-pinned (^27 drifts into 27.4.0 which re-adds @exodus/bytes). Lift once html-encoding-sniffer/jsdom stop require()-ing ESM.",
   "overrides": {
     "dompurify": "^3.4.11",
     "undici": "^7.28.0",
     "@babel/core": "^7.29.6",
     "js-yaml": "^4.2.0",
-    "hono": "^4.12.25"
+    "hono": "^4.12.25",
+    "jsdom": "27.3.0"
   }
 }
