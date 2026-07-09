@@ -1,0 +1,50 @@
+name: CI
+
+# Runs on PRs into main/staging (the gate for Rulesets) and on direct pushes to
+# those branches (post-merge validation). Fork PRs run without secrets by design.
+on:
+  pull_request:
+    branches: [main, staging]
+  push:
+    branches: [main, staging]
+
+# Least privilege: CI only needs to read the code.
+permissions:
+  contents: read
+
+# Cancel superseded runs on the same ref to save minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    # next build reads process.env at load time; these placeholders let the build
+    # run without connecting anywhere (no real DB/secret needed to compile).
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      AUTH_SECRET: ci-placeholder-not-a-real-secret
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20 # matches the production Docker image
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build (prisma generate + next build)
+        run: npm run build
