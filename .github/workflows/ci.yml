@@ -31,7 +31,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: 20 # matches the production Docker image
+          node-version: 24 # matches Dockerfile (node:24-alpine) + engines.node
           cache: npm
 
       - name: Install dependencies

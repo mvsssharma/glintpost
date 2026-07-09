@@ -45,9 +45,9 @@
     "typescript": "^5",
     "vitest": "^4.1.10"
   },
-  "//engines": "Node >=20.19 required: jsdom's CJS deps (via isomorphic-dompurify, e.g. @asamuzakjp/css-color -> @csstools/css-calc.mjs) do nested require() of ESM, which only works with Node's require(ESM) interop (unflagged since 20.19 / 22.12). On older Node (e.g. 18) these crash the function with ERR_REQUIRE_ESM -> FUNCTION_INVOCATION_FAILED on any sanitize path (e.g. GET /api/posts/[id]). Matches Dockerfile node:20-alpine + CI node 20. NOTE: also set the Vercel Project Node.js Version to 20.x/22.x — the dashboard setting governs the Functions runtime.",
+  "//engines": "Node 24.x: jsdom's CJS deps (via isomorphic-dompurify, e.g. @asamuzakjp/css-color -> @csstools/css-calc.mjs) do nested require() of ESM, which only works with Node's require(ESM) interop (unflagged since 20.19 / 22.12). It crashes with ERR_REQUIRE_ESM -> FUNCTION_INVOCATION_FAILED on any sanitize path (e.g. GET /api/posts/[id]). NOTE: Vercel's '20.x' runtime is pinned BELOW 20.19 (no interop) — do NOT target 20.x on Vercel. On Vercel, engines.node here overrides the dashboard Node.js Version, so it must name a runtime with interop (22.x or 24.x). Kept in lockstep with Dockerfile (node:24-alpine) + CI (node 24).",
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "//overrides": "Force patched versions of transitive deps flagged by Dependabot (they can't be bumped via a direct dependency).",
   "overrides": {
