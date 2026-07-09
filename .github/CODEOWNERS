@@ -1,0 +1,20 @@
+# Code owners are automatically requested for review on matching PRs.
+# The last matching pattern wins. Enforced once "Require review from Code Owners"
+# is enabled in the protect-main ruleset (public repos, free accounts).
+
+# Default owner for everything in the repo.
+*                       @mvsssharma
+
+# Extra emphasis on security/infra-sensitive paths (kept explicit so a future
+# rule change never accidentally leaves these unowned).
+/.github/               @mvsssharma
+/Dockerfile             @mvsssharma
+/docker-compose.yml     @mvsssharma
+/docker-entrypoint.sh   @mvsssharma
+/proxy.ts               @mvsssharma
+/auth.ts                @mvsssharma
+/prisma/                @mvsssharma
+/lib/db.ts              @mvsssharma
+/lib/auth-helpers.ts    @mvsssharma
+/lib/api-key.ts         @mvsssharma
+/lib/storage.ts         @mvsssharma

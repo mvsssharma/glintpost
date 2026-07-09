@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Report a security vulnerability
+    url: https://github.com/mvsssharma/glintpost/security/advisories/new
+    about: Please report vulnerabilities privately — do not open a public issue.
+  - name: 💬 Questions & discussion
+    url: https://github.com/mvsssharma/glintpost/discussions
+    about: Ask questions or discuss ideas before filing an issue.
