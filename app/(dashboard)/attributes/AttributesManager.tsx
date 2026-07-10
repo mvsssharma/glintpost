@@ -137,35 +137,35 @@ export default function AttributesManager({
   };
 
   return (
-    <div className={styles.page}>
-      <div className={styles.header}>
+    <div className="page">
+      <div className="page-header">
         <div>
-          <h1 className={styles.title}>Attributes</h1>
+          <h1 className="page-title">Attributes</h1>
         </div>
-        <button className={styles.primaryBtn} onClick={() => openCreate()}>
+        <button className="btn-primary btn-sm" onClick={() => openCreate()}>
           + New attribute
         </button>
       </div>
-      <p className={styles.subtitle}>
+      <p className="page-subtitle">
         Define the targeting variables your site passes into the datalayer. Attributes
         are immutable once created — delete and recreate to change one.
       </p>
 
       {initialAttributes.length === 0 ? (
-        <div className={styles.empty}>No attributes yet. Add one to get started.</div>
+        <div className="empty-state">No attributes yet. Add one to get started.</div>
       ) : (
-        <div className={styles.list}>
+        <div className="list">
           {initialAttributes.map((a) => (
-            <div key={a.id} className={styles.row}>
-              <div className={styles.rowMain}>
+            <div key={a.id} className="list-row">
+              <div className="list-row-main">
                 <div className={styles.rowName}>{a.label}</div>
                 <div className={styles.rowMeta}>
                   <code className={styles.discoveryKey}>{a.key}</code> · {TYPE_LABELS[a.type]}
                   {a.type === "enum" && a.values.length > 0 && ` · ${a.values.join(", ")}`}
                 </div>
               </div>
-              <div className={styles.rowActions}>
-                <button className={`${styles.ghostBtn} ${styles.dangerBtn}`} onClick={() => remove(a)}>
+              <div className="list-row-actions">
+                <button className="btn-ghost btn-sm btn-danger" onClick={() => remove(a)}>
                   Delete
                 </button>
               </div>
@@ -185,7 +185,7 @@ export default function AttributesManager({
             <div key={d.key} className={styles.discoveryRow}>
               <span className={styles.discoveryKey}>{d.key}</span>
               <button
-                className={styles.ghostBtn}
+                className="btn-ghost btn-sm"
                 onClick={() =>
                   openCreate({
                     key: d.key,
@@ -203,32 +203,32 @@ export default function AttributesManager({
       )}
 
       <Dialog open={dialogOpen} onClose={close} title="New attribute">
-        <div className={styles.field}>
-          <label className={styles.label}>Datalayer key</label>
+        <div className="field">
+          <label className="field-label">Datalayer key</label>
           <input
-            className={styles.input}
+            className="input-field"
             value={key}
             onChange={(e) => setKey(e.target.value)}
             placeholder="e.g. seat_count"
             autoFocus
           />
-          <span className={styles.hint}>The exact field name your site sends in the datalayer.</span>
+          <span className="field-hint">The exact field name your site sends in the datalayer.</span>
         </div>
 
-        <div className={styles.field}>
-          <label className={styles.label}>Label</label>
+        <div className="field">
+          <label className="field-label">Label</label>
           <input
-            className={styles.input}
+            className="input-field"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             placeholder="e.g. Seats"
           />
         </div>
 
-        <div className={styles.field}>
-          <label className={styles.label}>Type</label>
+        <div className="field">
+          <label className="field-label">Type</label>
           <select
-            className={styles.select}
+            className="input-field"
             value={type}
             onChange={(e) => setType(e.target.value as AttributeType)}
           >
@@ -239,17 +239,17 @@ export default function AttributesManager({
         </div>
 
         {type === "enum" && (
-          <div className={styles.field}>
-            <label className={styles.label}>Allowed values</label>
+          <div className="field">
+            <label className="field-label">Allowed values</label>
             <ValuesInput values={values} onChange={setValues} />
           </div>
         )}
 
-        {error && <div className={styles.error}>{error}</div>}
+        {error && <div className="form-error">{error}</div>}
 
         <div className="dialog-actions">
-          <button className={styles.ghostBtn} onClick={close} type="button">Cancel</button>
-          <button className={styles.primaryBtn} onClick={save} disabled={saving}>
+          <button className="btn-ghost btn-sm" onClick={close} type="button">Cancel</button>
+          <button className="btn-primary btn-sm" onClick={save} disabled={saving}>
             {saving ? "Creating…" : "Create attribute"}
           </button>
         </div>

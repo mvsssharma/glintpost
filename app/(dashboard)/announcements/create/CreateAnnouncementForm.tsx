@@ -114,7 +114,7 @@ export default function CreateAnnouncementForm({ aiConfigured }: { aiConfigured:
         />
         {errors.title && <p className={styles.errorText}>{errors.title}</p>}
 
-        <div className={styles.contentLabel} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div className={styles.contentLabel}>
           <span>Content <span className={styles.required}>*</span></span>
           <RefineButton
             aiConfigured={aiConfigured}

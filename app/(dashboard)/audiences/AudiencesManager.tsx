@@ -125,41 +125,41 @@ export default function AudiencesManager({
   };
 
   return (
-    <div className={styles.page}>
-      <div className={styles.header}>
+    <div className="page">
+      <div className="page-header">
         <div>
-          <h1 className={styles.title}>Audiences</h1>
+          <h1 className="page-title">Audiences</h1>
         </div>
-        <button className={styles.primaryBtn} onClick={openCreate}>
+        <button className="btn-primary btn-sm" onClick={openCreate}>
           + New audience
         </button>
       </div>
-      <p className={styles.subtitle}>
+      <p className="page-subtitle">
         Reusable segments built from your attributes. Target changelog posts and
         announcements at one or more audiences.
       </p>
 
       {initialAudiences.length === 0 ? (
-        <div className={styles.empty}>
+        <div className="empty-state">
           No audiences yet. Create one to start targeting posts and announcements.
         </div>
       ) : (
-        <div className={styles.list}>
+        <div className="list">
           {initialAudiences.map((a) => (
-            <div key={a.id} className={styles.row}>
-              <div className={styles.rowMain}>
+            <div key={a.id} className="list-row">
+              <div className="list-row-main">
                 <div className={styles.rowName}>{a.name}</div>
                 <div className={styles.rowMeta}>{summarize(a.rules, attributes)}</div>
               </div>
-              <div className={styles.rowActions}>
-                <span className={styles.badge}>
+              <div className="list-row-actions">
+                <span className="badge">
                   used by {a.usageCount}
                 </span>
-                <button className={styles.ghostBtn} onClick={() => openEdit(a)}>
+                <button className="btn-ghost btn-sm" onClick={() => openEdit(a)}>
                   Edit
                 </button>
                 <button
-                  className={`${styles.ghostBtn} ${styles.dangerBtn}`}
+                  className="btn-ghost btn-sm btn-danger"
                   onClick={() => remove(a)}
                 >
                   Delete
@@ -175,10 +175,10 @@ export default function AudiencesManager({
         onClose={close}
         title={editing ? "Edit audience" : "New audience"}
       >
-        <div className={styles.field}>
-          <label className={styles.label}>Name</label>
+        <div className="field">
+          <label className="field-label">Name</label>
           <input
-            className={styles.input}
+            className="input-field"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Enterprise power users"
@@ -186,19 +186,19 @@ export default function AudiencesManager({
           />
         </div>
 
-        <div className={styles.field}>
-          <label className={styles.label}>Conditions</label>
+        <div className="field">
+          <label className="field-label">Conditions</label>
           <RuleSetEditor value={rules} onChange={setRules} attributes={attributes} />
         </div>
 
-        {error && <div className={styles.error}>{error}</div>}
+        {error && <div className="form-error">{error}</div>}
 
         <div className="dialog-actions">
-          <button className={styles.ghostBtn} onClick={close} type="button">
+          <button className="btn-ghost btn-sm" onClick={close} type="button">
             Cancel
           </button>
           <button
-            className={styles.primaryBtn}
+            className="btn-primary btn-sm"
             onClick={save}
             disabled={saving || attributes.length === 0}
           >

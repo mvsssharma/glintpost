@@ -27,7 +27,7 @@ export default function PostActions({ postId }: { postId: string }) {
   };
 
   return (
-    <div style={{ display: "flex", gap: "0.5rem" }}>
+    <div className="list-row-actions">
       <button
         className="btn-secondary"
         onClick={() => router.push(`/posts/${postId}/edit`)}
@@ -35,10 +35,9 @@ export default function PostActions({ postId }: { postId: string }) {
         Edit
       </button>
       <button
-        className="btn-secondary"
+        className="btn-secondary btn-danger"
         onClick={handleDelete}
         disabled={isDeleting}
-        style={{ color: "hsl(var(--danger, 0 70% 50%))" }}
       >
         {isDeleting ? "Deleting..." : "Delete"}
       </button>

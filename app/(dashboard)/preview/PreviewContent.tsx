@@ -234,8 +234,8 @@ export default function PreviewContent({
             <div className={styles.mockContent}>
               <div className={styles.mockHeading} />
               <div className={styles.mockLine} />
-              <div className={styles.mockLine} style={{ width: "80%" }} />
-              <div className={styles.mockLine} style={{ width: "60%" }} />
+              <div className={`${styles.mockLine} ${styles.mockLineShort}`} />
+              <div className={`${styles.mockLine} ${styles.mockLineShorter}`} />
             </div>
           </div>
           <p className={styles.hint}>
@@ -260,8 +260,8 @@ export default function PreviewContent({
               <div className={styles.mockContent}>
                 <div className={styles.mockHeading} />
                 <div className={styles.mockLine} />
-                <div className={styles.mockLine} style={{ width: "80%" }} />
-                <div className={styles.mockLine} style={{ width: "60%" }} />
+                <div className={`${styles.mockLine} ${styles.mockLineShort}`} />
+                <div className={`${styles.mockLine} ${styles.mockLineShorter}`} />
               </div>
             </div>
             <p className={styles.hint}>

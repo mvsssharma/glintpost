@@ -48,6 +48,11 @@
   color: hsl(var(--text-main));
 }
 
+.optionalTag {
+  font-weight: 400;
+  opacity: 0.7;
+}
+
 .colorPickerRow {
   display: flex;
   flex-direction: column;
@@ -271,4 +276,8 @@
 
 .passwordSection .fieldGroup:last-of-type {
   margin-bottom: 0;
+}
+
+.backLink {
+  margin-top: 1rem;
 }

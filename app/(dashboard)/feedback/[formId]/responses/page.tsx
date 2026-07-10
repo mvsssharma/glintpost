@@ -72,7 +72,7 @@ export default async function FeedbackResponsesPage({
             <h2>{form.title}</h2>
             <p>{responses.length} response{responses.length !== 1 ? "s" : ""} collected</p>
           </div>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
+          <div className="list-row-actions">
             <Link href={`/feedback/${form.id}`} className="btn-secondary">
               Edit form
             </Link>

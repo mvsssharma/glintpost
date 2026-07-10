@@ -109,3 +109,8 @@
   font-weight: 700;
   color: hsl(var(--primary));
 }
+
+/* Text-valued stat tiles (e.g. "None live") use a smaller size than numbers. */
+.statValueText {
+  font-size: 1.25rem;
+}

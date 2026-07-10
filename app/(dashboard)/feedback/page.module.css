@@ -53,6 +53,11 @@
   margin-bottom: 1.25rem;
 }
 
+/* Field groups packed inside a question row have no trailing margin. */
+.fieldGroupFlush {
+  margin-bottom: 0;
+}
+
 .label {
   font-size: 0.875rem;
   font-weight: 500;

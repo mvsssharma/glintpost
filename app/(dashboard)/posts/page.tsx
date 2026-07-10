@@ -122,7 +122,7 @@ export default async function PostsPage({
                     <span className={styles.date}>
                       {new Date(post.createdAt).toLocaleDateString()}
                     </span>
-                    <span className={styles.reactions} style={{ display: "inline-flex", gap: "1rem" }}>
+                    <span className={styles.reactions}>
                       <span>👍 {post.likes}</span>
                       <span>👎 {post.dislikes}</span>
                     </span>
