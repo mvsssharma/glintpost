@@ -6,7 +6,8 @@
 - Post CRUD (create, edit, delete, list)
 - Rich text editor (Quill) with HTML storage
 - Image uploads to Cloudflare R2 (toolbar + clipboard paste — no base64 in DB)
-- Like/dislike/view tracking with datalayer targeting
+- Like/dislike/view tracking with datalayer analytics
+- Audience targeting (see Targeting section) — show posts only to matching visitors
 - Widget embed: slideover, side tab, inline, hosted, headless, advanced config
 - Draft/publish workflow with status filter (DRAFT / PUBLISHED / ALL) on posts list
 - Excel import for migration (Canny/Beamer etc.) — template download, backdated dates, all-or-nothing validation; shown only while the section has fewer than 3 entries
@@ -33,21 +34,28 @@
 - Session-based display: one announcement per session (30-min localStorage timeout)
 - Per-browser seen tracking: each announcement shown at most once (localStorage)
 - VIEW and CLICK event tracking with analytics (views, clicks, CTR)
-- Datalayer-based targeting rules (reuses changelog targeting system)
+- Audience targeting (see Targeting section) — same named segments as changelog
 - Widget script injects DOM directly into host page (not iframe)
 - Integration page with embed snippet and advanced config
 - Excel import for migration — display type/status/dates/priority/CTA, backdated entries
 
+### Targeting (Attributes & Audiences)
+- User-defined **attributes** — typed datalayer variables (string/number/boolean/enum/date, enum with allowed values) that map raw datalayer keys to friendly names, replacing the old fixed 7-param list
+- **Audiences** — reusable named segments built from flat AND/OR conditions over attributes, with type-appropriate operators (>, <, between, contains, is one of, before/after, within-last-N-days, …)
+- Posts & announcements target one or more audiences (ANY/ALL); matching is client-side/stateless (visitor attribute values never stored server-side)
+- **Attribute discovery** — widgets report seen datalayer keys + inferred type (never values); dashboard suggests undefined keys to define
+- Delete-safety: attributes/audiences in use return 409 with usage count unless force-removed
+
 ### Settings & Integration
 - Org settings: theme, locales, allowed domain, AI provider/key/model
 - Widget embed code generator with per-mode code snippets
-- Live widget preview (iframe-based with preloaded iframes)
+- Live widget preview (iframe-based with preloaded iframes) with a "Preview as" audience persona selector (Everyone by default; picking an audience simulates a matching visitor)
 - Feature-flagged Razorpay billing integration (`ENABLE_BILLING`)
 - Storage tracking (used/cap bytes per org)
 - Docker support for instant self-hosting (Next.js standalone + Postgres)
 
 ### Onboarding
-- New orgs are seeded with one sample entry per section (`lib/sample-content.ts`) so dashboards are never blank on registration
+- New orgs are seeded with one sample entry per section plus starter targeting attributes (plan/role/company/seat_count) via `lib/sample-content.ts` so dashboards and the audience builder are never blank on registration
 - Samples are never publicly visible: post + announcement are DRAFT, roadmap item is ARCHIVED (public board excludes archived)
 
 ### Privacy & Compliance

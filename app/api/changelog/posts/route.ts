@@ -3,8 +3,10 @@ import { validateApiKey } from "@/lib/api-key";
 import { getOrgPrisma } from "@/lib/db";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { corsHeaders, handlePreflight } from "@/lib/cors";
+import { loadTargetingContext, resolveTargeting } from "@/lib/targeting-server";
 import { logger } from "@/lib/logger";
 import { UnauthorizedError, ApiError } from "@/lib/errors";
+import type { ResolvedTargeting } from "@/types/targeting";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +17,7 @@ export interface CachedChangelogPost {
   createdAt: string;
   likes: number;
   dislikes: number;
-  targetingRules: unknown;
+  targeting: ResolvedTargeting | null;
 }
 
 async function fetchAndCachePosts(orgId: string): Promise<CachedChangelogPost[]> {
@@ -37,10 +39,13 @@ async function fetchAndCachePosts(orgId: string): Promise<CachedChangelogPost[]>
     id: string;
     publishedAt: Date | null;
     createdAt: Date;
-    targetingRules: unknown;
+    audienceIds: string[];
+    audienceMatch: string;
     translations: Array<{ title: string; content: string }>;
     _count: { changelogEvents: number };
   }>;
+
+  const { audiencesById, attributesByKey } = await loadTargetingContext(db);
 
   const postIds = posts.map((p) => p.id);
   const dislikeCounts = await db.changelogEvent.groupBy({
@@ -59,7 +64,7 @@ async function fetchAndCachePosts(orgId: string): Promise<CachedChangelogPost[]>
     createdAt: (post.publishedAt ?? post.createdAt).toISOString(),
     likes: post._count.changelogEvents,
     dislikes: (dislikeMap[post.id] as number) ?? 0,
-    targetingRules: post.targetingRules ?? null,
+    targeting: resolveTargeting(post.audienceIds, post.audienceMatch, audiencesById, attributesByKey),
   }));
 
   cacheSet(orgId, "changelog-posts", result);

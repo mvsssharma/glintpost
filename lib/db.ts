@@ -32,6 +32,9 @@ const TENANT_SCOPED_MODELS = new Set([
   "Announcement",
   "AnnouncementEvent",
   "PostTranslation",
+  "Attribute",
+  "Audience",
+  "ObservedAttribute",
 ]);
 
 /**

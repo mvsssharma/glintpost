@@ -1,9 +1,9 @@
 import { NextResponse, after } from "next/server";
-import { Prisma } from "@prisma/client";
 import { requireOrgApi } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import { updatePostSchema } from "@/lib/validations";
 import { cacheInvalidate } from "@/lib/cache";
+import { resolveAudienceRefs } from "@/lib/targeting-server";
 import { refreshOrgNomenclature } from "@/lib/nomenclature";
 import { htmlToText } from "@/lib/html-segments";
 import { logger } from "@/lib/logger";
@@ -53,7 +53,7 @@ export async function PUT(req: Request, context: Context) {
       throw new ValidationError(parsed.error.issues[0]?.message ?? "Invalid input");
     }
 
-    const { title, content, status, targetingRules } = parsed.data;
+    const { title, content, status, audienceIds, audienceMatch } = parsed.data;
     const db = getOrgPrisma(session.orgId);
 
     const existing = await db.post.findUnique({ where: { id } });
@@ -68,8 +68,11 @@ export async function PUT(req: Request, context: Context) {
         postUpdate.publishedAt = new Date();
       }
     }
-    if (targetingRules !== undefined) {
-      postUpdate.targetingRules = targetingRules === null ? Prisma.DbNull : targetingRules;
+    if (audienceIds !== undefined) {
+      postUpdate.audienceIds = await resolveAudienceRefs(db, audienceIds);
+    }
+    if (audienceMatch !== undefined) {
+      postUpdate.audienceMatch = audienceMatch;
     }
 
     const post = await db.$transaction(async (tx: Parameters<Parameters<typeof db.$transaction>[0]>[0]) => {

@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import RichTextEditor from "@/app/components/RichTextEditor";
-import TargetingRulesEditor from "../../../posts/TargetingRulesEditor";
-import type { TargetingRuleSet } from "@/types/targeting";
+import AudiencePicker, { type AudienceTargeting } from "../../../audiences/AudiencePicker";
 import styles from "../../form.module.css";
 
 interface AnnouncementData {
@@ -20,7 +19,8 @@ interface AnnouncementData {
   startDate: string;
   endDate: string;
   status: "DRAFT" | "PUBLISHED";
-  targetingRules: TargetingRuleSet | null;
+  audienceIds: string[];
+  audienceMatch: "AND" | "OR";
   views: number;
   clicks: number;
 }
@@ -45,7 +45,7 @@ export default function EditAnnouncementPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [status, setStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT");
-  const [targetingRules, setTargetingRules] = useState<TargetingRuleSet | null>(null);
+  const [targeting, setTargeting] = useState<AudienceTargeting>({ audienceIds: [], audienceMatch: "OR" });
   const [views, setViews] = useState(0);
   const [clicks, setClicks] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -73,7 +73,10 @@ export default function EditAnnouncementPage() {
         setStartDate(toLocalDatetime(data.startDate));
         setEndDate(toLocalDatetime(data.endDate));
         setStatus(data.status);
-        setTargetingRules(data.targetingRules ?? null);
+        setTargeting({
+          audienceIds: data.audienceIds ?? [],
+          audienceMatch: data.audienceMatch ?? "OR",
+        });
         setViews(data.views);
         setClicks(data.clicks);
       } catch {
@@ -119,7 +122,7 @@ export default function EditAnnouncementPage() {
           priority,
           startDate: new Date(startDate).toISOString(),
           endDate: new Date(endDate).toISOString(),
-          targetingRules,
+          ...targeting,
           ...(newStatus && { status: newStatus }),
         }),
       });
@@ -246,7 +249,7 @@ export default function EditAnnouncementPage() {
           </div>
         </div>
 
-        <TargetingRulesEditor value={targetingRules} onChange={setTargetingRules} />
+        <AudiencePicker {...targeting} onChange={setTargeting} />
 
         <div className={styles.actions}>
           {status === "DRAFT" && (

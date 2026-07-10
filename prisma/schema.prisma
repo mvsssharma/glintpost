@@ -87,6 +87,10 @@ model Organization {
   announcements      Announcement[]
   announcementEvents AnnouncementEvent[]
 
+  attributes         Attribute[]
+  audiences          Audience[]
+  observedAttributes ObservedAttribute[]
+
   // Billing (Razorpay)
   razorpayCustomerId     String?       @unique
   razorpaySubscriptionId String?
@@ -137,6 +141,60 @@ model OrgSettings {
   updatedAt DateTime @updatedAt
 }
 
+// === TARGETING: ATTRIBUTES & AUDIENCES ===
+
+// A user-defined targeting variable: maps a raw datalayer field (key) to a
+// friendly, typed definition used when building audiences.
+model Attribute {
+  id    String       @id @default(cuid())
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  key    String // datalayer field name, e.g. "seat_count"
+  label  String // friendly name shown in the builder, e.g. "Seats"
+  type   String // "string" | "number" | "boolean" | "enum" | "date"
+  values String[] @default([]) // allowed values, enum only
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([orgId, key])
+  @@index([orgId])
+}
+
+// A reusable named segment: a set of conditions over Attributes.
+model Audience {
+  id    String       @id @default(cuid())
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  name String
+  // JSON: { operator: "AND"|"OR", rules: [{ attributeKey, op, value }] }
+  rules Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([orgId, name])
+  @@index([orgId])
+}
+
+// Datalayer keys observed by the widgets (keys + inferred primitive type only,
+// never values) so the dashboard can suggest attributes to define.
+model ObservedAttribute {
+  id    String       @id @default(cuid())
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  key          String
+  inferredType String // "string" | "number" | "boolean"
+  lastSeenAt   DateTime @updatedAt
+  createdAt    DateTime @default(now())
+
+  @@unique([orgId, key])
+  @@index([orgId])
+}
+
 model Post {
   id    String       @id @default(cuid())
   orgId String
@@ -145,8 +203,9 @@ model Post {
   status      PostStatus @default(DRAFT)
   publishedAt DateTime?
 
-  // JSON: { operator: "AND"|"OR", rules: [{ param, op, value }] }
-  targetingRules Json?
+  // Targeting via named audiences. audienceMatch: "OR" = ANY, "AND" = ALL.
+  audienceIds   String[] @default([])
+  audienceMatch String   @default("OR")
 
   translations    PostTranslation[]
   changelogEvents ChangelogEvent[]
@@ -342,7 +401,9 @@ model Announcement {
   endDate     DateTime
   status      PostStatus              @default(DRAFT)
 
-  targetingRules Json?
+  // Targeting via named audiences. audienceMatch: "OR" = ANY, "AND" = ALL.
+  audienceIds   String[] @default([])
+  audienceMatch String   @default("OR")
 
   events AnnouncementEvent[]
 

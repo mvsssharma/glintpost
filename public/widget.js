@@ -16,6 +16,34 @@
 
   var appUrl = scriptTag.src.replace(/\/widget\.js(\?.*)?$/, "");
 
+  // Attribute discovery: report the datalayer keys we see (keys + inferred
+  // primitive type only — never values), once per page load, so the dashboard
+  // can suggest attributes to define. Fire-and-forget; never blocks widgets.
+  try {
+    var dl = (window.GlintPostConfig && window.GlintPostConfig.datalayer) || null;
+    // Plain object only — an array datalayer would report its indices as keys.
+    if (dl && typeof dl === "object" && !Array.isArray(dl) && !window.__glintpostAttrsReported) {
+      window.__glintpostAttrsReported = true;
+      var observedKeys = [];
+      for (var dkey in dl) {
+        if (Object.prototype.hasOwnProperty.call(dl, dkey)) {
+          var dtype = typeof dl[dkey];
+          if (dtype === "string" || dtype === "number" || dtype === "boolean") {
+            observedKeys.push({ key: dkey, type: dtype });
+          }
+        }
+      }
+      if (observedKeys.length) {
+        fetch(appUrl + "/api/attributes/observe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-api-key": apiKey },
+          body: JSON.stringify({ keys: observedKeys.slice(0, 100) }),
+          keepalive: true,
+        }).catch(function () {});
+      }
+    }
+  } catch {}
+
   var WIDGET_SCRIPTS = {
     changelog: "changelog-widget.js",
     roadmap: "roadmap-widget.js",

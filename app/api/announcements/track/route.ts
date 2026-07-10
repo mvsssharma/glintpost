@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey } from "@/lib/api-key";
 import { getOrgPrisma } from "@/lib/db";
 import { announcementEventSchema } from "@/lib/validations";
+import { legacyDatalayerColumns } from "@/lib/datalayer";
 import { corsHeaders, handlePreflight } from "@/lib/cors";
 import { logger } from "@/lib/logger";
 import { UnauthorizedError, ValidationError, NotFoundError, ApiError } from "@/lib/errors";
@@ -41,13 +42,7 @@ export async function POST(req: NextRequest) {
       announcementId,
       type,
       visitorId: visitorId || null,
-      plan: datalayer?.plan || null,
-      role: datalayer?.role || null,
-      region: datalayer?.region || null,
-      platform: datalayer?.platform || null,
-      version: datalayer?.version || null,
-      company: datalayer?.company || null,
-      locale: datalayer?.locale || null,
+      ...legacyDatalayerColumns(datalayer),
     };
 
     if (visitorId) {
