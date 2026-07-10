@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { sanitizeRichHtml } from "@/lib/sanitize-html";
+import { Dialog } from "./Dialog";
 import styles from "./AIRefine.module.css";
 
 export type Refinement = { content: string; warnings: string[] };
@@ -87,27 +88,9 @@ export function RefinePreview({
   onApply: () => void;
   onCancel: () => void;
 }) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-
-  // showModal() gives native focus-trapping/Escape/backdrop; close on unmount so a
-  // replaced dialog can't leave the top-layer stale.
-  useEffect(() => {
-    const dlg = dialogRef.current;
-    if (dlg && !dlg.open) dlg.showModal();
-    return () => { if (dlg?.open) dlg.close(); };
-  }, []);
-
   return (
-    <dialog
-      ref={dialogRef}
-      className={styles.dialog}
-      aria-labelledby="ai-refine-title"
-      // Escape fires `cancel`; prevent the default silent close so we run cleanup.
-      onCancel={(e) => { e.preventDefault(); onCancel(); }}
-      // Click on the backdrop (target is the <dialog> itself) closes it.
-      onClick={(e) => { if (e.target === dialogRef.current) onCancel(); }}
-    >
-      <div className={styles.panel}>
+    <Dialog open onClose={onCancel} width={720} bare>
+      <div className={styles.panel} aria-labelledby="ai-refine-title">
         <h3 id="ai-refine-title" className={styles.title}>AI refine — review before applying</h3>
         <p className={styles.subtitle}>
           Your editor is unchanged. Preview the refined version below and apply it if it looks good.
@@ -132,6 +115,6 @@ export function RefinePreview({
           <button type="button" className="btn-primary" onClick={onApply} autoFocus>Apply changes</button>
         </div>
       </div>
-    </dialog>
+    </Dialog>
   );
 }

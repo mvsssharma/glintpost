@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Attribute, AudienceRuleSet } from "@/types/targeting";
 import { opDef, opsForType } from "@/lib/attributes";
+import { Dialog } from "@/app/components/Dialog";
 import RuleSetEditor from "./RuleSetEditor";
 import styles from "./audiences.module.css";
 
@@ -52,7 +53,7 @@ export default function AudiencesManager({
   attributes: Attribute[];
 }) {
   const router = useRouter();
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<AudienceRow | null>(null);
   const [name, setName] = useState("");
   const [rules, setRules] = useState<AudienceRuleSet>(emptyRuleSet(attributes));
@@ -64,7 +65,7 @@ export default function AudiencesManager({
     setName("");
     setRules(emptyRuleSet(attributes));
     setError(null);
-    dialogRef.current?.showModal();
+    setDialogOpen(true);
   };
 
   const openEdit = (a: AudienceRow) => {
@@ -72,10 +73,10 @@ export default function AudiencesManager({
     setName(a.name);
     setRules(a.rules);
     setError(null);
-    dialogRef.current?.showModal();
+    setDialogOpen(true);
   };
 
-  const close = () => dialogRef.current?.close();
+  const close = () => setDialogOpen(false);
 
   const save = async () => {
     setError(null);
@@ -169,44 +170,42 @@ export default function AudiencesManager({
         </div>
       )}
 
-      <dialog ref={dialogRef} className={styles.dialog} onClose={close}>
-        <div className={styles.dialogBody}>
-          <div className={styles.dialogTitle}>
-            {editing ? "Edit audience" : "New audience"}
-          </div>
-
-          <div className={styles.field}>
-            <label className={styles.label}>Name</label>
-            <input
-              className={styles.input}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Enterprise power users"
-              autoFocus
-            />
-          </div>
-
-          <div className={styles.field}>
-            <label className={styles.label}>Conditions</label>
-            <RuleSetEditor value={rules} onChange={setRules} attributes={attributes} />
-          </div>
-
-          {error && <div className={styles.error}>{error}</div>}
-
-          <div className={styles.dialogActions}>
-            <button className={styles.ghostBtn} onClick={close} type="button">
-              Cancel
-            </button>
-            <button
-              className={styles.primaryBtn}
-              onClick={save}
-              disabled={saving || attributes.length === 0}
-            >
-              {saving ? "Saving…" : "Save audience"}
-            </button>
-          </div>
+      <Dialog
+        open={dialogOpen}
+        onClose={close}
+        title={editing ? "Edit audience" : "New audience"}
+      >
+        <div className={styles.field}>
+          <label className={styles.label}>Name</label>
+          <input
+            className={styles.input}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Enterprise power users"
+            autoFocus
+          />
         </div>
-      </dialog>
+
+        <div className={styles.field}>
+          <label className={styles.label}>Conditions</label>
+          <RuleSetEditor value={rules} onChange={setRules} attributes={attributes} />
+        </div>
+
+        {error && <div className={styles.error}>{error}</div>}
+
+        <div className="dialog-actions">
+          <button className={styles.ghostBtn} onClick={close} type="button">
+            Cancel
+          </button>
+          <button
+            className={styles.primaryBtn}
+            onClick={save}
+            disabled={saving || attributes.length === 0}
+          >
+            {saving ? "Saving…" : "Save audience"}
+          </button>
+        </div>
+      </Dialog>
     </div>
   );
 }

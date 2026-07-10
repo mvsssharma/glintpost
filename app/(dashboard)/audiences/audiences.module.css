@@ -403,33 +403,7 @@
   letter-spacing: 0.03em;
 }
 
-/* ---- Dialog ---- */
-
-.dialog {
-  border: none;
-  border-radius: var(--radius-lg);
-  padding: 0;
-  width: min(560px, calc(100vw - 2rem));
-  background: hsl(var(--bg-surface));
-  color: hsl(var(--text-main));
-  box-shadow: 0 20px 60px hsl(0 0% 0% / 0.25);
-}
-
-.dialog::backdrop {
-  background: hsl(0 0% 0% / 0.4);
-}
-
-.dialogBody {
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.875rem;
-}
-
-.dialogTitle {
-  font-size: 1.0625rem;
-  font-weight: 650;
-}
+/* ---- Dialog form fields (dialog shell now lives in globals.css) ---- */
 
 .field {
   display: flex;
@@ -470,13 +444,6 @@
 .error {
   font-size: 0.8125rem;
   color: hsl(0 70% 55%);
-}
-
-.dialogActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
 }
 
 /* ---- Discovery section ---- */
