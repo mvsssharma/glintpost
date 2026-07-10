@@ -7,6 +7,7 @@ import { sanitizeRichHtml } from "@/lib/sanitize-html";
 import { getVisitorId, getExistingVisitorId } from "@/lib/visitor";
 import { getAllowedOrigins, postToParent, isAllowedOrigin } from "@/lib/post-message";
 import { matchesTargeting } from "@/lib/attributes";
+import { formatDate } from "@/lib/format";
 import { widgetFetcher } from "@/lib/widget-fetcher";
 import { useWidgetConfig } from "@/app/useWidgetConfig";
 import type { ResolvedTargeting } from "@/types/targeting";
@@ -232,7 +233,7 @@ function ChangelogContent() {
 
         <div className={styles.detail}>
           <span className={styles.date}>
-            {new Date(selectedPost.createdAt).toLocaleDateString()}
+            {formatDate(selectedPost.createdAt)}
           </span>
           <h3 className={styles.detailTitle}>{selectedPost.title}</h3>
           <div
@@ -268,7 +269,7 @@ function ChangelogContent() {
             return (
               <article key={post.id} className={styles.postCard}>
                 <span className={styles.date}>
-                  {new Date(post.createdAt).toLocaleDateString()}
+                  {formatDate(post.createdAt)}
                 </span>
                 <h3 className={styles.title}>{post.title}</h3>
                 <div
