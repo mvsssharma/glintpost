@@ -3,16 +3,11 @@
 import { useEffect, useState, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
-import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import { getVisitorId } from "@/lib/visitor";
 import { getAllowedOrigins, postToParent } from "@/lib/post-message";
+import { widgetFetcher } from "@/lib/widget-fetcher";
+import { useWidgetConfig } from "@/app/useWidgetConfig";
 import styles from "./page.module.css";
-
-const fetcher = ([url, apiKey]: [string, string]) =>
-  fetch(url, { headers: { "x-api-key": apiKey } }).then((res) => {
-    if (!res.ok) throw new Error("Fetch failed");
-    return res.json();
-  });
 
 interface FeedbackQuestion {
   id: string;
@@ -22,7 +17,7 @@ interface FeedbackQuestion {
   required: boolean;
 }
 
-interface FormData {
+interface FeedbackFormData {
   id: string;
   title: string;
   questions: FeedbackQuestion[];
@@ -79,30 +74,18 @@ function SurveyContent() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   
-  const { data: config } = useSWR<{ primaryColor?: string; widgetTheme?: string; allowedDomain?: string | null }>(
-    apiKey ? ["/api/config", apiKey] : null,
-    fetcher
-  );
+  const { config, theme } = useWidgetConfig(apiKey, themeParam, primaryColorParam);
 
   const formUrl = formIdParam
     ? `/api/feedback/form?formId=${encodeURIComponent(formIdParam)}`
     : "/api/feedback/form";
 
-  const { data: form, error: formError } = useSWR<FormData>(
+  const { data: form, error: formError } = useSWR<FeedbackFormData>(
     apiKey ? [formUrl, apiKey] : null,
-    fetcher
+    widgetFetcher
   );
 
   const loading = (!form && !formError) || (!config);
-
-  const theme = themeParam
-    ? { primaryColor: primaryColorParam ?? DEFAULT_PRIMARY_COLOR, widgetTheme: themeParam }
-    : config
-    ? {
-        primaryColor: config.primaryColor ?? DEFAULT_PRIMARY_COLOR,
-        widgetTheme: config.widgetTheme ?? "light",
-      }
-    : null;
 
   const allowedOrigins = config ? getAllowedOrigins(config.allowedDomain ?? null) : getAllowedOrigins(null);
   // Latest-value ref for the postMessage handler; updated after commit (ref writes

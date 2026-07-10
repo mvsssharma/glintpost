@@ -2,6 +2,7 @@
  * Persistence + background refresh for the org's learned nomenclature
  * (OrgSettings.nomenclature). See lib/glossary.ts for the term logic.
  */
+import { after } from "next/server";
 import { getOrgPrisma } from "./db";
 import { decrypt } from "./crypto";
 import { htmlToText } from "./html-segments";
@@ -83,4 +84,15 @@ export async function refreshOrgNomenclature(orgId: string, newPlainText: string
   } catch (err) {
     logger.error({ err }, "refreshOrgNomenclature failed");
   }
+}
+
+/**
+ * Fire-and-forget a nomenclature refresh from post/announcement HTML after the
+ * response is sent (`after`). Converts HTML → plain text and skips empty content.
+ * Use this from route handlers instead of wiring `after`/`htmlToText` inline.
+ */
+export function scheduleNomenclatureRefresh(orgId: string, html: string): void {
+  const text = htmlToText(html);
+  if (!text) return;
+  after(() => refreshOrgNomenclature(orgId, text));
 }
