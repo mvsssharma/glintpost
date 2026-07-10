@@ -60,12 +60,17 @@ lib/
   constants.ts       # Enums, config values
   visitor.ts         # Visitor ID generation
   crypto.ts          # AES-256-GCM encrypt/decrypt (key from AUTH_SECRET)
+widgets/                   # ESM sources for widgets that share code with the app (import lib/attributes.ts)
+  changelog-widget.js      # → bundled to public/ by esbuild
+  announcement-widget.js   # → bundled to public/ by esbuild
+scripts/
+  build-widgets.mjs        # esbuild: bundles widgets/*.js → public/*.js IIFEs (npm run build:widgets)
 public/
   widget.js                # Unified loader (reads GlintPostConfig, reports observed datalayer keys)
-  changelog-widget.js      # Slideover/embed widget script
-  roadmap-widget.js        # Inline embed widget script
-  feedback-widget.js       # Slideover/embed widget script
-  announcement-widget.js   # Direct DOM injection widget script
+  changelog-widget.js      # GENERATED from widgets/ — Slideover/embed widget script
+  roadmap-widget.js        # Inline embed widget script (hand-authored, no shared code)
+  feedback-widget.js       # Slideover/embed widget script (hand-authored, no shared code)
+  announcement-widget.js   # GENERATED from widgets/ — Direct DOM injection widget script
 prisma/
   schema.prisma         # Database schema
 types/                  # TypeScript type definitions
@@ -103,7 +108,7 @@ Customers pass their existing datalayer (GTM etc.) into the widget; posts and an
 2. **Audiences** (`Audience`) — reusable named segments: a flat AND/OR set of conditions over attributes (`rules` JSON: `{ operator, rules: [{ attributeKey, op, value }] }`). Managed at `/audiences`; built with the shared `RuleSetEditor`.
 3. **Item targeting** — `Post`/`Announcement` reference audiences via `audienceIds` + `audienceMatch` (`OR`=ANY / `AND`=ALL), chosen with `AudiencePicker`.
 
-**Matching is client-side and stateless** — we never store visitors' attribute *values*. Public routes resolve `audienceIds` into a self-contained `targeting` payload (attribute `type` denormalized into each rule) via `resolveTargeting`/`loadTargetingContext` in `lib/targeting-server.ts`; the widget evaluates it against the datalayer. The evaluator lives in `lib/attributes.ts` (`evaluateCondition`/`matchesTargeting`) and is hand-ported to vanilla JS in **both** `public/announcement-widget.js` and `public/changelog-widget.js` (badge count) — **all three must stay in sync** (covered by `lib/attributes.test.ts`).
+**Matching is client-side and stateless** — we never store visitors' attribute *values*. Public routes resolve `audienceIds` into a self-contained `targeting` payload (attribute `type` denormalized into each rule) via `resolveTargeting`/`loadTargetingContext` in `lib/targeting-server.ts`; the widget evaluates it against the datalayer. The evaluator lives in `lib/attributes.ts` (`evaluateCondition`/`matchesTargeting`) as the **single source of truth**. The embeddable widgets no longer hand-port it: the ESM sources `widgets/announcement-widget.js` and `widgets/changelog-widget.js` (badge count) `import` it directly, and `scripts/build-widgets.mjs` uses **esbuild** to bundle + tree-shake that module into the classic-`<script>` IIFEs at `public/announcement-widget.js` / `public/changelog-widget.js`. Those `public/*.js` are **generated build outputs** (carry a "do not edit here" banner) — edit the `widgets/` source, then run `npm run build:widgets`. `lib/widget-matcher-drift.test.ts` extracts the matcher from the committed bundles and asserts parity with `lib/attributes.ts`, so a stale bundle (source changed but not rebuilt) fails CI (matcher behavior itself is covered by `lib/attributes.test.ts`).
 
 **Discovery:** the unified loader (`public/widget.js`) reports the datalayer *keys + inferred primitive type only — never values* to public `POST /api/attributes/observe` (capped 100/org, allowlisted in `proxy.ts`); the Attributes page surfaces undefined keys with one-click "Define".
 
@@ -113,7 +118,7 @@ Customers pass their existing datalayer (GTM etc.) into the widget; posts and an
 
 - **User/Organization:** 1:1 relationship (User.orgId is unique)
 - **OrgSettings:** Theme, locales, allowedDomain, AI config, storage limits
-- **Post + PostTranslation:** Changelog with multi-language support. Content stored as HTML (Quill output). Targeting via `audienceIds` + `audienceMatch`.
+- **Post + PostTranslation:** Changelog with multi-language *data model* (per-locale rows). Content stored as HTML (Quill output). Targeting via `audienceIds` + `audienceMatch`. Note: today only the `en` translation is authored/rendered — the multi-language authoring + translation UI is a roadmap feature, so the language pickers in onboarding/settings are currently hidden.
 - **ChangelogEvent:** Like/dislike/view tracking; legacy datalayer columns (plan/role/…) populated via `lib/datalayer.ts`
 - **RoadmapItem/Vote/Suggestion/View:** Feature voting + AI similarity matching. `RoadmapItem.importedUpvotes` / `importedDownvotes` hold migration carry-over counts; displayed totals = visitor votes + imported.
 - **FeedbackForm/Response:** Configurable survey (SELECT/NPS/TEXT, max 3 questions)
@@ -126,10 +131,10 @@ Customers pass their existing datalayer (GTM etc.) into the widget; posts and an
 
 - **Widget definitions:** `WIDGETS` (changelog + roadmap) vs `WIDGETS_WITH_FEEDBACK` (all three) in `lib/widgets.ts`. Dashboard preview uses `WIDGETS_WITH_FEEDBACK`.
 - **Cache invalidation:** Explicit — call cache invalidation after mutations, no TTL. Attribute/audience mutations must call `invalidateTargetingCaches(orgId)` (both `changelog-posts` + `announcements`) since resolved targeting is baked into those cached payloads.
-- **Targeting matchers stay in sync:** the typed evaluator in `lib/attributes.ts` has two vanilla-JS ports (`announcement-widget.js`, `changelog-widget.js`); change all three together. New `TENANT_SCOPED_MODELS` (`Attribute`/`Audience`/`ObservedAttribute`) are registered in `lib/db.ts`. Deleting an attribute/audience that is in use returns `409` + usage unless `?force=true`.
+- **Targeting matcher is a single source of truth:** `lib/attributes.ts` is imported by the `widgets/*.js` sources and bundled into `public/*-widget.js` via esbuild (`scripts/build-widgets.mjs`) — no hand-ported copies. After changing the matcher, run `npm run build:widgets` and commit the regenerated bundles; `lib/widget-matcher-drift.test.ts` fails CI if they drift. New `TENANT_SCOPED_MODELS` (`Attribute`/`Audience`/`ObservedAttribute`) are registered in `lib/db.ts`. Deleting an attribute/audience that is in use returns `409` + usage unless `?force=true`.
 - **API errors:** Typed error classes in `lib/errors.ts` (`ApiError` + `Validation`/`NotFound`/`Unauthorized`/`Forbidden`). Routes `throw` them inside a `try/catch`; the catch maps `instanceof ApiError` → `{ error, statusCode }`, else 500. Migration is partial — apply to new/edited routes.
 - **Logging:** pino `logger` in `lib/logger.ts` (`logger.error({ err }, "…")`) instead of `console.*`; level via `LOG_LEVEL`.
 - **Public data fetching:** SWR hooks (e.g. `app/board/useRoadmap.ts`) with `[url, apiKey]` keys for dedup/caching on widget pages, subject to the no-request-loop rule.
 - **AI keys:** Encrypted at rest with AES-256-GCM, key derived from `AUTH_SECRET`. Never serialized to the client — the settings page redacts `aiApiKey` to a sentinel (only "is a key saved?" reaches the browser).
-- **Locales:** en, hi, ta, te, kn, mr, bn, gu.
+- **Locales:** en, hi, ta, te, kn, mr, bn, gu (`SUPPORTED_LOCALES`). The picker is **hidden in onboarding + settings** until the translation feature ships (roadmap); `OrgSettings.supportedLocales` defaults to `["en"]` and existing values are preserved untouched.
 - **Billing states:** trialing → active → past_due → canceled → inactive.
