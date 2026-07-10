@@ -4,8 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import RichTextEditor from "@/app/components/RichTextEditor";
 import { useAIRefine, RefineButton, RefinePreview } from "@/app/components/AIRefine";
-import TargetingRulesEditor from "../../posts/TargetingRulesEditor";
-import type { TargetingRuleSet } from "@/types/targeting";
+import AudiencePicker, { type AudienceTargeting } from "../../audiences/AudiencePicker";
 import styles from "../form.module.css";
 
 function defaultDatetime(offsetDays: number): string {
@@ -27,7 +26,7 @@ export default function CreateAnnouncementForm({ aiConfigured }: { aiConfigured:
   const [priority, setPriority] = useState(0);
   const [startDate, setStartDate] = useState(defaultDatetime(0));
   const [endDate, setEndDate] = useState(defaultDatetime(7));
-  const [targetingRules, setTargetingRules] = useState<TargetingRuleSet | null>(null);
+  const [targeting, setTargeting] = useState<AudienceTargeting>({ audienceIds: [], audienceMatch: "OR" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -76,7 +75,7 @@ export default function CreateAnnouncementForm({ aiConfigured }: { aiConfigured:
           priority,
           startDate: new Date(startDate).toISOString(),
           endDate: new Date(endDate).toISOString(),
-          targetingRules,
+          ...targeting,
           status,
         }),
       });
@@ -181,7 +180,7 @@ export default function CreateAnnouncementForm({ aiConfigured }: { aiConfigured:
           </div>
         </div>
 
-        <TargetingRulesEditor value={targetingRules} onChange={setTargetingRules} />
+        <AudiencePicker {...targeting} onChange={setTargeting} />
 
         <div className={styles.actions}>
           <button

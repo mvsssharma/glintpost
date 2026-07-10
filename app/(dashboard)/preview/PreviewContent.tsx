@@ -1,8 +1,16 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { WIDGETS_WITH_FEEDBACK as WIDGETS } from "@/lib/widgets";
+import { synthesizeDatalayer } from "@/lib/attributes";
+import type { Attribute, AudienceRuleSet } from "@/types/targeting";
 import styles from "./page.module.css";
+
+export interface PreviewAudience {
+  id: string;
+  name: string;
+  rules: AudienceRuleSet;
+}
 
 function hasSlideover(widget: (typeof WIDGETS)[number]) {
   return widget.integrations.some((i) => i.mode === "slideover");
@@ -59,20 +67,47 @@ export default function PreviewContent({
   apiKey,
   theme,
   primaryColor,
+  audiences,
+  attributes,
 }: {
   apiKey: string;
   theme: string;
   primaryColor: string;
+  audiences: PreviewAudience[];
+  attributes: Attribute[];
 }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const [viewport, setViewport] = useState<ViewportMode>("desktop");
+  const [personaId, setPersonaId] = useState<string>(""); // "" = Everyone (all content)
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const attrMap = useMemo(
+    () => new Map(attributes.map((a) => [a.key, { type: a.type, values: a.values }])),
+    [attributes],
+  );
+  const persona = personaId ? audiences.find((a) => a.id === personaId) ?? null : null;
+  // Synthesize a datalayer that satisfies the chosen audience; null = show all.
+  const datalayer = useMemo(
+    () => (persona ? synthesizeDatalayer(persona.rules, attrMap) : null),
+    [persona, attrMap],
+  );
+  const previewShowAll = !persona;
+  const datalayerJson = datalayer ? JSON.stringify(datalayer) : "";
+  // Serialize for effect deps so injected widgets re-init on persona change.
+  const personaKey = personaId + "|" + datalayerJson;
   const isAnnouncement = activeIdx === ANNOUNCEMENT_IDX;
   const widget = isAnnouncement ? null : WIDGETS[activeIdx];
   const isSlideover = widget ? hasSlideover(widget) : false;
   const widgetScript = widget?.script ?? null;
 
   useEffect(() => {
+    // Injected widgets read persona from window.GlintPostConfig at load.
+    const win = window as unknown as Record<string, unknown>;
+    win.GlintPostConfig = {
+      ...(datalayer ? { datalayer } : {}),
+      previewShowAll,
+    };
+
     if (isAnnouncement) {
       cleanupWidgets();
 
@@ -102,14 +137,20 @@ export default function PreviewContent({
       script.remove();
       cleanupWidgets();
     };
-  }, [activeIdx, apiKey, widgetScript, isSlideover, isAnnouncement]);
+    // personaKey re-inits injected widgets when the previewed audience changes.
+  }, [activeIdx, apiKey, widgetScript, isSlideover, isAnnouncement, datalayer, previewShowAll, personaKey]);
 
   useEffect(() => {
     if (isSlideover || isAnnouncement) return;
     cleanupWidgets();
   }, [isSlideover, isAnnouncement]);
 
-  const iframeSrc = widget ? `${widget.pagePath}?apiKey=${apiKey}&theme=${theme}&primaryColor=${encodeURIComponent(primaryColor)}` : "";
+  const targetingParam = persona
+    ? `&datalayer=${encodeURIComponent(datalayerJson)}`
+    : "&preview=all";
+  const iframeSrc = widget
+    ? `${widget.pagePath}?apiKey=${apiKey}&theme=${theme}&primaryColor=${encodeURIComponent(primaryColor)}${targetingParam}`
+    : "";
   const iframeBackground = theme === "dark" ? "hsl(224 71% 4%)" : "hsl(220 10% 98%)";
 
   return (
@@ -126,6 +167,22 @@ export default function PreviewContent({
             </button>
           ))}
         </div>
+
+        {audiences.length > 0 && (
+          <label className={styles.personaPicker}>
+            <span className={styles.personaLabel}>Preview as</span>
+            <select
+              className={styles.personaSelect}
+              value={personaId}
+              onChange={(e) => setPersonaId(e.target.value)}
+            >
+              <option value="">Everyone (all content)</option>
+              {audiences.map((a) => (
+                <option key={a.id} value={a.id}>{a.name}</option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <div className={styles.viewportPicker}>
           <button
@@ -151,6 +208,24 @@ export default function PreviewContent({
           </button>
         </div>
       </div>
+
+      {persona && (
+        <p className={styles.personaNote}>
+          {datalayer && Object.keys(datalayer).length > 0 ? (
+            <>Simulating a visitor with{" "}
+              <code>
+                {Object.entries(datalayer)
+                  .map(([k, v]) => `${k}=${v}`)
+                  .join(", ")}
+              </code>
+              . Items targeting any audience these attributes match will appear —
+              use this to spot cross-audience overlap.
+            </>
+          ) : (
+            <>This audience has no rules our preview can simulate.</>
+          )}
+        </p>
+      )}
 
       {isAnnouncement ? (
         <div className={styles.previewArea} ref={containerRef}>

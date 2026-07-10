@@ -4,8 +4,10 @@ import { validateApiKey } from "@/lib/api-key";
 import { getOrgPrisma } from "@/lib/db";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { corsHeaders, handlePreflight } from "@/lib/cors";
+import { loadTargetingContext, resolveTargeting } from "@/lib/targeting-server";
 import { logger } from "@/lib/logger";
 import { UnauthorizedError, ApiError } from "@/lib/errors";
+import type { ResolvedTargeting } from "@/types/targeting";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +21,7 @@ export interface CachedAnnouncement {
   ctaUrl: string | null;
   displayType: string;
   priority: number;
-  targetingRules: unknown;
+  targeting: ResolvedTargeting | null;
   startDate: string;
   endDate: string;
 }
@@ -36,6 +38,8 @@ async function fetchAndCacheAnnouncements(orgId: string): Promise<CachedAnnounce
     orderBy: { priority: "desc" },
   });
 
+  const { audiencesById, attributesByKey } = await loadTargetingContext(db);
+
   const result: CachedAnnouncement[] = announcements.map((a: {
     id: string;
     title: string;
@@ -46,7 +50,8 @@ async function fetchAndCacheAnnouncements(orgId: string): Promise<CachedAnnounce
     ctaUrl: string | null;
     displayType: string;
     priority: number;
-    targetingRules: unknown;
+    audienceIds: string[];
+    audienceMatch: string;
     startDate: Date;
     endDate: Date;
   }) => ({
@@ -59,7 +64,7 @@ async function fetchAndCacheAnnouncements(orgId: string): Promise<CachedAnnounce
     ctaUrl: a.ctaUrl,
     displayType: a.displayType,
     priority: a.priority,
-    targetingRules: a.targetingRules ?? null,
+    targeting: resolveTargeting(a.audienceIds, a.audienceMatch, audiencesById, attributesByKey),
     startDate: a.startDate.toISOString(),
     endDate: a.endDate.toISOString(),
   }));

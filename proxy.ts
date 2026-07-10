@@ -19,6 +19,9 @@ const publicPaths = [
   "/api/announcements/active",
   "/api/announcements/track",
   "/api/feedback",
+  // Attribute discovery: widgets report seen datalayer keys (keys + type only).
+  // Only the /observe subpath is public — /api/attributes CRUD stays protected.
+  "/api/attributes/observe",
   // Public iframe pages embedded on customer sites.
   "/changelog",
   "/board",

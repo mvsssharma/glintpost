@@ -83,34 +83,97 @@ export const updateOrgSettingsSchema = z.object({
   aiWritingContext: z.string().max(2000).nullable().optional(),
 });
 
-// === Posts ===
+// === Targeting: attributes, audiences, datalayer ===
 
-const TARGETING_PARAMS = ["plan", "role", "region", "platform", "version", "company", "locale"] as const;
-const TARGETING_OPS = ["equals", "not_equals", "contains", "in"] as const;
+const ATTRIBUTE_TYPE_VALUES = ["string", "number", "boolean", "enum", "date"] as const;
 
-const targetingRuleSchema = z.object({
-  param: z.enum(TARGETING_PARAMS),
-  op: z.enum(TARGETING_OPS),
-  value: z.union([z.string().min(1).max(200), z.array(z.string().min(1).max(200)).min(1).max(50)]),
+const ATTRIBUTE_OP_VALUES = [
+  "equals", "not_equals", "contains", "in",
+  "is", "is_not",
+  "eq", "ne", "gt", "lt", "gte", "lte", "between",
+  "is_true", "is_false",
+  "before", "after", "within_last_days", "more_than_days_ago",
+] as const;
+
+export const attributeSchema = z
+  .object({
+    key: z
+      .string()
+      .min(1, "Key is required")
+      .max(100)
+      .regex(/^[A-Za-z0-9_.-]+$/, "Key may only contain letters, numbers, and _ . -"),
+    label: z.string().min(1, "Label is required").max(100),
+    type: z.enum(ATTRIBUTE_TYPE_VALUES),
+    values: z.array(z.string().min(1).max(200)).max(100).default([]),
+  })
+  .refine((a) => a.type !== "enum" || a.values.length > 0, {
+    message: "Enum attributes need at least one allowed value",
+    path: ["values"],
+  });
+
+const audienceRuleSchema = z.object({
+  attributeKey: z.string().min(1).max(100),
+  op: z.enum(ATTRIBUTE_OP_VALUES),
+  value: z
+    .union([
+      z.string().max(200),
+      z.number(),
+      z.array(z.string().min(1).max(200)).max(50),
+      z.tuple([z.number(), z.number()]),
+    ])
+    .optional(),
 });
 
-export const targetingRulesSchema = z.object({
+export const audienceRulesSchema = z.object({
   operator: z.enum(["AND", "OR"]),
-  rules: z.array(targetingRuleSchema).min(1).max(20),
+  rules: z.array(audienceRuleSchema).min(1).max(50),
 });
+
+export const audienceSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  rules: audienceRulesSchema,
+});
+
+// Open datalayer: user-defined attribute keys → primitive values.
+export const datalayerSchema = z
+  .record(
+    z.string().max(100),
+    z.union([z.string().max(500), z.number(), z.boolean()]),
+  )
+  .nullable()
+  .optional();
+
+// Reported datalayer keys for attribute discovery (keys + inferred type only).
+export const observeAttributesSchema = z.object({
+  keys: z
+    .array(
+      z.object({
+        key: z.string().min(1).max(100),
+        type: z.enum(["string", "number", "boolean"]),
+      }),
+    )
+    .max(100),
+});
+
+const audienceTargetingFields = {
+  audienceIds: z.array(z.string().min(1).max(50)).max(50).optional(),
+  audienceMatch: z.enum(["AND", "OR"]).optional(),
+};
+
+// === Posts ===
 
 export const createPostSchema = z.object({
   title: z.string().min(1, "Title is required").max(500),
   content: z.string().min(1, "Content is required").max(100_000),
   status: z.enum(["DRAFT", "PUBLISHED"]).optional().default("DRAFT"),
-  targetingRules: targetingRulesSchema.nullable().optional(),
+  ...audienceTargetingFields,
 });
 
 export const updatePostSchema = z.object({
   title: z.string().min(1, "Title is required").max(500).optional(),
   content: z.string().min(1, "Content is required").max(100_000).optional(),
   status: z.enum(["DRAFT", "PUBLISHED"]).optional(),
-  targetingRules: targetingRulesSchema.nullable().optional(),
+  ...audienceTargetingFields,
 });
 
 export const aiRefineSchema = z.object({
@@ -125,18 +188,7 @@ export const changelogEventSchema = z.object({
   type: z.enum(CHANGELOG_EVENT_TYPES, { message: "Invalid event type" }),
   postId: z.string().max(50).nullable().optional(),
   visitorId: z.string().max(200).nullable().optional(),
-  datalayer: z
-    .object({
-      plan: z.string().max(100).optional(),
-      role: z.string().max(100).optional(),
-      region: z.string().max(100).optional(),
-      platform: z.string().max(100).optional(),
-      version: z.string().max(100).optional(),
-      company: z.string().max(200).optional(),
-      locale: z.string().max(20).optional(),
-    })
-    .nullable()
-    .optional(),
+  datalayer: datalayerSchema,
 });
 
 // === Roadmap ===
@@ -189,18 +241,7 @@ export const feedbackSubmitSchema = z.object({
       value: z.union([z.string().max(5000), z.number()]),
     })
   ).min(1).max(3),
-  datalayer: z
-    .object({
-      plan: z.string().max(100).optional(),
-      role: z.string().max(100).optional(),
-      region: z.string().max(100).optional(),
-      platform: z.string().max(100).optional(),
-      version: z.string().max(100).optional(),
-      company: z.string().max(200).optional(),
-      locale: z.string().max(20).optional(),
-    })
-    .nullable()
-    .optional(),
+  datalayer: datalayerSchema,
 });
 
 // === Announcements ===
@@ -216,7 +257,7 @@ export const createAnnouncementSchema = z.object({
   priority: z.number().int().min(0).max(1000).default(0),
   startDate: z.coerce.date(),
   endDate: z.coerce.date(),
-  targetingRules: targetingRulesSchema.nullable().optional(),
+  ...audienceTargetingFields,
   status: z.enum(["DRAFT", "PUBLISHED"]).default("DRAFT"),
 }).refine((d) => d.endDate > d.startDate, {
   message: "End date must be after start date",
@@ -234,7 +275,7 @@ export const updateAnnouncementSchema = z.object({
   priority: z.number().int().min(0).max(1000).optional(),
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
-  targetingRules: targetingRulesSchema.nullable().optional(),
+  ...audienceTargetingFields,
   status: z.enum(["DRAFT", "PUBLISHED"]).optional(),
 });
 
@@ -242,18 +283,7 @@ export const announcementEventSchema = z.object({
   type: z.enum(["VIEW", "CLICK"], { message: "Invalid event type" }),
   announcementId: z.string().min(1).max(50),
   visitorId: z.string().max(200).nullable().optional(),
-  datalayer: z
-    .object({
-      plan: z.string().max(100).optional(),
-      role: z.string().max(100).optional(),
-      region: z.string().max(100).optional(),
-      platform: z.string().max(100).optional(),
-      version: z.string().max(100).optional(),
-      company: z.string().max(200).optional(),
-      locale: z.string().max(20).optional(),
-    })
-    .nullable()
-    .optional(),
+  datalayer: datalayerSchema,
 });
 
 // === Helpers ===

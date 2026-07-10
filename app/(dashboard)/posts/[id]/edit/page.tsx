@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import RichTextEditor from "@/app/components/RichTextEditor";
-import TargetingRulesEditor from "../../TargetingRulesEditor";
-import type { TargetingRuleSet } from "@/types/targeting";
+import AudiencePicker, { type AudienceTargeting } from "../../../audiences/AudiencePicker";
 import styles from "../../form.module.css";
 
 interface PostData {
   id: string;
   status: "DRAFT" | "PUBLISHED";
-  targetingRules: TargetingRuleSet | null;
+  audienceIds: string[];
+  audienceMatch: "AND" | "OR";
   translations: Array<{ locale: string; title: string; content: string }>;
 }
 
@@ -20,7 +20,7 @@ export default function EditPostPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [status, setStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT");
-  const [targetingRules, setTargetingRules] = useState<TargetingRuleSet | null>(null);
+  const [targeting, setTargeting] = useState<AudienceTargeting>({ audienceIds: [], audienceMatch: "OR" });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +39,10 @@ export default function EditPostPage() {
         setTitle(enTranslation?.title ?? "");
         setContent(enTranslation?.content ?? "");
         setStatus(post.status);
-        setTargetingRules(post.targetingRules ?? null);
+        setTargeting({
+          audienceIds: post.audienceIds ?? [],
+          audienceMatch: post.audienceMatch ?? "OR",
+        });
       } catch {
         setError("Failed to load post");
       } finally {
@@ -70,7 +73,7 @@ export default function EditPostPage() {
         body: JSON.stringify({
           title,
           content,
-          targetingRules,
+          ...targeting,
           ...(newStatus && { status: newStatus }),
         }),
       });
@@ -133,7 +136,7 @@ export default function EditPostPage() {
         </div>
         {errors.content && <p className={styles.errorText}>{errors.content}</p>}
 
-        <TargetingRulesEditor value={targetingRules} onChange={setTargetingRules} />
+        <AudiencePicker {...targeting} onChange={setTargeting} />
 
         <div className={styles.actions}>
           {status === "DRAFT" && (

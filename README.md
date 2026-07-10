@@ -1,10 +1,35 @@
+<div align="center">
+
 # GlintPost 🌟
 
-> **The ultimate product marketing platform.**
+**The open-source, self-hostable product marketing platform.**
 
-Open-source, multi-tenant widgets for **Changelogs, Roadmaps, and Feedback** that drop into your site in minutes — so your users actually find out about all the stuff you shipped at 2am.
+Embeddable widgets for **Changelogs, Roadmaps, and Feedback** that drop into your site in minutes — so your users actually find out about all the stuff you shipped at 2am.
 
-🌐 **[glintpost.com](https://glintpost.com)** — bridge the gap between product and go-to-market.
+A free, self-hosted alternative to Canny, Beamer, Sleekplan, and Frill — no per-seat pricing, no vendor lock-in, your data on your own server.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-20b16d.svg)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/mvsssharma/glintpost?style=flat&color=20b16d)](https://github.com/mvsssharma/glintpost/stargazers)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-3b82f6.svg)](CONTRIBUTING.md)
+[![Self-host with Docker](https://img.shields.io/badge/self--host-docker%20compose-2496ED.svg?logo=docker&logoColor=white)](#-quick-start-self-hosting-via-docker)
+[![Built with Next.js](https://img.shields.io/badge/Next.js-Prisma%20%2B%20Postgres-000000.svg?logo=next.js)](#-features)
+
+🌐 **[glintpost.com](https://glintpost.com)** · 📚 **[Docs](https://glintpost.com/docs)** · ⚖️ **[Compare](https://glintpost.com/vs)** · 🐳 **[Self-host in one command](#-quick-start-self-hosting-via-docker)**
+
+</div>
+
+---
+
+## ⚡ TL;DR
+
+```bash
+git clone https://github.com/mvsssharma/glintpost.git && cd glintpost
+cp .env.example .env
+docker compose up -d --build   # app + Postgres + local storage, zero external accounts
+# → open http://localhost:3000
+```
+
+That's the entire setup. No cloud account, no "book a demo", no per-seat invoice.
 
 ---
 
@@ -28,6 +53,27 @@ And since it's open source, you can run the entire thing on your own box with a 
 - **Multi-Tenant:** Run many products or clients from one dashboard. Great for founders, agencies, and serial side-project offenders.
 - **Modern Stack:** Next.js + Prisma + Postgres. Fast, typed, and unsurprising.
 - **Frictionless Self-Hosting:** One command, zero external accounts to get started. Bring your own DB and storage whenever you're ready.
+
+---
+
+## ⚖️ How GlintPost compares
+
+Most changelog/roadmap/feedback tools are closed-source SaaS that charge per seat and keep your users' data on their servers. GlintPost bundles all three surfaces into one self-hostable app.
+
+| | **GlintPost** | Canny | Beamer | Sleekplan | Frill |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Open source (MIT) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Self-host your data | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Free forever tier | ✅ *(self-host)* | Limited | Limited | Limited | Limited |
+| Per-seat pricing | ❌ None | ✅ | ✅ | ✅ | ✅ |
+| Changelog | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Roadmap + voting | ✅ | ✅ | ➖ | ✅ | ✅ |
+| Feedback / surveys | ✅ | ✅ | ➖ | ✅ | ✅ |
+| In-app embeddable widgets | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Multi-tenant (many products) | ✅ | ➖ | ➖ | ➖ | ➖ |
+| Headless REST API | ✅ | ➖ | ➖ | ➖ | ➖ |
+
+> Full side-by-side breakdowns: **[glintpost.com/vs](https://glintpost.com/vs)** — [vs Canny](https://glintpost.com/vs/canny) · [vs Beamer](https://glintpost.com/vs/beamer) · [vs Sleekplan](https://glintpost.com/vs/sleekplan) · [vs Frill](https://glintpost.com/vs/frill)
 
 ---
 

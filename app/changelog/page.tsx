@@ -7,6 +7,8 @@ import { sanitizeRichHtml } from "@/lib/sanitize-html";
 import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import { getVisitorId, getExistingVisitorId } from "@/lib/visitor";
 import { getAllowedOrigins, postToParent, isAllowedOrigin } from "@/lib/post-message";
+import { matchesTargeting } from "@/lib/attributes";
+import type { ResolvedTargeting } from "@/types/targeting";
 import styles from "./page.module.css";
 
 const fetcher = ([url, apiKey]: [string, string]) =>
@@ -15,17 +17,6 @@ const fetcher = ([url, apiKey]: [string, string]) =>
     return res.json();
   });
 
-interface TargetingRule {
-  param: string;
-  op: string;
-  value: string | string[];
-}
-
-interface TargetingRuleSet {
-  operator: "AND" | "OR";
-  rules: TargetingRule[];
-}
-
 interface Post {
   id: string;
   title: string;
@@ -33,38 +24,7 @@ interface Post {
   createdAt: string;
   likes: number;
   dislikes: number;
-  targetingRules: TargetingRuleSet | null;
-}
-
-function matchesTargetingRules(
-  post: Post,
-  datalayer: Record<string, string> | null
-): boolean {
-  if (!post.targetingRules) return true;
-  if (!datalayer) return false;
-
-  const { operator, rules } = post.targetingRules;
-
-  const evalRule = (rule: TargetingRule): boolean => {
-    const actual = datalayer[rule.param] ?? "";
-    switch (rule.op) {
-      case "equals":
-        return actual === rule.value;
-      case "not_equals":
-        return actual !== rule.value;
-      case "contains":
-        return typeof rule.value === "string" &&
-          actual.toLowerCase().includes(rule.value.toLowerCase());
-      case "in":
-        return Array.isArray(rule.value) && rule.value.includes(actual);
-      default:
-        return false;
-    }
-  };
-
-  return operator === "AND"
-    ? rules.every(evalRule)
-    : rules.some(evalRule);
+  targeting: ResolvedTargeting | null;
 }
 
 function ReactionButtons({
@@ -104,13 +64,14 @@ function ChangelogContent() {
   const apiKey = searchParams.get("apiKey");
   const visitorIdParam = searchParams.get("visitorId");
   const datalayerParam = searchParams.get("datalayer");
+  const previewAll = searchParams.get("preview") === "all";
   const [visitorId, setVisitorId] = useState("");
   const themeParam = searchParams.get("theme");
   const primaryColorParam = searchParams.get("primaryColor");
 
   const parsedDatalayer = useMemo(() => {
     if (!datalayerParam) return null;
-    try { return JSON.parse(datalayerParam) as Record<string, string>; }
+    try { return JSON.parse(datalayerParam) as Record<string, string | number | boolean>; }
     catch { return null; }
   }, [datalayerParam]);
 
@@ -261,7 +222,10 @@ function ChangelogContent() {
 
   const themeClass = theme?.widgetTheme === "dark" ? styles.dark : styles.light;
 
-  const visiblePosts = posts.filter((p) => matchesTargetingRules(p, parsedDatalayer));
+  // Preview "Everyone" mode (dashboard) shows all posts regardless of targeting.
+  const visiblePosts = previewAll
+    ? posts
+    : posts.filter((p) => matchesTargeting(p.targeting, parsedDatalayer));
 
   const selectedPost = selectedPostId
     ? visiblePosts.find((p) => p.id === selectedPostId)

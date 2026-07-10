@@ -1,9 +1,9 @@
 import { NextResponse, after } from "next/server";
-import { Prisma } from "@prisma/client";
 import { requireOrgApi } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import { updateAnnouncementSchema } from "@/lib/validations";
 import { cacheInvalidate } from "@/lib/cache";
+import { resolveAudienceRefs } from "@/lib/targeting-server";
 import { refreshOrgNomenclature } from "@/lib/nomenclature";
 import { htmlToText } from "@/lib/html-segments";
 import { logger } from "@/lib/logger";
@@ -62,10 +62,13 @@ export async function PUT(req: Request, context: Context) {
       throw new NotFoundError("Announcement not found");
     }
 
-    const { targetingRules, ...rest } = parsed.data;
+    const { audienceIds, audienceMatch, ...rest } = parsed.data;
     const updateData: Record<string, unknown> = { ...rest };
-    if (targetingRules !== undefined) {
-      updateData.targetingRules = targetingRules === null ? Prisma.DbNull : targetingRules;
+    if (audienceIds !== undefined) {
+      updateData.audienceIds = await resolveAudienceRefs(db, audienceIds);
+    }
+    if (audienceMatch !== undefined) {
+      updateData.audienceMatch = audienceMatch;
     }
 
     const announcement = await db.announcement.update({

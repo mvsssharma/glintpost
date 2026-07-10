@@ -4,15 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import RichTextEditor from "@/app/components/RichTextEditor";
 import { useAIRefine, RefineButton, RefinePreview } from "@/app/components/AIRefine";
-import TargetingRulesEditor from "../TargetingRulesEditor";
-import type { TargetingRuleSet } from "@/types/targeting";
+import AudiencePicker, { type AudienceTargeting } from "../../audiences/AudiencePicker";
 import styles from "../form.module.css";
 
 export default function CreatePostForm({ aiConfigured }: { aiConfigured: boolean }) {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [targetingRules, setTargetingRules] = useState<TargetingRuleSet | null>(null);
+  const [targeting, setTargeting] = useState<AudienceTargeting>({ audienceIds: [], audienceMatch: "OR" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -45,7 +44,7 @@ export default function CreatePostForm({ aiConfigured }: { aiConfigured: boolean
       const res = await fetch("/api/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content, status, targetingRules }),
+        body: JSON.stringify({ title, content, status, ...targeting }),
       });
 
       if (res.ok) {
@@ -97,7 +96,7 @@ export default function CreatePostForm({ aiConfigured }: { aiConfigured: boolean
         </div>
         {errors.content && <p className={styles.errorText}>{errors.content}</p>}
 
-        <TargetingRulesEditor value={targetingRules} onChange={setTargetingRules} />
+        <AudiencePicker {...targeting} onChange={setTargeting} />
 
         <div className={styles.actions}>
           <button

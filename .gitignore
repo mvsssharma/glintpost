@@ -53,3 +53,6 @@ dev.db-journal
 .agents/
 .claude/
 skills-lock.json
+
+# Stray diff/patch artifacts
+*.patch

@@ -23,7 +23,14 @@ export type {
   AnnouncementEventType,
 } from "@prisma/client";
 
-export type { TargetingRule, TargetingRuleSet, TargetingOperator, TargetingRuleOp } from "./targeting";
+export type {
+  Attribute,
+  AttributeType,
+  AttributeOp,
+  AudienceRule,
+  AudienceRuleSet,
+  ResolvedTargeting,
+} from "./targeting";
 export type { GlintPostConfig, WidgetMessage, WidgetMessageType } from "./widget";
 export type { PublicRoadmapItem, SuggestionResponse } from "./roadmap";
 export type { FeedbackQuestion } from "./feedback";

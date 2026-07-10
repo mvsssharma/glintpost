@@ -46,6 +46,17 @@ export async function seedSampleContent(
     },
   });
 
+  // Starter attributes so the audience builder isn't empty. These are just
+  // examples — users rename, retype, or delete them freely.
+  await tx.attribute.createMany({
+    data: [
+      { orgId, key: "plan", label: "Plan", type: "enum", values: ["free", "pro", "enterprise"] },
+      { orgId, key: "role", label: "Role", type: "string", values: [] },
+      { orgId, key: "company", label: "Company", type: "string", values: [] },
+      { orgId, key: "seat_count", label: "Seats", type: "number", values: [] },
+    ],
+  });
+
   const now = new Date();
   await tx.announcement.create({
     data: {

@@ -1,9 +1,9 @@
 import { NextResponse, after } from "next/server";
-import { Prisma } from "@prisma/client";
 import { requireOrgApi } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import { createPostSchema } from "@/lib/validations";
 import { cacheInvalidate } from "@/lib/cache";
+import { resolveAudienceRefs } from "@/lib/targeting-server";
 import { refreshOrgNomenclature } from "@/lib/nomenclature";
 import { htmlToText } from "@/lib/html-segments";
 import { logger } from "@/lib/logger";
@@ -22,15 +22,18 @@ export async function POST(req: Request) {
       throw new ValidationError(parsed.error.issues[0]?.message ?? "Invalid input");
     }
 
-    const { title, content, status, targetingRules } = parsed.data;
+    const { title, content, status, audienceIds, audienceMatch } = parsed.data;
     const db = getOrgPrisma(session.orgId);
+
+    const validAudienceIds = await resolveAudienceRefs(db, audienceIds);
 
     const post = await db.post.create({
       data: {
         orgId: session.orgId,
         status: status ?? "DRAFT",
         publishedAt: status === "PUBLISHED" ? new Date() : null,
-        targetingRules: targetingRules ?? Prisma.DbNull,
+        audienceIds: validAudienceIds,
+        audienceMatch: audienceMatch ?? "OR",
         translations: {
           create: {
             orgId: session.orgId,

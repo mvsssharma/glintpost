@@ -14,6 +14,8 @@ import {
   Settings,
   CreditCard,
   LogOut,
+  Tags,
+  Users,
 } from "lucide-react";
 import styles from "./dashboard.module.css";
 
@@ -23,6 +25,8 @@ const navItems = [
   { href: "/announcements", label: "Announcements", icon: Megaphone },
   { href: "/roadmap", label: "Roadmap", icon: Map },
   { href: "/feedback", label: "Feedback", icon: MessageSquare },
+  { href: "/attributes", label: "Attributes", icon: Tags },
+  { href: "/audiences", label: "Audiences", icon: Users },
   { href: "/integration", label: "Integration", icon: Code },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
