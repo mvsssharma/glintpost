@@ -25,16 +25,10 @@ function ResetPasswordForm() {
     return (
       <div className={styles.card}>
         <h2 className={styles.cardTitle}>Invalid reset link</h2>
-        <p
-          style={{
-            color: "hsl(var(--text-muted))",
-            fontSize: "0.875rem",
-            marginBottom: "1.5rem",
-          }}
-        >
+        <p className={styles.note}>
           This password reset link is invalid or has expired.
         </p>
-        <Link href="/forgot-password" className="btn-primary" style={{ width: "100%", textAlign: "center" }}>
+        <Link href="/forgot-password" className="btn-primary btn-block">
           Request a new link
         </Link>
       </div>
@@ -45,16 +39,10 @@ function ResetPasswordForm() {
     return (
       <div className={styles.card}>
         <h2 className={styles.cardTitle}>Password reset</h2>
-        <p
-          style={{
-            color: "hsl(var(--text-muted))",
-            fontSize: "0.875rem",
-            marginBottom: "1.5rem",
-          }}
-        >
+        <p className={styles.note}>
           {state.success}
         </p>
-        <Link href="/login" className="btn-primary" style={{ width: "100%", textAlign: "center" }}>
+        <Link href="/login" className="btn-primary btn-block">
           Sign in
         </Link>
       </div>

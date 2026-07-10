@@ -37,19 +37,11 @@ function VerifyEmailContent() {
       {state.error && <div className={styles.error}>{state.error}</div>}
 
       {state.success ? (
-        <p style={{
-          color: "hsl(142 71% 45%)",
-          fontSize: "0.875rem",
-          marginBottom: "1rem",
-        }}>
+        <p className={`${styles.note} ${styles.noteSuccess}`}>
           {state.success}
         </p>
       ) : (
-        <p style={{
-          color: "hsl(var(--text-muted))",
-          fontSize: "0.875rem",
-          marginBottom: "1.5rem",
-        }}>
+        <p className={styles.note}>
           Check your inbox for a verification link. If you don&apos;t see it, click
           the button below to send another.
         </p>
@@ -59,8 +51,7 @@ function VerifyEmailContent() {
         <button
           type="submit"
           disabled={isPending}
-          className={`btn-primary ${styles.submitBtn}`}
-          style={{ width: "100%" }}
+          className={`btn-primary btn-block ${styles.submitBtn}`}
         >
           {isPending ? "Sending..." : "Resend verification email"}
         </button>
