@@ -50,6 +50,22 @@
   margin-bottom: 1.5rem;
 }
 
+/* Muted explanatory paragraph (success/invalid states, form intros). */
+.note {
+  color: hsl(var(--text-muted));
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+.noteTight {
+  margin-bottom: 0.5rem;
+}
+
+.noteSuccess {
+  color: hsl(var(--success));
+  margin-bottom: 1rem;
+}
+
 .form {
   display: flex;
   flex-direction: column;
@@ -74,6 +90,23 @@
   padding: 0.75rem 1rem;
   border-radius: var(--radius-md);
   font-size: 0.875rem;
+}
+
+.success {
+  background: hsl(var(--success) / 0.1);
+  color: hsl(var(--success));
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+}
+
+.forgotRow {
+  text-align: right;
+}
+
+.forgotLink {
+  font-size: 0.8125rem;
+  color: hsl(var(--text-muted));
 }
 
 .footer {

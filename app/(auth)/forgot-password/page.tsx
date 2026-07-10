@@ -19,29 +19,17 @@ export default function ForgotPasswordPage() {
       <h2 className={styles.cardTitle}>Reset your password</h2>
       {state.success ? (
         <div>
-          <p
-            style={{
-              color: "hsl(var(--text-muted))",
-              fontSize: "0.875rem",
-              marginBottom: "1.5rem",
-            }}
-          >
+          <p className={styles.note}>
             {state.success}
           </p>
-          <Link href="/login" className="btn-primary" style={{ width: "100%", textAlign: "center" }}>
+          <Link href="/login" className="btn-primary btn-block">
             Back to sign in
           </Link>
         </div>
       ) : (
         <form action={formAction} className={styles.form}>
           {state.error && <div className={styles.error}>{state.error}</div>}
-          <p
-            style={{
-              color: "hsl(var(--text-muted))",
-              fontSize: "0.875rem",
-              marginBottom: "0.5rem",
-            }}
-          >
+          <p className={`${styles.note} ${styles.noteTight}`}>
             Enter your email and we&apos;ll send you a link to reset your
             password.
           </p>

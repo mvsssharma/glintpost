@@ -21,13 +21,7 @@ function LoginForm() {
       <h2 className={styles.cardTitle}>Sign in</h2>
       <form action={formAction} className={styles.form}>
         {verified && (
-          <div style={{
-            background: "hsl(142 71% 45% / 0.1)",
-            color: "hsl(142 71% 45%)",
-            padding: "0.75rem 1rem",
-            borderRadius: "var(--radius-md)",
-            fontSize: "0.875rem",
-          }}>
+          <div className={styles.success}>
             Email verified successfully! You can now sign in.
           </div>
         )}
@@ -57,11 +51,8 @@ function LoginForm() {
             placeholder="Enter your password"
           />
         </div>
-        <div style={{ textAlign: "right" }}>
-          <Link
-            href="/forgot-password"
-            style={{ fontSize: "0.813rem", color: "hsl(var(--text-muted))" }}
-          >
+        <div className={styles.forgotRow}>
+          <Link href="/forgot-password" className={styles.forgotLink}>
             Forgot password?
           </Link>
         </div>
