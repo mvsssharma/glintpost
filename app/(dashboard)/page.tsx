@@ -183,7 +183,7 @@ export default async function DashboardPage() {
               <h3>Status</h3>
               <span className={styles.tipIcon} data-tip="Whether the feedback form is live for visitors">?</span>
             </div>
-            <div className={styles.statValue} style={{ fontSize: "1.25rem" }}>
+            <div className={`${styles.statValue} ${styles.statValueText}`}>
               {activeFeedbackForms > 0 ? `${activeFeedbackForms} live` : "None live"}
             </div>
           </div>

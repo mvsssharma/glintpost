@@ -1,6 +1,7 @@
 import { requireOrg } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import { SUGGESTION_STATUSES } from "@/lib/constants";
+import { formatDate } from "@/lib/format";
 import { SuggestionActions } from "./SuggestionActions";
 import styles from "./page.module.css";
 
@@ -51,7 +52,7 @@ export default async function SuggestionsPage() {
                         {s.similarityScore != null && ` (${Math.round(s.similarityScore * 100)}%)`}
                       </span>
                     )}
-                    <span>{new Date(s.createdAt).toLocaleDateString()}</span>
+                    <span>{formatDate(s.createdAt)}</span>
                   </div>
                 </div>
                 {s.status === "PENDING" && (

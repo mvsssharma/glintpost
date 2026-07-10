@@ -3,6 +3,7 @@ import { getOrgPrisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { FeedbackQuestion } from "@/types";
+import { formatDate, formatTime } from "@/lib/format";
 import styles from "../../responses/page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -72,7 +73,7 @@ export default async function FeedbackResponsesPage({
             <h2>{form.title}</h2>
             <p>{responses.length} response{responses.length !== 1 ? "s" : ""} collected</p>
           </div>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
+          <div className="list-row-actions">
             <Link href={`/feedback/${form.id}`} className="btn-secondary">
               Edit form
             </Link>
@@ -154,8 +155,8 @@ export default async function FeedbackResponsesPage({
               return (
                 <div key={r.id} className={styles.responseCard}>
                   <span className={styles.responseDate}>
-                    {new Date(r.createdAt).toLocaleDateString()} &middot;{" "}
-                    {new Date(r.createdAt).toLocaleTimeString()}
+                    {formatDate(r.createdAt)} &middot;{" "}
+                    {formatTime(r.createdAt)}
                   </span>
                   {ans.map((a) => {
                     const q = questions.find((q) => q.id === a.questionId);

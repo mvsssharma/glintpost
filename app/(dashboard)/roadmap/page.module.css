@@ -91,6 +91,14 @@
   align-items: center;
 }
 
+.voteUp {
+  color: #22c55e;
+}
+
+.voteDown {
+  color: #ef4444;
+}
+
 .itemActions {
   display: flex;
   gap: 0.5rem;

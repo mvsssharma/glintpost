@@ -3,6 +3,7 @@ import { requireOrg } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import AnnouncementActions from "./AnnouncementActions";
 import ImportDialog from "@/app/components/ImportDialog";
+import { formatDate } from "@/lib/format";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -146,7 +147,7 @@ export default async function AnnouncementsPage({
                   </span>
                   <span className={styles.priority}>P{item.priority}</span>
                   <span className={styles.date}>
-                    {new Date(item.startDate).toLocaleDateString()} – {new Date(item.endDate).toLocaleDateString()}
+                    {formatDate(item.startDate)} – {formatDate(item.endDate)}
                   </span>
                   <span className={styles.stats}>
                     {item.views} views · {item.clicks} clicks

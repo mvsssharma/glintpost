@@ -3,6 +3,7 @@ import { requireOrg } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import PostActions from "./PostActions";
 import ImportDialog from "@/app/components/ImportDialog";
+import { formatDate } from "@/lib/format";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -120,9 +121,9 @@ export default async function PostsPage({
                       {post.status}
                     </span>
                     <span className={styles.date}>
-                      {new Date(post.createdAt).toLocaleDateString()}
+                      {formatDate(post.createdAt)}
                     </span>
-                    <span className={styles.reactions} style={{ display: "inline-flex", gap: "1rem" }}>
+                    <span className={styles.reactions}>
                       <span>👍 {post.likes}</span>
                       <span>👎 {post.dislikes}</span>
                     </span>

@@ -1,6 +1,7 @@
 import { requireOrg } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import Link from "next/link";
+import { formatDate } from "@/lib/format";
 import styles from "./page.module.css";
 import { DeleteFormButton } from "./DeleteFormButton";
 import { CopyFormId } from "./CopyFormId";
@@ -52,7 +53,7 @@ export default async function FeedbackPage() {
               <div className={styles.formCardMeta}>
                 <span>{form._count.responses} response{form._count.responses !== 1 ? "s" : ""}</span>
                 <span>&middot;</span>
-                <span>Created {new Date(form.createdAt).toLocaleDateString()}</span>
+                <span>Created {formatDate(form.createdAt)}</span>
               </div>
               <div className={styles.formCardActions}>
                 <Link href={`/feedback/${form.id}`} className="btn-secondary">

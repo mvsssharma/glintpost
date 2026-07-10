@@ -351,7 +351,7 @@ export function SettingsForm({
 
           <div className={styles.fieldGroup}>
             <label htmlFor="aiWritingContext" className={styles.label}>
-              AI writing context <span style={{ fontWeight: 400, opacity: 0.7 }}>(optional)</span>
+              AI writing context <span className={styles.optionalTag}>(optional)</span>
             </label>
             <textarea
               id="aiWritingContext"

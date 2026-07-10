@@ -162,7 +162,7 @@ export function FeedbackFormBuilder({
 
             <div className={styles.questionFields}>
               <div className={styles.questionRow}>
-                <div className={styles.fieldGroup} style={{ marginBottom: 0 }}>
+                <div className={`${styles.fieldGroup} ${styles.fieldGroupFlush}`}>
                   <label className={styles.label}>Question text</label>
                   <input
                     type="text"
@@ -172,7 +172,7 @@ export function FeedbackFormBuilder({
                     placeholder="e.g. How likely are you to recommend us?"
                   />
                 </div>
-                <div className={styles.fieldGroup} style={{ marginBottom: 0 }}>
+                <div className={`${styles.fieldGroup} ${styles.fieldGroupFlush}`}>
                   <label className={styles.label}>Type</label>
                   <select
                     value={q.type}
@@ -191,7 +191,7 @@ export function FeedbackFormBuilder({
               </div>
 
               {q.type === "SELECT" && (
-                <div className={styles.fieldGroup} style={{ marginBottom: 0 }}>
+                <div className={`${styles.fieldGroup} ${styles.fieldGroupFlush}`}>
                   <label className={styles.label}>Options</label>
                   <div className={styles.optionsEditor}>
                     {(q.options || []).map((opt, oIdx) => (

@@ -20,7 +20,7 @@ export default async function BillingPage() {
       </header>
       <div className={styles.card}>
         <p>Billing is not set up yet. You can configure Razorpay (or another provider) later.</p>
-        <Link href="/settings" className="btn-secondary" style={{ marginTop: "1rem", display: "inline-block" }}>
+        <Link href="/settings" className={`btn-secondary ${styles.backLink}`}>
           Back to Settings
         </Link>
       </div>

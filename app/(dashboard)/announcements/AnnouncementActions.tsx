@@ -27,7 +27,7 @@ export default function AnnouncementActions({ announcementId }: { announcementId
   };
 
   return (
-    <div style={{ display: "flex", gap: "0.5rem" }}>
+    <div className="list-row-actions">
       <button
         className="btn-secondary"
         onClick={() => router.push(`/announcements/${announcementId}/edit`)}
@@ -35,10 +35,9 @@ export default function AnnouncementActions({ announcementId }: { announcementId
         Edit
       </button>
       <button
-        className="btn-secondary"
+        className="btn-secondary btn-danger"
         onClick={handleDelete}
         disabled={isDeleting}
-        style={{ color: "hsl(var(--danger, 0 70% 50%))" }}
       >
         {isDeleting ? "Deleting..." : "Delete"}
       </button>

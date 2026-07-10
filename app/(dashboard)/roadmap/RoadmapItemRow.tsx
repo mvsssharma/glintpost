@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { updateRoadmapItemStatus, deleteRoadmapItem } from "@/app/actions/roadmap";
 import { ROADMAP_STATUSES } from "@/lib/constants";
+import { formatDate } from "@/lib/format";
 import type { RoadmapItemStatus } from "@prisma/client";
 import styles from "./page.module.css";
 
@@ -45,10 +46,10 @@ export function RoadmapItemRow({ item, statusColor, statusLabel }: Props) {
             {statusLabel}
           </span>
           <span className={styles.votes}>
-            <span><span style={{ color: "#22c55e" }}>▲</span> {item.upvotes}</span>
-            <span><span style={{ color: "#ef4444" }}>▼</span> {item.downvotes}</span>
+            <span><span className={styles.voteUp}>▲</span> {item.upvotes}</span>
+            <span><span className={styles.voteDown}>▼</span> {item.downvotes}</span>
           </span>
-          <span>{new Date(item.createdAt).toLocaleDateString()}</span>
+          <span>{formatDate(item.createdAt)}</span>
         </div>
       </div>
       <div className={styles.itemActions}>

@@ -109,3 +109,8 @@
   background: hsl(145 60% 92%);
   color: hsl(145 60% 30%);
 }
+
+.reactions {
+  display: inline-flex;
+  gap: 1rem;
+}
