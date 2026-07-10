@@ -1,18 +1,4 @@
-.dialog {
-  padding: 0;
-  border: 1px solid hsl(var(--border-light));
-  border-radius: 12px;
-  background: hsl(var(--bg-main));
-  color: inherit;
-  max-width: 720px;
-  width: calc(100% - 2rem);
-  max-height: 85vh;
-  overflow: auto;
-}
-
-.dialog::backdrop {
-  background: rgba(0, 0, 0, 0.4);
-}
+/* Dialog shell now lives in globals.css (.dialog); width via <Dialog width>. */
 
 .panel {
   padding: 1.5rem;

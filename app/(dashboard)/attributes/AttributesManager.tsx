@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useState, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import type { Attribute, AttributeType } from "@/types/targeting";
 import { ATTRIBUTE_TYPES } from "@/lib/attributes";
+import { Dialog } from "@/app/components/Dialog";
 import styles from "../audiences/audiences.module.css";
 
 const TYPE_LABELS: Record<AttributeType, string> = {
@@ -70,7 +71,7 @@ export default function AttributesManager({
   discovered: DiscoveredKey[];
 }) {
   const router = useRouter();
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [key, setKey] = useState("");
   const [label, setLabel] = useState("");
   const [type, setType] = useState<AttributeType>("string");
@@ -87,10 +88,10 @@ export default function AttributesManager({
     setType(prefill?.type ?? "string");
     setValues([]);
     setError(null);
-    dialogRef.current?.showModal();
+    setDialogOpen(true);
   };
 
-  const close = () => dialogRef.current?.close();
+  const close = () => setDialogOpen(false);
 
   const save = async () => {
     setError(null);
@@ -201,62 +202,58 @@ export default function AttributesManager({
         </div>
       )}
 
-      <dialog ref={dialogRef} className={styles.dialog} onClose={close}>
-        <div className={styles.dialogBody}>
-          <div className={styles.dialogTitle}>New attribute</div>
-
-          <div className={styles.field}>
-            <label className={styles.label}>Datalayer key</label>
-            <input
-              className={styles.input}
-              value={key}
-              onChange={(e) => setKey(e.target.value)}
-              placeholder="e.g. seat_count"
-              autoFocus
-            />
-            <span className={styles.hint}>The exact field name your site sends in the datalayer.</span>
-          </div>
-
-          <div className={styles.field}>
-            <label className={styles.label}>Label</label>
-            <input
-              className={styles.input}
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              placeholder="e.g. Seats"
-            />
-          </div>
-
-          <div className={styles.field}>
-            <label className={styles.label}>Type</label>
-            <select
-              className={styles.select}
-              value={type}
-              onChange={(e) => setType(e.target.value as AttributeType)}
-            >
-              {ATTRIBUTE_TYPES.map((t) => (
-                <option key={t} value={t}>{TYPE_LABELS[t]}</option>
-              ))}
-            </select>
-          </div>
-
-          {type === "enum" && (
-            <div className={styles.field}>
-              <label className={styles.label}>Allowed values</label>
-              <ValuesInput values={values} onChange={setValues} />
-            </div>
-          )}
-
-          {error && <div className={styles.error}>{error}</div>}
-
-          <div className={styles.dialogActions}>
-            <button className={styles.ghostBtn} onClick={close} type="button">Cancel</button>
-            <button className={styles.primaryBtn} onClick={save} disabled={saving}>
-              {saving ? "Creating…" : "Create attribute"}
-            </button>
-          </div>
+      <Dialog open={dialogOpen} onClose={close} title="New attribute">
+        <div className={styles.field}>
+          <label className={styles.label}>Datalayer key</label>
+          <input
+            className={styles.input}
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+            placeholder="e.g. seat_count"
+            autoFocus
+          />
+          <span className={styles.hint}>The exact field name your site sends in the datalayer.</span>
         </div>
-      </dialog>
+
+        <div className={styles.field}>
+          <label className={styles.label}>Label</label>
+          <input
+            className={styles.input}
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder="e.g. Seats"
+          />
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.label}>Type</label>
+          <select
+            className={styles.select}
+            value={type}
+            onChange={(e) => setType(e.target.value as AttributeType)}
+          >
+            {ATTRIBUTE_TYPES.map((t) => (
+              <option key={t} value={t}>{TYPE_LABELS[t]}</option>
+            ))}
+          </select>
+        </div>
+
+        {type === "enum" && (
+          <div className={styles.field}>
+            <label className={styles.label}>Allowed values</label>
+            <ValuesInput values={values} onChange={setValues} />
+          </div>
+        )}
+
+        {error && <div className={styles.error}>{error}</div>}
+
+        <div className="dialog-actions">
+          <button className={styles.ghostBtn} onClick={close} type="button">Cancel</button>
+          <button className={styles.primaryBtn} onClick={save} disabled={saving}>
+            {saving ? "Creating…" : "Create attribute"}
+          </button>
+        </div>
+      </Dialog>
     </div>
   );
 }
