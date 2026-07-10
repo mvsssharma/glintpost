@@ -1,11 +1,10 @@
-import { NextResponse, after } from "next/server";
+import { NextResponse } from "next/server";
 import { requireOrgApi } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import { updatePostSchema } from "@/lib/validations";
 import { cacheInvalidate } from "@/lib/cache";
 import { resolveAudienceRefs } from "@/lib/targeting-server";
-import { refreshOrgNomenclature } from "@/lib/nomenclature";
-import { htmlToText } from "@/lib/html-segments";
+import { scheduleNomenclatureRefresh } from "@/lib/nomenclature";
 import { logger } from "@/lib/logger";
 import { ValidationError, NotFoundError, ApiError } from "@/lib/errors";
 
@@ -105,7 +104,7 @@ export async function PUT(req: Request, context: Context) {
     // Background: refresh learned terminology when a post is published. Never blocks/fails the save.
     if (post.status === "PUBLISHED") {
       const enText = post.translations.find((t) => t.locale === "en")?.content ?? "";
-      if (enText) after(() => refreshOrgNomenclature(session.orgId, htmlToText(enText)));
+      if (enText) scheduleNomenclatureRefresh(session.orgId, enText);
     }
 
     return NextResponse.json(post);

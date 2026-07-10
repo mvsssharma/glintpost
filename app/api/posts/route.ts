@@ -1,11 +1,10 @@
-import { NextResponse, after } from "next/server";
+import { NextResponse } from "next/server";
 import { requireOrgApi } from "@/lib/auth-helpers";
 import { getOrgPrisma } from "@/lib/db";
 import { createPostSchema } from "@/lib/validations";
 import { cacheInvalidate } from "@/lib/cache";
 import { resolveAudienceRefs } from "@/lib/targeting-server";
-import { refreshOrgNomenclature } from "@/lib/nomenclature";
-import { htmlToText } from "@/lib/html-segments";
+import { scheduleNomenclatureRefresh } from "@/lib/nomenclature";
 import { logger } from "@/lib/logger";
 import { ValidationError, ApiError } from "@/lib/errors";
 
@@ -51,7 +50,7 @@ export async function POST(req: Request) {
     // Learn org terminology in the background — published posts only, so draft wording
     // never pollutes the glossary or burns LLM calls.
     if (status === "PUBLISHED") {
-      after(() => refreshOrgNomenclature(session.orgId, htmlToText(content)));
+      scheduleNomenclatureRefresh(session.orgId, content);
     }
 
     return NextResponse.json(post, { status: 201 });

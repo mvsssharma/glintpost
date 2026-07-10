@@ -4,18 +4,13 @@ import { useEffect, useState, useMemo, Suspense, useCallback, useRef } from "rea
 import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import { sanitizeRichHtml } from "@/lib/sanitize-html";
-import { DEFAULT_PRIMARY_COLOR } from "@/lib/constants";
 import { getVisitorId, getExistingVisitorId } from "@/lib/visitor";
 import { getAllowedOrigins, postToParent, isAllowedOrigin } from "@/lib/post-message";
 import { matchesTargeting } from "@/lib/attributes";
+import { widgetFetcher } from "@/lib/widget-fetcher";
+import { useWidgetConfig } from "@/app/useWidgetConfig";
 import type { ResolvedTargeting } from "@/types/targeting";
 import styles from "./page.module.css";
-
-const fetcher = ([url, apiKey]: [string, string]) =>
-  fetch(url, { headers: { "x-api-key": apiKey } }).then((res) => {
-    if (!res.ok) throw new Error("Fetch failed");
-    return res.json();
-  });
 
 interface Post {
   id: string;
@@ -75,27 +70,15 @@ function ChangelogContent() {
     catch { return null; }
   }, [datalayerParam]);
 
-  const { data: config } = useSWR<{ primaryColor?: string; widgetTheme?: string; allowedDomain?: string | null }>(
-    apiKey ? ["/api/config", apiKey] : null,
-    fetcher
-  );
+  const { config, theme } = useWidgetConfig(apiKey, themeParam, primaryColorParam);
 
   const { data: postsData, error: postsError } = useSWR<Post[]>(
     apiKey ? ["/api/changelog/posts", apiKey] : null,
-    fetcher
+    widgetFetcher
   );
 
   const posts = Array.isArray(postsData) ? postsData : [];
   const loading = (!postsData && !postsError) || !config;
-
-  const theme = themeParam
-    ? { primaryColor: primaryColorParam ?? DEFAULT_PRIMARY_COLOR, widgetTheme: themeParam }
-    : config
-    ? {
-        primaryColor: config.primaryColor ?? DEFAULT_PRIMARY_COLOR,
-        widgetTheme: config.widgetTheme ?? "light",
-      }
-    : null;
 
   const allowedOrigins = config ? getAllowedOrigins(config.allowedDomain ?? null) : getAllowedOrigins(null);
   // Latest-value ref for the postMessage handler; updated after commit (ref writes

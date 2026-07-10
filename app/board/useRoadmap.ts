@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import useSWR from "swr";
+import { widgetFetcher } from "@/lib/widget-fetcher";
 import type { PublicRoadmapItem } from "@/types/roadmap";
 
 interface UseRoadmapReturn {
@@ -17,12 +18,6 @@ interface UseRoadmapReturn {
   }>;
 }
 
-const fetcher = ([url, apiKey]: [string, string]) =>
-  fetch(url, { headers: { "x-api-key": apiKey } }).then((res) => {
-    if (!res.ok) throw new Error("Fetch failed");
-    return res.json();
-  });
-
 export function useRoadmap(
   apiKey: string | null,
   visitorId: string,
@@ -37,7 +32,7 @@ export function useRoadmap(
 
   const { data: itemsData, error: swrError, mutate } = useSWR<PublicRoadmapItem[]>(
     apiKey ? [`/api/roadmap/items?${params.toString()}`, apiKey] : null,
-    fetcher
+    widgetFetcher
   );
 
   const items = itemsData || [];
