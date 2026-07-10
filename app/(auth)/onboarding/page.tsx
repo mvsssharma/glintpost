@@ -8,31 +8,22 @@ import {
 import {
   COLOR_PRESETS,
   DEFAULT_PRIMARY_COLOR,
-  SUPPORTED_LOCALES,
 } from "@/lib/constants";
 import styles from "./onboarding.module.css";
 
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 2;
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [orgName, setOrgName] = useState("");
   const [primaryColor, setPrimaryColor] = useState(DEFAULT_PRIMARY_COLOR);
-  const [selectedLocales, setSelectedLocales] = useState<string[]>(["en"]);
+  // Defaults to English; language selection is hidden until the translation
+  // feature ships (roadmap).
+  const selectedLocales = ["en"];
   const [state, formAction, isPending] = useActionState<
     OnboardingState,
     FormData
   >(createOrganization, {});
-
-  function toggleLocale(code: string) {
-    setSelectedLocales((prev) =>
-      prev.includes(code)
-        ? code === "en"
-          ? prev // English is always selected
-          : prev.filter((l) => l !== code)
-        : [...prev, code],
-    );
-  }
 
   function handleNext() {
     if (step === 0 && orgName.trim().length < 2) return;
@@ -93,7 +84,15 @@ export default function OnboardingPage() {
 
       {/* Step 1: Color */}
       {step === 1 && (
-        <>
+        <form action={formAction}>
+          <input type="hidden" name="name" value={orgName} />
+          <input type="hidden" name="primaryColor" value={primaryColor} />
+          <input
+            type="hidden"
+            name="locales"
+            value={selectedLocales.join(",")}
+          />
+
           <h2 className={styles.stepTitle}>Choose your brand color</h2>
           <p className={styles.stepDescription}>
             This color will be used in your changelog widget.
@@ -108,60 +107,6 @@ export default function OnboardingPage() {
                 onClick={() => setPrimaryColor(preset.value)}
                 title={preset.name}
               />
-            ))}
-          </div>
-          <div className={styles.actions}>
-            <button
-              type="button"
-              onClick={handleBack}
-              className="btn-secondary"
-            >
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={handleNext}
-              className="btn-primary"
-            >
-              Continue
-            </button>
-          </div>
-        </>
-      )}
-
-      {/* Step 2: Locales */}
-      {step === 2 && (
-        <form action={formAction}>
-          <input type="hidden" name="name" value={orgName} />
-          <input type="hidden" name="primaryColor" value={primaryColor} />
-          <input
-            type="hidden"
-            name="locales"
-            value={selectedLocales.join(",")}
-          />
-
-          <h2 className={styles.stepTitle}>Select supported languages</h2>
-          <p className={styles.stepDescription}>
-            Choose languages for your changelog content. You can change this
-            later.
-          </p>
-          <div className={styles.localeGrid}>
-            {SUPPORTED_LOCALES.map((locale) => (
-              <button
-                key={locale.code}
-                type="button"
-                className={`${styles.localeChip} ${selectedLocales.includes(locale.code) ? styles.localeChipActive : ""}`}
-                onClick={() => toggleLocale(locale.code)}
-              >
-                <span
-                  className={`${styles.checkbox} ${selectedLocales.includes(locale.code) ? styles.checkboxActive : ""}`}
-                >
-                  {selectedLocales.includes(locale.code) && (
-                    <span className={styles.checkmark}>&#10003;</span>
-                  )}
-                </span>
-                {locale.label}
-              </button>
             ))}
           </div>
           <div className={styles.actions}>

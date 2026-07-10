@@ -12,22 +12,11 @@ import {
 import {
   COLOR_PRESETS,
   DEFAULT_PRIMARY_COLOR,
-  SUPPORTED_LOCALES,
   AI_PROVIDERS,
   AI_MODELS,
 } from "@/lib/constants";
 import type { Organization, OrgSettings } from "@/types";
 import styles from "./page.module.css";
-
-function toggleLocale(
-  current: string[],
-  code: string,
-): string[] {
-  if (code === "en") return current;
-  return current.includes(code)
-    ? current.filter((l) => l !== code)
-    : [...current, code];
-}
 
 export function SettingsForm({
   org,
@@ -45,7 +34,8 @@ export function SettingsForm({
   const [widgetTheme, setWidgetTheme] = useState<"light" | "dark">(
     (settings?.widgetTheme as "light" | "dark") ?? "light"
   );
-  const [selectedLocales, setSelectedLocales] = useState<string[]>(
+  // Preserved as-is (not user-editable yet) — translation feature is on the roadmap.
+  const [selectedLocales] = useState<string[]>(
     settings?.supportedLocales?.length
       ? settings.supportedLocales
       : ["en"]
@@ -106,7 +96,7 @@ export function SettingsForm({
         <h3>Organization &amp; widget</h3>
         <p>
           These settings match what you configured in onboarding. They affect
-          your widget appearance and supported languages.
+          your widget appearance.
         </p>
         <form action={settingsAction}>
           <input type="hidden" name="name" value={orgName} />
@@ -197,32 +187,7 @@ export function SettingsForm({
             </div>
           </div>
 
-          <div className={styles.fieldGroup}>
-            <span className={styles.label}>Supported languages</span>
-            <div className={styles.localeGrid}>
-              {SUPPORTED_LOCALES.map((locale) => (
-                <button
-                  key={locale.code}
-                  type="button"
-                  className={`${styles.localeChip} ${selectedLocales.includes(locale.code) ? styles.localeChipActive : ""}`}
-                  onClick={() =>
-                    setSelectedLocales((prev) =>
-                      toggleLocale(prev, locale.code)
-                    )
-                  }
-                >
-                  <span
-                    className={`${styles.checkbox} ${selectedLocales.includes(locale.code) ? styles.checkboxActive : ""}`}
-                  >
-                    {selectedLocales.includes(locale.code) && (
-                      <span className={styles.checkmark}>&#10003;</span>
-                    )}
-                  </span>
-                  {locale.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Supported languages — hidden until translation feature ships (roadmap). */}
 
           <div className={styles.fieldGroup}>
             <label htmlFor="allowedDomain" className={styles.label}>
