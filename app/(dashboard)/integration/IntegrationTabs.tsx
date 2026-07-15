@@ -57,12 +57,24 @@ function getVisitorId() {
 
 const visitorId = getVisitorId();
 
+// --- Describe the current visitor (for audience targeting) ---
+// Same keys you would pass via window.GlintPostConfig.datalayer.
+// Omit or leave empty to only see posts with no audience targeting.
+const datalayer = { plan: "pro", role: "admin" };
+
 // --- Fetch changelog posts ---
 const res = await fetch("${appUrl}/api/changelog/posts", {
   headers: { "x-api-key": "${apiKey}" }
 });
 const posts = await res.json();
-// Each post: { id, title, content, createdAt, likes, dislikes }
+// Each post: { id, title, content, createdAt, likes, dislikes, targeting }
+
+// --- Filter by audience targeting ---
+// Posts can target audiences; matching is client-side (visitor attributes
+// never leave the browser). Load the matcher helper once on your page:
+//   <script src="${appUrl}/glintpost-targeting.js"></script>
+// then keep only the posts this visitor should see:
+const visible = window.GlintPost.filterVisible(posts, datalayer);
 
 // --- Like a post ---
 await fetch("${appUrl}/api/changelog/track", {
@@ -73,8 +85,60 @@ await fetch("${appUrl}/api/changelog/track", {
   },
   body: JSON.stringify({
     type: "LIKE",    // "LIKE" | "DISLIKE" | "VIEW"
-    postId: posts[0].id,
+    postId: visible[0].id,
     visitorId        // required for LIKE/DISLIKE
+  })
+});`;
+}
+
+function getAnnouncementHeadlessSnippet(appUrl: string, apiKey: string): string {
+  return `// --- Visitor ID ---
+// Generate a unique visitor ID per browser and persist it.
+// Used for per-visitor view/click deduplication.
+// If your users are logged in, you can use their user ID instead.
+function getVisitorId() {
+  const KEY = "glintpost_visitor_id";
+  let id = localStorage.getItem(KEY);
+  if (!id) {
+    try { id = "v_" + crypto.randomUUID(); }
+    catch { id = "v_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15); }
+    localStorage.setItem(KEY, id);
+  }
+  return id;
+}
+
+const visitorId = getVisitorId();
+
+// --- Describe the current visitor (for audience targeting) ---
+const datalayer = { plan: "pro", role: "admin" };
+
+// --- Fetch active announcements (already filtered to the live window) ---
+const res = await fetch("${appUrl}/api/announcements/active", {
+  headers: { "x-api-key": "${apiKey}" }
+});
+const announcements = await res.json();
+// Each: { id, title, content, imageUrl, videoUrl, ctaText, ctaUrl,
+//         displayType, priority, targeting, startDate, endDate }
+// Sorted by priority (highest first).
+
+// --- Filter by audience targeting ---
+// Load the matcher helper once on your page:
+//   <script src="${appUrl}/glintpost-targeting.js"></script>
+const visible = window.GlintPost.filterVisible(announcements, datalayer);
+// Typically show the first match once per session, then track it:
+const announcement = visible[0];
+
+// --- Track a view (and, on CTA click, a click) ---
+await fetch("${appUrl}/api/announcements/track", {
+  method: "POST",
+  headers: {
+    "x-api-key": "${apiKey}",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    type: "VIEW",    // "VIEW" | "CLICK"
+    announcementId: announcement.id,
+    visitorId
   })
 });`;
 }
@@ -104,6 +168,7 @@ const res = await fetch(
 );
 const items = await res.json();
 // Each item: { id, title, description, status, upvotes, downvotes, myVote }
+// Note: roadmap items are shown to everyone — no audience targeting.
 
 // --- Vote on an item ---
 await fetch("${appUrl}/api/roadmap/vote", {
@@ -156,6 +221,7 @@ const res = await fetch("${appUrl}/api/feedback/form?formId=" + formId, {
 });
 const form = await res.json();
 // form: { id, title, questions: [{ id, text, type, options?, required }] }
+// Note: feedback forms are shown to everyone — no audience targeting.
 
 // --- Submit feedback ---
 await fetch("${appUrl}/api/feedback/submit", {
@@ -298,6 +364,22 @@ export default function IntegrationTabs({
             <CopyCodeBlock
               displayCode={getAnnouncementSnippet(appUrl, maskSecret(apiKey))}
               copyCode={getAnnouncementSnippet(appUrl, apiKey)}
+            />
+          </div>
+          <div className={styles.card}>
+            <div className={styles.cardIntro}>
+              <h3>Headless API</h3>
+              <p>
+                Fetch active announcements via REST API and render them in your own UI.
+                Audience-targeted announcements are filtered client-side with the{" "}
+                <code>glintpost-targeting.js</code> helper. You generate and persist a visitor ID
+                on your side for view/click deduplication. Set your allowed domain in Settings for
+                cross-origin access.
+              </p>
+            </div>
+            <CopyCodeBlock
+              displayCode={getAnnouncementHeadlessSnippet(appUrl, maskSecret(apiKey))}
+              copyCode={getAnnouncementHeadlessSnippet(appUrl, apiKey)}
             />
           </div>
           <div className={styles.card}>

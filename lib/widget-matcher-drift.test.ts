@@ -4,14 +4,19 @@ import { describe, it, expect } from "vitest";
 import { evaluateCondition } from "@/lib/attributes";
 import type { AttributeType, AttributeOp, RuleValue } from "@/types/targeting";
 
-// The widget scripts no longer hand-port the matcher: public/*-widget.js are
-// bundled from widgets/ and inline lib/attributes.ts (single source of truth,
+// The widget scripts no longer hand-port the matcher: the built bundles under
+// public/ (the *-widget.js embeds plus the standalone glintpost-targeting.js
+// helper) are bundled from widgets/ and inline lib/attributes.ts (single source of truth,
 // see scripts/build-widgets.mjs). This test extracts evaluateCondition from the
 // committed bundles and asserts it still agrees with lib/attributes.ts across a
 // fixture matrix — so a stale bundle (matcher changed but `npm run build:widgets`
 // not re-run before commit) fails CI instead of shipping mismatched targeting.
 
-const WIDGETS = ["announcement-widget.js", "changelog-widget.js"] as const;
+const WIDGETS = [
+  "announcement-widget.js",
+  "changelog-widget.js",
+  "glintpost-targeting.js",
+] as const;
 
 /** Extract a top-level `function name(...) { ... }` source via brace balancing. */
 function extractFunction(source: string, name: string): string {
