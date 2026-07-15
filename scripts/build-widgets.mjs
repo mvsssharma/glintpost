@@ -15,7 +15,7 @@ import { dirname, join } from "node:path";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-const ENTRIES = ["announcement-widget.js", "changelog-widget.js"];
+const ENTRIES = ["announcement-widget.js", "changelog-widget.js", "glintpost-targeting.js"];
 
 await build({
   entryPoints: ENTRIES.map((f) => join(root, "widgets", f)),

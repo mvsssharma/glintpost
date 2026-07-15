@@ -63,6 +63,7 @@ lib/
 widgets/                   # ESM sources for widgets that share code with the app (import lib/attributes.ts)
   changelog-widget.js      # → bundled to public/ by esbuild
   announcement-widget.js   # → bundled to public/ by esbuild
+  glintpost-targeting.js   # → bundled to public/ by esbuild (standalone matcher for headless API consumers)
 scripts/
   build-widgets.mjs        # esbuild: bundles widgets/*.js → public/*.js IIFEs (npm run build:widgets)
 public/
@@ -71,6 +72,7 @@ public/
   roadmap-widget.js        # Inline embed widget script (hand-authored, no shared code)
   feedback-widget.js       # Slideover/embed widget script (hand-authored, no shared code)
   announcement-widget.js   # GENERATED from widgets/ — Direct DOM injection widget script
+  glintpost-targeting.js   # GENERATED from widgets/ — exposes GlintPost.matchesTargeting/filterVisible for headless API
 prisma/
   schema.prisma         # Database schema
 types/                  # TypeScript type definitions
@@ -108,7 +110,9 @@ Customers pass their existing datalayer (GTM etc.) into the widget; posts and an
 2. **Audiences** (`Audience`) — reusable named segments: a flat AND/OR set of conditions over attributes (`rules` JSON: `{ operator, rules: [{ attributeKey, op, value }] }`). Managed at `/audiences`; built with the shared `RuleSetEditor`.
 3. **Item targeting** — `Post`/`Announcement` reference audiences via `audienceIds` + `audienceMatch` (`OR`=ANY / `AND`=ALL), chosen with `AudiencePicker`.
 
-**Matching is client-side and stateless** — we never store visitors' attribute *values*. Public routes resolve `audienceIds` into a self-contained `targeting` payload (attribute `type` denormalized into each rule) via `resolveTargeting`/`loadTargetingContext` in `lib/targeting-server.ts`; the widget evaluates it against the datalayer. The evaluator lives in `lib/attributes.ts` (`evaluateCondition`/`matchesTargeting`) as the **single source of truth**. The embeddable widgets no longer hand-port it: the ESM sources `widgets/announcement-widget.js` and `widgets/changelog-widget.js` (badge count) `import` it directly, and `scripts/build-widgets.mjs` uses **esbuild** to bundle + tree-shake that module into the classic-`<script>` IIFEs at `public/announcement-widget.js` / `public/changelog-widget.js`. Those `public/*.js` are **generated build outputs** (carry a "do not edit here" banner) — edit the `widgets/` source, then run `npm run build:widgets`. `lib/widget-matcher-drift.test.ts` extracts the matcher from the committed bundles and asserts parity with `lib/attributes.ts`, so a stale bundle (source changed but not rebuilt) fails CI (matcher behavior itself is covered by `lib/attributes.test.ts`).
+**Matching is client-side and stateless** — we never store visitors' attribute *values*. Public routes resolve `audienceIds` into a self-contained `targeting` payload (attribute `type` denormalized into each rule) via `resolveTargeting`/`loadTargetingContext` in `lib/targeting-server.ts`; the widget evaluates it against the datalayer. The evaluator lives in `lib/attributes.ts` (`evaluateCondition`/`matchesTargeting`) as the **single source of truth**. The embeddable widgets no longer hand-port it: the ESM sources `widgets/announcement-widget.js` and `widgets/changelog-widget.js` (badge count) `import` it directly, and `scripts/build-widgets.mjs` uses **esbuild** to bundle + tree-shake that module into the classic-`<script>` IIFEs at `public/announcement-widget.js` / `public/changelog-widget.js`. Those `public/*.js` are **generated build outputs** (carry a "do not edit here" banner) — edit the `widgets/` source, then run `npm run build:widgets`. `lib/widget-matcher-drift.test.ts` extracts both `evaluateCondition` (leaf) and `matchesTargeting` (the AND/OR audience-combining layer behind `GlintPost.matchesTargeting`/`filterVisible`) from the committed bundles and asserts parity with `lib/attributes.ts`, so a stale bundle (source changed but not rebuilt) fails CI (matcher behavior itself is covered by `lib/attributes.test.ts`).
+
+**Headless API consumers** (who fetch the public `targeting` payload and render their own UI, rather than using the embed scripts) get the same matcher as a standalone build: `widgets/glintpost-targeting.js` → `public/glintpost-targeting.js`, loaded via `<script src=".../glintpost-targeting.js">`. It exposes `window.GlintPost.matchesTargeting(targeting, datalayer)` and `window.GlintPost.filterVisible(items, datalayer)`. It shares the same esbuild pipeline and drift test, so headless targeting can't diverge from the server resolver or the embed widgets. Only changelog posts and announcements carry a `targeting` payload; roadmap items and feedback forms are not audience-targeted.
 
 **Discovery:** the unified loader (`public/widget.js`) reports the datalayer *keys + inferred primitive type only — never values* to public `POST /api/attributes/observe` (capped 100/org, allowlisted in `proxy.ts`); the Attributes page surfaces undefined keys with one-click "Define".
 
