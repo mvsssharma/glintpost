@@ -111,6 +111,7 @@
     var BASE_URL = new URL(scriptTag.src).origin;
     var SESSION_KEY = "glintpost_ann_session";
     var SEEN_KEY = "glintpost_ann_seen";
+    var BANNER_LINK_TEXT = "Learn more";
     var SESSION_TIMEOUT = 30 * 60 * 1e3;
     function isSessionActive() {
       try {
@@ -225,7 +226,8 @@
       var bgColor = isDark ? "#1a1a2e" : "#ffffff";
       var textColor = isDark ? "#e2e8f0" : "#1a202c";
       var mutedColor = isDark ? "#94a3b8" : "#64748b";
-      style.innerHTML = ".glintpost-announcement-overlay {  position: fixed; top: 0; left: 0; width: 100%; height: 100%;  background: rgba(0,0,0,0.6); z-index: 2147483647;  display: flex; align-items: center; justify-content: center;  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;  animation: glintpost-ann-fadein 0.3s ease;}@keyframes glintpost-ann-fadein { from { opacity: 0; } to { opacity: 1; } }@keyframes glintpost-ann-slidein { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }.glintpost-announcement-card {  background: " + bgColor + "; color: " + textColor + ";  border-radius: 16px; width: 65vw; min-height: 70vh; max-height: 80vh;  display: flex; flex-direction: column;  overflow-y: auto; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.25);  animation: glintpost-ann-slidein 0.4s cubic-bezier(0.16, 1, 0.3, 1);}.glintpost-announcement-card .glintpost-announcement-close {  position: absolute; top: 12px; right: 12px; width: 32px; height: 32px;  border: none; background: rgba(0,0,0,0.08); border-radius: 50%;  cursor: pointer; display: flex; align-items: center; justify-content: center;  font-size: 18px; color: " + mutedColor + "; z-index: 1;  transition: background 0.2s;}.glintpost-announcement-card .glintpost-announcement-close:hover { background: rgba(0,0,0,0.15); }.glintpost-announcement-body {  padding: 32px 36px 36px; flex: 1;  display: flex; flex-direction: column; justify-content: safe center;}.glintpost-announcement-title { font-size: 24px; font-weight: 700; margin: 0 0 14px; line-height: 1.3; }.glintpost-announcement-content { font-size: 15px; line-height: 1.6; color: " + mutedColor + "; margin: 0 0 20px; }.glintpost-announcement-content p { margin: 0 0 8px; }.glintpost-announcement-content img { max-width: 100%; height: auto; display: block; border-radius: 8px; margin: 8px 0; }.glintpost-announcement-content iframe { width: 100%; aspect-ratio: 16 / 9; height: auto; display: block; border: 0; border-radius: 8px; margin: 8px 0; }.glintpost-announcement-card .glintpost-announcement-cta {  display: inline-block; align-self: flex-start;  padding: 10px 24px; border-radius: 8px; border: none;  background: " + primaryColor + "; color: white; font-size: 15px; font-weight: 600;  cursor: pointer; text-decoration: none; transition: opacity 0.2s;}.glintpost-announcement-banner {  position: fixed; top: 0; left: 0; width: 100%; z-index: 2147483647;  background: " + bgColor + "; color: " + textColor + ";  box-shadow: 0 2px 8px rgba(0,0,0,0.1);  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;  animation: glintpost-ann-banner-slide 0.4s cubic-bezier(0.16, 1, 0.3, 1);}@keyframes glintpost-ann-banner-slide { from { transform: translateY(-100%); } to { transform: translateY(0); } }.glintpost-announcement-banner-inner {  display: flex; align-items: center; justify-content: center; gap: 16px;  padding: 14px 48px 14px 24px; max-width: 1200px; margin: 0 auto;}.glintpost-announcement-banner-text {  font-size: 15px; font-weight: 500;}.glintpost-announcement-banner-expand {  cursor: pointer; display: flex; align-items: center; justify-content: center;  gap: 16px; flex: 1; min-width: 0; background: none; border: none; padding: 0;  color: inherit; font: inherit; text-align: left;}.glintpost-announcement-banner-expand:hover .glintpost-announcement-banner-text { text-decoration: underline; }.glintpost-announcement-banner-expand:focus-visible { outline: 2px solid " + primaryColor + "; outline-offset: 2px; }.glintpost-announcement-banner .glintpost-announcement-cta {  display: inline-block; padding: 7px 18px; border-radius: 6px; border: none;  background: " + primaryColor + "; color: white; font-size: 14px; font-weight: 600;  cursor: pointer; text-decoration: none; white-space: nowrap; transition: opacity 0.2s; flex-shrink: 0;}.glintpost-announcement-cta:hover { opacity: 0.9; }@media (max-width: 640px) {  .glintpost-announcement-card {    width: 92vw; min-height: 0; max-height: 85vh;  }  .glintpost-announcement-body { padding: 24px 22px 26px; }  .glintpost-announcement-title { font-size: 20px; }}.glintpost-announcement-banner .glintpost-announcement-close {  position: absolute; top: 50%; right: 12px; transform: translateY(-50%);  width: 28px; height: 28px; border: none; background: transparent;  cursor: pointer; display: flex; align-items: center; justify-content: center;  font-size: 18px; color: " + mutedColor + "; transition: color 0.2s;}.glintpost-announcement-banner .glintpost-announcement-close:hover { color: " + textColor + "; }";
+      var dividerColor = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
+      style.innerHTML = ".glintpost-announcement-overlay {  position: fixed; top: 0; left: 0; width: 100%; height: 100%;  background: rgba(0,0,0,0.6); z-index: 2147483647;  display: flex; align-items: center; justify-content: center;  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;  animation: glintpost-ann-fadein 0.3s ease;}@keyframes glintpost-ann-fadein { from { opacity: 0; } to { opacity: 1; } }@keyframes glintpost-ann-slidein { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }.glintpost-announcement-card {  background: " + bgColor + "; color: " + textColor + ";  border-radius: 16px; width: 65vw; min-height: 70vh; max-height: 80vh;  display: flex; flex-direction: column; overflow: hidden;  position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.25);  animation: glintpost-ann-slidein 0.4s cubic-bezier(0.16, 1, 0.3, 1);}.glintpost-announcement-card .glintpost-announcement-close {  position: absolute; top: 12px; right: 12px; width: 32px; height: 32px;  border: none; background: rgba(0,0,0,0.08); border-radius: 50%;  cursor: pointer; display: flex; align-items: center; justify-content: center;  font-size: 18px; color: " + mutedColor + "; z-index: 1;  transition: background 0.2s;}.glintpost-announcement-card .glintpost-announcement-close:hover { background: rgba(0,0,0,0.15); }.glintpost-announcement-header {  flex: 0 0 auto; padding: 28px 36px 16px 36px; padding-right: 56px;  border-bottom: 1px solid " + dividerColor + ";}.glintpost-announcement-title { font-size: 24px; font-weight: 700; margin: 0; line-height: 1.3; }.glintpost-announcement-body {  flex: 1 1 auto; min-height: 0; overflow-y: auto;  padding: 24px 36px;}.glintpost-announcement-content { font-size: 15px; line-height: 1.6; color: " + mutedColor + "; margin: 0; }.glintpost-announcement-content p { margin: 0 0 8px; }.glintpost-announcement-content img { max-width: 100%; height: auto; display: block; border-radius: 8px; margin: 8px 0; }.glintpost-announcement-content iframe { width: 100%; aspect-ratio: 16 / 9; height: auto; display: block; border: 0; border-radius: 8px; margin: 8px 0; }.glintpost-announcement-footer {  flex: 0 0 auto; padding: 16px 36px 24px 36px;  border-top: 1px solid " + dividerColor + ";  display: flex; justify-content: flex-end; align-items: center;}.glintpost-announcement-card .glintpost-announcement-cta {  display: inline-block;  padding: 10px 24px; border-radius: 8px; border: none;  background: " + primaryColor + "; color: white; font-size: 15px; font-weight: 600;  cursor: pointer; text-decoration: none; transition: opacity 0.2s;}.glintpost-announcement-banner {  position: fixed; top: 0; left: 0; width: 100%; z-index: 2147483647;  background: " + bgColor + "; color: " + textColor + ";  box-shadow: 0 2px 8px rgba(0,0,0,0.1);  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;  animation: glintpost-ann-banner-slide 0.4s cubic-bezier(0.16, 1, 0.3, 1);}@keyframes glintpost-ann-banner-slide { from { transform: translateY(-100%); } to { transform: translateY(0); } }.glintpost-announcement-banner-inner {  display: flex; align-items: center; justify-content: center; gap: 16px;  padding: 14px 48px 14px 24px; max-width: 1200px; margin: 0 auto;}.glintpost-announcement-banner-text {  font-size: 15px; font-weight: 500;}.glintpost-announcement-banner-expand {  cursor: pointer; display: flex; align-items: center; justify-content: center;  gap: 16px; flex: 1; min-width: 0; background: none; border: none; padding: 0;  color: inherit; font: inherit; text-align: left;}.glintpost-announcement-banner-expand:hover .glintpost-announcement-banner-text { text-decoration: underline; }.glintpost-announcement-banner-expand:focus-visible { outline: 2px solid " + primaryColor + "; outline-offset: 2px; }.glintpost-announcement-banner-link {  font-size: 14px; font-weight: 600; white-space: nowrap; flex-shrink: 0;  color: " + primaryColor + "; text-decoration: underline;  text-underline-offset: 2px;}.glintpost-announcement-cta:hover { opacity: 0.9; }@media (max-width: 640px) {  .glintpost-announcement-card {    width: 92vw; min-height: 0; max-height: 85vh;  }  .glintpost-announcement-header { padding: 22px 22px 14px 22px; padding-right: 52px; }  .glintpost-announcement-body { padding: 18px 22px; }  .glintpost-announcement-title { font-size: 20px; }  .glintpost-announcement-footer { padding: 14px 22px 20px 22px; justify-content: center; }  .glintpost-announcement-card .glintpost-announcement-cta { width: 100%; text-align: center; }}.glintpost-announcement-banner .glintpost-announcement-close {  position: absolute; top: 50%; right: 12px; transform: translateY(-50%);  width: 28px; height: 28px; border: none; background: transparent;  cursor: pointer; display: flex; align-items: center; justify-content: center;  font-size: 18px; color: " + mutedColor + "; transition: color 0.2s;}.glintpost-announcement-banner .glintpost-announcement-close:hover { color: " + textColor + "; }";
       document.head.appendChild(style);
       var wrapper;
       var expandedOverlay = null;
@@ -283,17 +285,23 @@
         closeBtn.innerHTML = "&#10005;";
         closeBtn.setAttribute("aria-label", "Close");
         card.appendChild(closeBtn);
-        var body = document.createElement("div");
-        body.className = "glintpost-announcement-body";
+        var header = document.createElement("div");
+        header.className = "glintpost-announcement-header";
         var title = document.createElement("h2");
         title.className = "glintpost-announcement-title";
         title.textContent = announcement.title;
-        body.appendChild(title);
+        header.appendChild(title);
+        card.appendChild(header);
+        var body = document.createElement("div");
+        body.className = "glintpost-announcement-body";
         var content = document.createElement("div");
         content.className = "glintpost-announcement-content";
         content.innerHTML = announcement.content;
         body.appendChild(content);
+        card.appendChild(body);
         if (announcement.ctaText && announcement.ctaUrl) {
+          var footer = document.createElement("div");
+          footer.className = "glintpost-announcement-footer";
           var cta = document.createElement("a");
           cta.className = "glintpost-announcement-cta";
           cta.textContent = announcement.ctaText;
@@ -304,9 +312,9 @@
             dismiss();
             window.open(announcement.ctaUrl, "_blank", "noopener");
           });
-          body.appendChild(cta);
+          footer.appendChild(cta);
+          card.appendChild(footer);
         }
-        card.appendChild(body);
         overlay.appendChild(card);
         closeBtn.addEventListener("click", function() {
           dismiss();
@@ -326,28 +334,19 @@
         var expand = document.createElement("button");
         expand.type = "button";
         expand.className = "glintpost-announcement-banner-expand";
-        expand.setAttribute("aria-label", "Read more: " + announcement.title);
+        expand.setAttribute("aria-label", BANNER_LINK_TEXT + ": " + announcement.title);
         var text = document.createElement("span");
         text.className = "glintpost-announcement-banner-text";
         text.textContent = announcement.title;
         expand.appendChild(text);
+        var bannerLink = document.createElement("span");
+        bannerLink.className = "glintpost-announcement-banner-link";
+        bannerLink.textContent = BANNER_LINK_TEXT;
+        expand.appendChild(bannerLink);
         expand.addEventListener("click", function() {
           openFromBanner();
         });
         inner.appendChild(expand);
-        if (announcement.ctaText && announcement.ctaUrl) {
-          var bannerCta = document.createElement("a");
-          bannerCta.className = "glintpost-announcement-cta";
-          bannerCta.textContent = announcement.ctaText;
-          bannerCta.href = announcement.ctaUrl;
-          bannerCta.addEventListener("click", function(e) {
-            e.preventDefault();
-            trackEvent("CLICK", announcement.id);
-            dismiss();
-            window.open(announcement.ctaUrl, "_blank", "noopener");
-          });
-          inner.appendChild(bannerCta);
-        }
         var bannerClose = document.createElement("button");
         bannerClose.className = "glintpost-announcement-close";
         bannerClose.innerHTML = "&#10005;";
@@ -363,10 +362,11 @@
         expandedOverlay = buildOverlay();
         document.body.appendChild(expandedOverlay);
         activateDialog(expandedOverlay);
+        trackEvent("VIEW", announcement.id);
       }
       document.body.appendChild(wrapper);
       if (isOverlay) activateDialog(wrapper);
-      trackEvent("VIEW", announcement.id);
+      trackEvent(isOverlay ? "VIEW" : "APPEAR", announcement.id);
       var savedBodyPadding = null;
       if (!isOverlay) {
         savedBodyPadding = document.body.style.paddingTop;

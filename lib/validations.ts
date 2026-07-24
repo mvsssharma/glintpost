@@ -276,7 +276,7 @@ export const updateAnnouncementSchema = z.object({
 });
 
 export const announcementEventSchema = z.object({
-  type: z.enum(["VIEW", "CLICK"], { message: "Invalid event type" }),
+  type: z.enum(["APPEAR", "VIEW", "CLICK"], { message: "Invalid event type" }),
   announcementId: z.string().min(1).max(50),
   visitorId: z.string().max(200).nullable().optional(),
   datalayer: datalayerSchema,

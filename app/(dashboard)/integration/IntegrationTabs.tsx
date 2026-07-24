@@ -136,7 +136,9 @@ await fetch("${appUrl}/api/announcements/track", {
     "Content-Type": "application/json"
   },
   body: JSON.stringify({
-    type: "VIEW",    // "VIEW" | "CLICK"
+    // "APPEAR" = banner shown, "VIEW" = content opened, "CLICK" = CTA clicked
+    type: "VIEW",
+
     announcementId: announcement.id,
     visitorId
   })

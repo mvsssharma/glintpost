@@ -27,6 +27,9 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
   var BASE_URL = new URL(scriptTag.src).origin;
   var SESSION_KEY = "glintpost_ann_session";
   var SEEN_KEY = "glintpost_ann_seen";
+  // Fixed on purpose — the banner's label is not per-announcement configurable.
+  // The configured ctaText drives the overlay's CTA button instead.
+  var BANNER_LINK_TEXT = "Learn more";
   var SESSION_TIMEOUT = 30 * 60 * 1000;
 
   // --- Session check ---
@@ -160,6 +163,8 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
     var bgColor = isDark ? "#1a1a2e" : "#ffffff";
     var textColor = isDark ? "#e2e8f0" : "#1a202c";
     var mutedColor = isDark ? "#94a3b8" : "#64748b";
+    // Separates the card's header and footer from the scrolling center.
+    var dividerColor = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
 
     // Both rule sets are always emitted: a TOP_BANNER expands into the overlay
     // card on click, so it needs the overlay styles too. The close button is
@@ -177,11 +182,14 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
       // Sized as a share of the viewport: ~65% wide, and pinned between 70% and
       // 80% tall so short announcements still read as a substantial modal
       // rather than a small card floating in the middle of the screen.
+      // Three bands: a fixed header, a center that grows and scrolls on its own,
+      // and a fixed footer. Only the center scrolls, so the title and CTA stay
+      // put no matter how long the announcement is.
       ".glintpost-announcement-card {" +
       "  background: " + bgColor + "; color: " + textColor + ";" +
       "  border-radius: 16px; width: 65vw; min-height: 70vh; max-height: 80vh;" +
-      "  display: flex; flex-direction: column;" +
-      "  overflow-y: auto; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.25);" +
+      "  display: flex; flex-direction: column; overflow: hidden;" +
+      "  position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.25);" +
       "  animation: glintpost-ann-slidein 0.4s cubic-bezier(0.16, 1, 0.3, 1);" +
       "}" +
       ".glintpost-announcement-card .glintpost-announcement-close {" +
@@ -192,26 +200,34 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
       "  transition: background 0.2s;" +
       "}" +
       ".glintpost-announcement-card .glintpost-announcement-close:hover { background: rgba(0,0,0,0.15); }" +
-      // `safe center` keeps a short announcement from stranding all its empty
-      // space at the bottom of the tall card, while degrading to top-aligned
-      // once the content overflows — plain `center` would make the overflowing
-      // top unreachable in a scroll container.
-      ".glintpost-announcement-body {" +
-      "  padding: 32px 36px 36px; flex: 1;" +
-      "  display: flex; flex-direction: column; justify-content: safe center;" +
+      ".glintpost-announcement-header {" +
+      "  flex: 0 0 auto; padding: 28px 36px 16px 36px; padding-right: 56px;" +
+      "  border-bottom: 1px solid " + dividerColor + ";" +
       "}" +
-      ".glintpost-announcement-title { font-size: 24px; font-weight: 700; margin: 0 0 14px; line-height: 1.3; }" +
-      ".glintpost-announcement-content { font-size: 15px; line-height: 1.6; color: " + mutedColor + "; margin: 0 0 20px; }" +
+      ".glintpost-announcement-title { font-size: 24px; font-weight: 700; margin: 0; line-height: 1.3; }" +
+      // min-height:0 is required for a flex child to be allowed to shrink below
+      // its content size — without it the center refuses to scroll and pushes
+      // the footer off the card.
+      ".glintpost-announcement-body {" +
+      "  flex: 1 1 auto; min-height: 0; overflow-y: auto;" +
+      "  padding: 24px 36px;" +
+      "}" +
+      ".glintpost-announcement-content { font-size: 15px; line-height: 1.6; color: " + mutedColor + "; margin: 0; }" +
       ".glintpost-announcement-content p { margin: 0 0 8px; }" +
       // Editor media is inline in `content`. The customer's page has no Quill
       // stylesheet, so size it here — otherwise images render at natural width
       // (clipped by the card) and video iframes fall back to 300x150.
       ".glintpost-announcement-content img { max-width: 100%; height: auto; display: block; border-radius: 8px; margin: 8px 0; }" +
       ".glintpost-announcement-content iframe { width: 100%; aspect-ratio: 16 / 9; height: auto; display: block; border: 0; border-radius: 8px; margin: 8px 0; }" +
+      // Footer sits below the scrolling center. CTA is bottom-right on desktop;
+      // the mobile block below re-centers it.
+      ".glintpost-announcement-footer {" +
+      "  flex: 0 0 auto; padding: 16px 36px 24px 36px;" +
+      "  border-top: 1px solid " + dividerColor + ";" +
+      "  display: flex; justify-content: flex-end; align-items: center;" +
+      "}" +
       ".glintpost-announcement-card .glintpost-announcement-cta {" +
-      // align-self stops the button stretching to full width now that the body
-      // is a flex column.
-      "  display: inline-block; align-self: flex-start;" +
+      "  display: inline-block;" +
       "  padding: 10px 24px; border-radius: 8px; border: none;" +
       "  background: " + primaryColor + "; color: white; font-size: 15px; font-weight: 600;" +
       "  cursor: pointer; text-decoration: none; transition: opacity 0.2s;" +
@@ -240,10 +256,13 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
       "}" +
       ".glintpost-announcement-banner-expand:hover .glintpost-announcement-banner-text { text-decoration: underline; }" +
       ".glintpost-announcement-banner-expand:focus-visible { outline: 2px solid " + primaryColor + "; outline-offset: 2px; }" +
-      ".glintpost-announcement-banner .glintpost-announcement-cta {" +
-      "  display: inline-block; padding: 7px 18px; border-radius: 6px; border: none;" +
-      "  background: " + primaryColor + "; color: white; font-size: 14px; font-weight: 600;" +
-      "  cursor: pointer; text-decoration: none; white-space: nowrap; transition: opacity 0.2s; flex-shrink: 0;" +
+      // The banner's affordance is a plain link, not a primary button: the
+      // banner only opens the overlay, and the real CTA lives in that overlay's
+      // footer. Two competing buttons would misrepresent which is the action.
+      ".glintpost-announcement-banner-link {" +
+      "  font-size: 14px; font-weight: 600; white-space: nowrap; flex-shrink: 0;" +
+      "  color: " + primaryColor + "; text-decoration: underline;" +
+      "  text-underline-offset: 2px;" +
       "}" +
       ".glintpost-announcement-cta:hover { opacity: 0.9; }" +
       // A viewport-share width collapses to an unreadable column on phones, and
@@ -253,8 +272,13 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
       "  .glintpost-announcement-card {" +
       "    width: 92vw; min-height: 0; max-height: 85vh;" +
       "  }" +
-      "  .glintpost-announcement-body { padding: 24px 22px 26px; }" +
+      "  .glintpost-announcement-header { padding: 22px 22px 14px 22px; padding-right: 52px; }" +
+      "  .glintpost-announcement-body { padding: 18px 22px; }" +
       "  .glintpost-announcement-title { font-size: 20px; }" +
+      // Centered, full-width CTA on mobile — a right-aligned button reads as
+      // stranded on a narrow card and is harder to reach one-handed.
+      "  .glintpost-announcement-footer { padding: 14px 22px 20px 22px; justify-content: center; }" +
+      "  .glintpost-announcement-card .glintpost-announcement-cta { width: 100%; text-align: center; }" +
       "}" +
       ".glintpost-announcement-banner .glintpost-announcement-close {" +
       "  position: absolute; top: 50%; right: 12px; transform: translateY(-50%);" +
@@ -342,20 +366,28 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
       closeBtn.setAttribute("aria-label", "Close");
       card.appendChild(closeBtn);
 
-      var body = document.createElement("div");
-      body.className = "glintpost-announcement-body";
+      var header = document.createElement("div");
+      header.className = "glintpost-announcement-header";
 
       var title = document.createElement("h2");
       title.className = "glintpost-announcement-title";
       title.textContent = announcement.title;
-      body.appendChild(title);
+      header.appendChild(title);
+      card.appendChild(header);
+
+      var body = document.createElement("div");
+      body.className = "glintpost-announcement-body";
 
       var content = document.createElement("div");
       content.className = "glintpost-announcement-content";
       content.innerHTML = announcement.content;
       body.appendChild(content);
+      card.appendChild(body);
 
       if (announcement.ctaText && announcement.ctaUrl) {
+        var footer = document.createElement("div");
+        footer.className = "glintpost-announcement-footer";
+
         var cta = document.createElement("a");
         cta.className = "glintpost-announcement-cta";
         cta.textContent = announcement.ctaText;
@@ -366,10 +398,10 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
           dismiss();
           window.open(announcement.ctaUrl, "_blank", "noopener");
         });
-        body.appendChild(cta);
+        footer.appendChild(cta);
+        card.appendChild(footer);
       }
 
-      card.appendChild(body);
       overlay.appendChild(card);
 
       closeBtn.addEventListener("click", function () { dismiss(); });
@@ -389,34 +421,28 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
       var inner = document.createElement("div");
       inner.className = "glintpost-announcement-banner-inner";
 
-      // The title is a button so the banner can be opened by keyboard too. The
-      // CTA and close button sit outside it, so their clicks can't expand it.
+      // The whole bar is one button so it opens by keyboard as well as by click.
+      // The close button sits outside it, so closing can't also expand.
       var expand = document.createElement("button");
       expand.type = "button";
       expand.className = "glintpost-announcement-banner-expand";
-      expand.setAttribute("aria-label", "Read more: " + announcement.title);
+      expand.setAttribute("aria-label", BANNER_LINK_TEXT + ": " + announcement.title);
 
       var text = document.createElement("span");
       text.className = "glintpost-announcement-banner-text";
       text.textContent = announcement.title;
       expand.appendChild(text);
 
+      // A fixed link label, not the configured CTA: the banner's only action is
+      // to open the overlay, and the configured CTA belongs to that overlay's
+      // footer. Styled as a link so it doesn't compete with the real CTA.
+      var bannerLink = document.createElement("span");
+      bannerLink.className = "glintpost-announcement-banner-link";
+      bannerLink.textContent = BANNER_LINK_TEXT;
+      expand.appendChild(bannerLink);
+
       expand.addEventListener("click", function () { openFromBanner(); });
       inner.appendChild(expand);
-
-      if (announcement.ctaText && announcement.ctaUrl) {
-        var bannerCta = document.createElement("a");
-        bannerCta.className = "glintpost-announcement-cta";
-        bannerCta.textContent = announcement.ctaText;
-        bannerCta.href = announcement.ctaUrl;
-        bannerCta.addEventListener("click", function (e) {
-          e.preventDefault();
-          trackEvent("CLICK", announcement.id);
-          dismiss();
-          window.open(announcement.ctaUrl, "_blank", "noopener");
-        });
-        inner.appendChild(bannerCta);
-      }
 
       var bannerClose = document.createElement("button");
       bannerClose.className = "glintpost-announcement-close";
@@ -428,18 +454,23 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
       wrapper.appendChild(bannerClose);
     }
 
-    // Expanding is deliberately not tracked as CLICK — that metric counts CTA
-    // clicks, and conflating the two would make it meaningless.
+    // Expanding the banner is when the content is actually seen, so it is the
+    // VIEW. It is deliberately not a CLICK — that metric counts CTA clicks, and
+    // conflating the two would make it meaningless.
     function openFromBanner() {
       if (expandedOverlay) return;
       expandedOverlay = buildOverlay();
       document.body.appendChild(expandedOverlay);
       activateDialog(expandedOverlay);
+      trackEvent("VIEW", announcement.id);
     }
 
     document.body.appendChild(wrapper);
     if (isOverlay) activateDialog(wrapper);
-    trackEvent("VIEW", announcement.id);
+    // An overlay showing *is* the content being seen, so it is a VIEW outright.
+    // A banner is only a teaser: it records APPEAR, and becomes a VIEW when the
+    // visitor opens it.
+    trackEvent(isOverlay ? "VIEW" : "APPEAR", announcement.id);
 
     // Push page content down so the fixed banner doesn't overlap it
     var savedBodyPadding = null;
