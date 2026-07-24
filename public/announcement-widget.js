@@ -229,6 +229,46 @@
       document.head.appendChild(style);
       var wrapper;
       var expandedOverlay = null;
+      var previouslyFocused = null;
+      var FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])';
+      function focusableIn(root) {
+        var all = root.querySelectorAll(FOCUSABLE);
+        var out = [];
+        for (var i = 0; i < all.length; i++) {
+          if (all[i].offsetParent !== null) out.push(all[i]);
+        }
+        return out;
+      }
+      function activateDialog(overlay) {
+        previouslyFocused = document.activeElement;
+        var card = overlay.querySelector(".glintpost-announcement-card");
+        var first = focusableIn(card)[0];
+        (first || card).focus();
+        overlay.addEventListener("keydown", function(e) {
+          if (e.key !== "Tab") return;
+          var items = focusableIn(card);
+          if (!items.length) {
+            e.preventDefault();
+            card.focus();
+            return;
+          }
+          var head = items[0];
+          var tail = items[items.length - 1];
+          if (e.shiftKey && document.activeElement === head) {
+            e.preventDefault();
+            tail.focus();
+          } else if (!e.shiftKey && document.activeElement === tail) {
+            e.preventDefault();
+            head.focus();
+          }
+        });
+      }
+      function restoreFocus() {
+        if (previouslyFocused && typeof previouslyFocused.focus === "function" && document.contains(previouslyFocused)) {
+          previouslyFocused.focus();
+        }
+        previouslyFocused = null;
+      }
       function buildOverlay() {
         var overlay = document.createElement("div");
         overlay.className = "glintpost-announcement-overlay";
@@ -237,6 +277,7 @@
         card.setAttribute("role", "dialog");
         card.setAttribute("aria-modal", "true");
         card.setAttribute("aria-label", announcement.title);
+        card.setAttribute("tabindex", "-1");
         var closeBtn = document.createElement("button");
         closeBtn.className = "glintpost-announcement-close";
         closeBtn.innerHTML = "&#10005;";
@@ -321,8 +362,10 @@
         if (expandedOverlay) return;
         expandedOverlay = buildOverlay();
         document.body.appendChild(expandedOverlay);
+        activateDialog(expandedOverlay);
       }
       document.body.appendChild(wrapper);
+      if (isOverlay) activateDialog(wrapper);
       trackEvent("VIEW", announcement.id);
       var savedBodyPadding = null;
       if (!isOverlay) {
@@ -347,6 +390,7 @@
         expandedOverlay = null;
         if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
         if (style.parentNode) style.parentNode.removeChild(style);
+        restoreFocus();
       }
     }
     if (!window.GlintPost) window.GlintPost = {};

@@ -245,6 +245,58 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
     var wrapper;
     // The overlay a TOP_BANNER expands into, while it is open.
     var expandedOverlay = null;
+    // Focus to hand back when the dialog closes.
+    var previouslyFocused = null;
+
+    var FOCUSABLE =
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]),' +
+      ' textarea:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])';
+
+    function focusableIn(root) {
+      var all = root.querySelectorAll(FOCUSABLE);
+      var out = [];
+      for (var i = 0; i < all.length; i++) {
+        // offsetParent is null for display:none subtrees.
+        if (all[i].offsetParent !== null) out.push(all[i]);
+      }
+      return out;
+    }
+
+    // The card is an aria-modal dialog, so focus has to move into it and stay
+    // there — otherwise keyboard users tab through the obscured page behind it.
+    function activateDialog(overlay) {
+      previouslyFocused = document.activeElement;
+      var card = overlay.querySelector(".glintpost-announcement-card");
+      var first = focusableIn(card)[0];
+      (first || card).focus();
+
+      overlay.addEventListener("keydown", function (e) {
+        if (e.key !== "Tab") return;
+        var items = focusableIn(card);
+        if (!items.length) {
+          e.preventDefault();
+          card.focus();
+          return;
+        }
+        var head = items[0];
+        var tail = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === head) {
+          e.preventDefault();
+          tail.focus();
+        } else if (!e.shiftKey && document.activeElement === tail) {
+          e.preventDefault();
+          head.focus();
+        }
+      });
+    }
+
+    function restoreFocus() {
+      if (previouslyFocused && typeof previouslyFocused.focus === "function" &&
+          document.contains(previouslyFocused)) {
+        previouslyFocused.focus();
+      }
+      previouslyFocused = null;
+    }
 
     // Builds the full-content overlay. Used directly for OVERLAY announcements,
     // and on demand when a TOP_BANNER is clicked.
@@ -257,6 +309,8 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
       card.setAttribute("role", "dialog");
       card.setAttribute("aria-modal", "true");
       card.setAttribute("aria-label", announcement.title);
+      // Focusable as a fallback target when the card holds no controls.
+      card.setAttribute("tabindex", "-1");
 
       var closeBtn = document.createElement("button");
       closeBtn.className = "glintpost-announcement-close";
@@ -356,9 +410,11 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
       if (expandedOverlay) return;
       expandedOverlay = buildOverlay();
       document.body.appendChild(expandedOverlay);
+      activateDialog(expandedOverlay);
     }
 
     document.body.appendChild(wrapper);
+    if (isOverlay) activateDialog(wrapper);
     trackEvent("VIEW", announcement.id);
 
     // Push page content down so the fixed banner doesn't overlap it
@@ -391,6 +447,7 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
       expandedOverlay = null;
       if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
       if (style.parentNode) style.parentNode.removeChild(style);
+      restoreFocus();
     }
   }
 

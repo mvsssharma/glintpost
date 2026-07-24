@@ -42,4 +42,10 @@ describe("hasRichContent", () => {
     expect(hasRichContent("<p></p>")).toBe(false);
     expect(hasRichContent("<imgfoo>")).toBe(false);
   });
+
+  // <video> is not in the sanitizer allowlist, so it is stripped on render.
+  // Counting it here would let a document save and then publish as empty.
+  it("rejects a bare <video> that sanitization would strip", () => {
+    expect(hasRichContent('<video src="https://cdn/x.mp4"></video>')).toBe(false);
+  });
 });

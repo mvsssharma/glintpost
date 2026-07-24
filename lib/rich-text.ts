@@ -17,7 +17,11 @@ export function richTextToPlain(html: string): string {
  * to add media (there is no separate media URL field), and both strip to an
  * empty string. Treating them as empty made an image-only or video-only post
  * impossible to save.
+ *
+ * Only `img` and `iframe` count, matching the tags that survive
+ * `sanitizeRichHtml`. `<video>` is not in that allowlist, so accepting it here
+ * would let a document pass validation and then publish as empty.
  */
 export function hasRichContent(html: string): boolean {
-  return richTextToPlain(html).length > 0 || /<(?:img|iframe|video)\b/i.test(html);
+  return richTextToPlain(html).length > 0 || /<(?:img|iframe)\b/i.test(html);
 }
