@@ -36,23 +36,3 @@ export function getExistingVisitorId(override?: string | null): string {
   if (typeof window === "undefined") return "";
   return localStorage.getItem(STORAGE_KEY) || "";
 }
-
-/**
- * Clear all GlintPost visitor data from localStorage.
- * Used by GlintPost.destroy() for consent withdrawal.
- */
-export function clearVisitorData(): void {
-  if (typeof window === "undefined") return;
-
-  localStorage.removeItem(STORAGE_KEY);
-  localStorage.removeItem("glintpost_changelog_last_seen");
-  localStorage.removeItem("glintpost_interactions");
-
-  // Clear all feedback submission markers
-  for (let i = localStorage.length - 1; i >= 0; i--) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith("glintpost_feedback_")) {
-      localStorage.removeItem(key);
-    }
-  }
-}

@@ -47,7 +47,6 @@ export interface AnnouncementImportRow {
   priority: number;
   ctaText: string | null;
   ctaUrl: string | null;
-  imageUrl: string | null;
 }
 
 export type ParsedImport =
@@ -88,7 +87,6 @@ const COLUMNS: Record<ImportType, ColumnSpec[]> = {
     { header: "Priority", required: false, note: "0–1000, higher shows first. Blank = 0.", example: "10", width: 10 },
     { header: "CTA Text", required: false, note: "Optional button label (max 100 chars)", example: "Learn more", width: 16 },
     { header: "CTA URL", required: false, note: "Optional button link (http/https)", example: "https://example.com/blog/maintenance", width: 30 },
-    { header: "Image URL", required: false, note: "Optional image link (http/https)", example: "", width: 30 },
   ],
 };
 
@@ -389,7 +387,6 @@ export async function parseImportFile(
       priority: priorityText ? Number(priorityText) : 0,
       ctaText: getText(row, "CTA Text") || null,
       ctaUrl: optionalUrl(getText(row, "CTA URL")),
-      imageUrl: optionalUrl(getText(row, "Image URL")),
     };
     const result = createAnnouncementSchema.safeParse(candidate);
     if (!result.success) {
@@ -406,7 +403,6 @@ export async function parseImportFile(
       priority: result.data.priority,
       ctaText: result.data.ctaText ?? null,
       ctaUrl: result.data.ctaUrl ?? null,
-      imageUrl: result.data.imageUrl ?? null,
     });
   }
   return errors.length > 0 ? { parsed: null, errors } : { parsed: { type, rows }, errors: [] };

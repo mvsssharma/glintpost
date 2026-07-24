@@ -249,8 +249,6 @@ export const feedbackSubmitSchema = z.object({
 export const createAnnouncementSchema = z.object({
   title: z.string().min(1, "Title is required").max(500),
   content: z.string().min(1, "Content is required").max(100_000),
-  imageUrl: z.string().url().max(2000).nullable().optional(),
-  videoUrl: z.string().url().max(2000).nullable().optional(),
   ctaText: z.string().max(100).nullable().optional(),
   ctaUrl: safeUrlSchema.nullable().optional(),
   displayType: z.enum(["OVERLAY", "TOP_BANNER"]).default("OVERLAY"),
@@ -267,8 +265,6 @@ export const createAnnouncementSchema = z.object({
 export const updateAnnouncementSchema = z.object({
   title: z.string().min(1, "Title is required").max(500).optional(),
   content: z.string().min(1, "Content is required").max(100_000).optional(),
-  imageUrl: z.string().url().max(2000).nullable().optional(),
-  videoUrl: z.string().url().max(2000).nullable().optional(),
   ctaText: z.string().max(100).nullable().optional(),
   ctaUrl: safeUrlSchema.nullable().optional(),
   displayType: z.enum(["OVERLAY", "TOP_BANNER"]).optional(),

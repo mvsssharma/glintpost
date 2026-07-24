@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import RichTextEditor from "@/app/components/RichTextEditor";
 import { useAIRefine, RefineButton, RefinePreview } from "@/app/components/AIRefine";
 import AudiencePicker, { type AudienceTargeting } from "../../audiences/AudiencePicker";
+import { hasRichContent, richTextToPlain } from "@/lib/rich-text";
 import styles from "../form.module.css";
 
 export default function CreatePostForm({ aiConfigured }: { aiConfigured: boolean }) {
@@ -27,12 +28,12 @@ export default function CreatePostForm({ aiConfigured }: { aiConfigured: boolean
   const validate = (): Record<string, string> => {
     const errs: Record<string, string> = {};
     if (!title.trim()) errs.title = "Title is required.";
-    const textContent = content.replace(/<[^>]*>/g, "").trim();
-    if (!textContent) errs.content = "Content is required.";
+    if (!hasRichContent(content)) errs.content = "Content is required.";
     return errs;
   };
 
-  const hasContent = content.replace(/<[^>]*>/g, "").trim().length > 0;
+  // AI refine needs prose to work with, so this stays a text-only check.
+  const hasContent = richTextToPlain(content).length > 0;
 
   const handleSubmit = async (status: "DRAFT" | "PUBLISHED") => {
     const errs = validate();

@@ -15,8 +15,6 @@ export interface CachedAnnouncement {
   id: string;
   title: string;
   content: string;
-  imageUrl: string | null;
-  videoUrl: string | null;
   ctaText: string | null;
   ctaUrl: string | null;
   displayType: string;
@@ -44,8 +42,6 @@ async function fetchAndCacheAnnouncements(orgId: string): Promise<CachedAnnounce
     id: string;
     title: string;
     content: string;
-    imageUrl: string | null;
-    videoUrl: string | null;
     ctaText: string | null;
     ctaUrl: string | null;
     displayType: string;
@@ -58,8 +54,6 @@ async function fetchAndCacheAnnouncements(orgId: string): Promise<CachedAnnounce
     id: a.id,
     title: a.title,
     content: sanitizeRichHtml(a.content),
-    imageUrl: a.imageUrl,
-    videoUrl: a.videoUrl,
     ctaText: a.ctaText,
     ctaUrl: a.ctaUrl,
     displayType: a.displayType,

@@ -117,7 +117,7 @@ const res = await fetch("${appUrl}/api/announcements/active", {
   headers: { "x-api-key": "${apiKey}" }
 });
 const announcements = await res.json();
-// Each: { id, title, content, imageUrl, videoUrl, ctaText, ctaUrl,
+// Each: { id, title, content, ctaText, ctaUrl,
 //         displayType, priority, targeting, startDate, endDate }
 // Sorted by priority (highest first).
 

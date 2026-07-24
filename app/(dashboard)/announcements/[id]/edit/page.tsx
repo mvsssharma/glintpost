@@ -4,14 +4,13 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import RichTextEditor from "@/app/components/RichTextEditor";
 import AudiencePicker, { type AudienceTargeting } from "../../../audiences/AudiencePicker";
+import { hasRichContent } from "@/lib/rich-text";
 import styles from "../../form.module.css";
 
 interface AnnouncementData {
   id: string;
   title: string;
   content: string;
-  imageUrl: string | null;
-  videoUrl: string | null;
   ctaText: string | null;
   ctaUrl: string | null;
   displayType: "OVERLAY" | "TOP_BANNER";
@@ -36,8 +35,6 @@ export default function EditAnnouncementPage() {
   const params = useParams<{ id: string }>();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [videoUrl, setVideoUrl] = useState("");
   const [ctaText, setCtaText] = useState("");
   const [ctaUrl, setCtaUrl] = useState("");
   const [displayType, setDisplayType] = useState<"OVERLAY" | "TOP_BANNER">("OVERLAY");
@@ -64,8 +61,6 @@ export default function EditAnnouncementPage() {
         const data: AnnouncementData = await res.json();
         setTitle(data.title);
         setContent(data.content);
-        setImageUrl(data.imageUrl ?? "");
-        setVideoUrl(data.videoUrl ?? "");
         setCtaText(data.ctaText ?? "");
         setCtaUrl(data.ctaUrl ?? "");
         setDisplayType(data.displayType);
@@ -91,8 +86,7 @@ export default function EditAnnouncementPage() {
   const validate = (): Record<string, string> => {
     const errs: Record<string, string> = {};
     if (!title.trim()) errs.title = "Title is required.";
-    const textContent = content.replace(/<[^>]*>/g, "").trim();
-    if (!textContent) errs.content = "Content is required.";
+    if (!hasRichContent(content)) errs.content = "Content is required.";
     if (!startDate) errs.startDate = "Start date is required.";
     if (!endDate) errs.endDate = "End date is required.";
     if (startDate && endDate && new Date(endDate) <= new Date(startDate)) {
@@ -114,8 +108,6 @@ export default function EditAnnouncementPage() {
         body: JSON.stringify({
           title,
           content,
-          imageUrl: imageUrl || null,
-          videoUrl: videoUrl || null,
           ctaText: ctaText || null,
           ctaUrl: ctaUrl || null,
           displayType,
@@ -223,17 +215,6 @@ export default function EditAnnouncementPage() {
               <label>End Date <span className={styles.required}>*</span></label>
               <input type="datetime-local" value={endDate} onChange={(e) => { setEndDate(e.target.value); setErrors((prev) => { const { endDate: _, ...rest } = prev; return rest; }); }} />
               {errors.endDate && <p className={styles.errorText}>{errors.endDate}</p>}
-            </div>
-          </div>
-
-          <div className={styles.fieldRow}>
-            <div className={styles.field}>
-              <label>Image URL (optional)</label>
-              <input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." />
-            </div>
-            <div className={styles.field}>
-              <label>Video URL (optional)</label>
-              <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://..." />
             </div>
           </div>
 

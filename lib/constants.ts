@@ -46,7 +46,6 @@ export const SUGGESTION_STATUSES = [
 ] as const;
 
 export const SIMILARITY_THRESHOLD_DUPLICATE = 0.8;
-export const SIMILARITY_THRESHOLD_RELATED = 0.6;
 
 export const FEEDBACK_QUESTION_TYPES = [
   { value: "SELECT", label: "Select (options)" },

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import RichTextEditor from "@/app/components/RichTextEditor";
 import AudiencePicker, { type AudienceTargeting } from "../../../audiences/AudiencePicker";
+import { hasRichContent } from "@/lib/rich-text";
 import styles from "../../form.module.css";
 
 interface PostData {
@@ -55,8 +56,7 @@ export default function EditPostPage() {
   const validate = (): Record<string, string> => {
     const errs: Record<string, string> = {};
     if (!title.trim()) errs.title = "Title is required.";
-    const textContent = content.replace(/<[^>]*>/g, "").trim();
-    if (!textContent) errs.content = "Content is required.";
+    if (!hasRichContent(content)) errs.content = "Content is required.";
     return errs;
   };
 

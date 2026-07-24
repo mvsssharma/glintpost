@@ -127,7 +127,6 @@ async function importRows(db: OrgDb, orgId: string, parsed: ParsedImport): Promi
       priority: row.priority,
       ctaText: row.ctaText,
       ctaUrl: row.ctaUrl,
-      imageUrl: row.imageUrl,
       createdAt: row.startDate,
     })),
   });

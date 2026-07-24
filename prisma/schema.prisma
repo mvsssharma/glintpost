@@ -395,8 +395,6 @@ model Announcement {
 
   title       String
   content     String
-  imageUrl    String?
-  videoUrl    String?
   ctaText     String?
   ctaUrl      String?
   displayType AnnouncementDisplayType @default(OVERLAY)
