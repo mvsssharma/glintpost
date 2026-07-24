@@ -201,14 +201,14 @@ export function SettingsForm({
               className={styles.inputField}
               placeholder="https://example.com"
             />
-            <span className={styles.hint}>
+            <span className="field-hint">
               The origin where your API calls come from. Subdomains (e.g. app.example.com) must be added separately.
             </span>
           </div>
 
           <div className={styles.fieldGroup}>
             <span className={styles.label}>Enabled widgets</span>
-            <span className={styles.hint}>
+            <span className="field-hint">
               Select which widgets the unified embed snippet activates. Use a single script tag to load all enabled widgets automatically.
             </span>
             <div className={styles.localeGrid}>
@@ -240,7 +240,7 @@ export function SettingsForm({
 
           <div className={styles.fieldGroup}>
             <span className={styles.label}>Unified embed snippet</span>
-            <span className={styles.hint}>
+            <span className="field-hint">
               Add this single script tag to your site. It automatically loads all enabled widgets above.
             </span>
             <code className={styles.embedSnippet}>

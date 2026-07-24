@@ -33,7 +33,10 @@
 - Scheduling via start/end dates with priority ordering
 - Session-based display: one announcement per session (30-min localStorage timeout)
 - Per-browser seen tracking: each announcement shown at most once (localStorage)
-- VIEW and CLICK event tracking with analytics (views, clicks, CTR)
+- Overlay is a header / scrolling center / footer card sized to the viewport; the CTA sits bottom-right on desktop and centered on mobile
+- Top banners show title + a fixed "Learn more" link that opens the same overlay — the configured CTA button belongs to the overlay, not the banner
+- Images and video embeds are added inline through the editor only (no separate media URL fields); video is embed-by-link, as there is no video upload
+- APPEAR / VIEW / CLICK event tracking with analytics. Banners record APPEAR when shown and VIEW only once expanded; overlays record VIEW on render. Appearances are surfaced only for banners, where the distinction is meaningful
 - Audience targeting (see Targeting section) — same named segments as changelog
 - Widget script injects DOM directly into host page (not iframe)
 - Integration page with embed snippet and advanced config

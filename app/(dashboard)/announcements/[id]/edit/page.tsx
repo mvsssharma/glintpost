@@ -20,6 +20,7 @@ interface AnnouncementData {
   status: "DRAFT" | "PUBLISHED";
   audienceIds: string[];
   audienceMatch: "AND" | "OR";
+  appearances: number;
   views: number;
   clicks: number;
 }
@@ -43,6 +44,7 @@ export default function EditAnnouncementPage() {
   const [endDate, setEndDate] = useState("");
   const [status, setStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT");
   const [targeting, setTargeting] = useState<AudienceTargeting>({ audienceIds: [], audienceMatch: "OR" });
+  const [appearances, setAppearances] = useState(0);
   const [views, setViews] = useState(0);
   const [clicks, setClicks] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -72,6 +74,7 @@ export default function EditAnnouncementPage() {
           audienceIds: data.audienceIds ?? [],
           audienceMatch: data.audienceMatch ?? "OR",
         });
+        setAppearances(data.appearances);
         setViews(data.views);
         setClicks(data.clicks);
       } catch {
@@ -157,8 +160,15 @@ export default function EditAnnouncementPage() {
         <h2>Edit Announcement</h2>
       </header>
 
-      {(views > 0 || clicks > 0) && (
+      {(appearances > 0 || views > 0 || clicks > 0) && (
         <div className={styles.analyticsBar}>
+          {/* Only banners record APPEAR — an overlay showing is already a view. */}
+          {displayType === "TOP_BANNER" && (
+            <div className={styles.stat}>
+              <span className={styles.statValue}>{appearances}</span>
+              <span className={styles.statLabel}>Appearances</span>
+            </div>
+          )}
           <div className={styles.stat}>
             <span className={styles.statValue}>{views}</span>
             <span className={styles.statLabel}>Views</span>
@@ -228,7 +238,7 @@ export default function EditAnnouncementPage() {
               <input type="text" value={ctaUrl} onChange={(e) => setCtaUrl(e.target.value)} placeholder="/features or https://..." />
             </div>
           </div>
-          <p className={styles.hint}>
+          <p className="field-hint">
             The CTA button appears in the announcement popup. Banners always show
             a fixed &ldquo;Learn more&rdquo; link that opens the popup.
           </p>

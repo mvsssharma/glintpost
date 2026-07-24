@@ -222,12 +222,6 @@
   margin-top: 0.25rem;
 }
 
-.hint {
-  font-size: 0.75rem;
-  color: hsl(var(--text-muted));
-  margin: -0.25rem 0 0;
-}
-
 .titleError {
   border-bottom-color: hsl(0 70% 55%) !important;
 }

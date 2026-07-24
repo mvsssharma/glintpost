@@ -164,7 +164,7 @@ export default function CreateAnnouncementForm({ aiConfigured }: { aiConfigured:
               <input type="text" value={ctaUrl} onChange={(e) => setCtaUrl(e.target.value)} placeholder="/features or https://..." />
             </div>
           </div>
-          <p className={styles.hint}>
+          <p className="field-hint">
             The CTA button appears in the announcement popup. Banners always show
             a fixed &ldquo;Learn more&rdquo; link that opens the popup.
           </p>
