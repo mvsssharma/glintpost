@@ -174,9 +174,13 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
       "}" +
       "@keyframes glintpost-ann-fadein { from { opacity: 0; } to { opacity: 1; } }" +
       "@keyframes glintpost-ann-slidein { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }" +
+      // Sized as a share of the viewport: ~65% wide, and pinned between 70% and
+      // 80% tall so short announcements still read as a substantial modal
+      // rather than a small card floating in the middle of the screen.
       ".glintpost-announcement-card {" +
       "  background: " + bgColor + "; color: " + textColor + ";" +
-      "  border-radius: 16px; max-width: 520px; width: 90%; max-height: 85vh;" +
+      "  border-radius: 16px; width: 65vw; min-height: 70vh; max-height: 80vh;" +
+      "  display: flex; flex-direction: column;" +
       "  overflow-y: auto; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.25);" +
       "  animation: glintpost-ann-slidein 0.4s cubic-bezier(0.16, 1, 0.3, 1);" +
       "}" +
@@ -188,8 +192,15 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
       "  transition: background 0.2s;" +
       "}" +
       ".glintpost-announcement-card .glintpost-announcement-close:hover { background: rgba(0,0,0,0.15); }" +
-      ".glintpost-announcement-body { padding: 24px 28px 28px; }" +
-      ".glintpost-announcement-title { font-size: 22px; font-weight: 700; margin: 0 0 12px; line-height: 1.3; }" +
+      // `safe center` keeps a short announcement from stranding all its empty
+      // space at the bottom of the tall card, while degrading to top-aligned
+      // once the content overflows — plain `center` would make the overflowing
+      // top unreachable in a scroll container.
+      ".glintpost-announcement-body {" +
+      "  padding: 32px 36px 36px; flex: 1;" +
+      "  display: flex; flex-direction: column; justify-content: safe center;" +
+      "}" +
+      ".glintpost-announcement-title { font-size: 24px; font-weight: 700; margin: 0 0 14px; line-height: 1.3; }" +
       ".glintpost-announcement-content { font-size: 15px; line-height: 1.6; color: " + mutedColor + "; margin: 0 0 20px; }" +
       ".glintpost-announcement-content p { margin: 0 0 8px; }" +
       // Editor media is inline in `content`. The customer's page has no Quill
@@ -198,7 +209,10 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
       ".glintpost-announcement-content img { max-width: 100%; height: auto; display: block; border-radius: 8px; margin: 8px 0; }" +
       ".glintpost-announcement-content iframe { width: 100%; aspect-ratio: 16 / 9; height: auto; display: block; border: 0; border-radius: 8px; margin: 8px 0; }" +
       ".glintpost-announcement-card .glintpost-announcement-cta {" +
-      "  display: inline-block; padding: 10px 24px; border-radius: 8px; border: none;" +
+      // align-self stops the button stretching to full width now that the body
+      // is a flex column.
+      "  display: inline-block; align-self: flex-start;" +
+      "  padding: 10px 24px; border-radius: 8px; border: none;" +
       "  background: " + primaryColor + "; color: white; font-size: 15px; font-weight: 600;" +
       "  cursor: pointer; text-decoration: none; transition: opacity 0.2s;" +
       "}" +
@@ -232,6 +246,16 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
       "  cursor: pointer; text-decoration: none; white-space: nowrap; transition: opacity 0.2s; flex-shrink: 0;" +
       "}" +
       ".glintpost-announcement-cta:hover { opacity: 0.9; }" +
+      // A viewport-share width collapses to an unreadable column on phones, and
+      // a 70vh floor wastes the little height there is. Go near-full-width and
+      // let height follow the content instead.
+      "@media (max-width: 640px) {" +
+      "  .glintpost-announcement-card {" +
+      "    width: 92vw; min-height: 0; max-height: 85vh;" +
+      "  }" +
+      "  .glintpost-announcement-body { padding: 24px 22px 26px; }" +
+      "  .glintpost-announcement-title { font-size: 20px; }" +
+      "}" +
       ".glintpost-announcement-banner .glintpost-announcement-close {" +
       "  position: absolute; top: 50%; right: 12px; transform: translateY(-50%);" +
       "  width: 28px; height: 28px; border: none; background: transparent;" +
