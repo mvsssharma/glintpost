@@ -144,11 +144,3 @@ export const WIDGETS_WITH_FEEDBACK: WidgetConfig[] = [
     ],
   },
 ];
-
-export const SLIDEOVER_WIDGETS = WIDGETS_WITH_FEEDBACK.filter((w) =>
-  w.integrations.some((i) => i.mode === "slideover")
-);
-
-export function getWidget(key: string): WidgetConfig | undefined {
-  return WIDGETS.find((w) => w.key === key);
-}

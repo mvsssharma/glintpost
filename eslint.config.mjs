@@ -21,6 +21,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Build artifacts of scripts/build-widgets.mjs. The `widgets/` sources are
+    // linted instead; the bundled output is not editable by hand and its shape
+    // is esbuild's (e.g. the es2017 target downlevels `catch {}` to an unused
+    // `catch (e) {}`, which would otherwise warn on every build).
+    "public/announcement-widget.js",
+    "public/changelog-widget.js",
+    "public/glintpost-targeting.js",
   ]),
 ]);
 
