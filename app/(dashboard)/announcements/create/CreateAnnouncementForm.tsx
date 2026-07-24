@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import RichTextEditor from "@/app/components/RichTextEditor";
 import { useAIRefine, RefineButton, RefinePreview } from "@/app/components/AIRefine";
 import AudiencePicker, { type AudienceTargeting } from "../../audiences/AudiencePicker";
+import { hasRichContent, richTextToPlain } from "@/lib/rich-text";
 import styles from "../form.module.css";
 
 function defaultDatetime(offsetDays: number): string {
@@ -18,8 +19,6 @@ export default function CreateAnnouncementForm({ aiConfigured }: { aiConfigured:
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [videoUrl, setVideoUrl] = useState("");
   const [ctaText, setCtaText] = useState("");
   const [ctaUrl, setCtaUrl] = useState("");
   const [displayType, setDisplayType] = useState<"OVERLAY" | "TOP_BANNER">("OVERLAY");
@@ -39,13 +38,13 @@ export default function CreateAnnouncementForm({ aiConfigured }: { aiConfigured:
       return next;
     });
 
-  const hasContent = content.replace(/<[^>]*>/g, "").trim().length > 0;
+  // AI refine needs prose to work with, so this stays a text-only check.
+  const hasContent = richTextToPlain(content).length > 0;
 
   const validate = (): Record<string, string> => {
     const errs: Record<string, string> = {};
     if (!title.trim()) errs.title = "Title is required.";
-    const textContent = content.replace(/<[^>]*>/g, "").trim();
-    if (!textContent) errs.content = "Content is required.";
+    if (!hasRichContent(content)) errs.content = "Content is required.";
     if (!startDate) errs.startDate = "Start date is required.";
     if (!endDate) errs.endDate = "End date is required.";
     if (startDate && endDate && new Date(endDate) <= new Date(startDate)) {
@@ -67,8 +66,6 @@ export default function CreateAnnouncementForm({ aiConfigured }: { aiConfigured:
         body: JSON.stringify({
           title,
           content,
-          imageUrl: imageUrl || null,
-          videoUrl: videoUrl || null,
           ctaText: ctaText || null,
           ctaUrl: ctaUrl || null,
           displayType,
@@ -154,17 +151,6 @@ export default function CreateAnnouncementForm({ aiConfigured }: { aiConfigured:
               <label>End Date <span className={styles.required}>*</span></label>
               <input type="datetime-local" value={endDate} onChange={(e) => { setEndDate(e.target.value); clearError("endDate"); }} />
               {errors.endDate && <p className={styles.errorText}>{errors.endDate}</p>}
-            </div>
-          </div>
-
-          <div className={styles.fieldRow}>
-            <div className={styles.field}>
-              <label>Image URL (optional)</label>
-              <input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." />
-            </div>
-            <div className={styles.field}>
-              <label>Video URL (optional)</label>
-              <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://..." />
             </div>
           </div>
 

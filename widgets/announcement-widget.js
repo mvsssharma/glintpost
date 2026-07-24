@@ -161,102 +161,102 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
     var textColor = isDark ? "#e2e8f0" : "#1a202c";
     var mutedColor = isDark ? "#94a3b8" : "#64748b";
 
-    if (isOverlay) {
-      style.innerHTML =
-        ".glintpost-announcement-overlay {" +
-        "  position: fixed; top: 0; left: 0; width: 100%; height: 100%;" +
-        "  background: rgba(0,0,0,0.6); z-index: 2147483647;" +
-        "  display: flex; align-items: center; justify-content: center;" +
-        "  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;" +
-        "  animation: glintpost-ann-fadein 0.3s ease;" +
-        "}" +
-        "@keyframes glintpost-ann-fadein { from { opacity: 0; } to { opacity: 1; } }" +
-        "@keyframes glintpost-ann-slidein { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }" +
-        ".glintpost-announcement-card {" +
-        "  background: " + bgColor + "; color: " + textColor + ";" +
-        "  border-radius: 16px; max-width: 520px; width: 90%; max-height: 85vh;" +
-        "  overflow-y: auto; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.25);" +
-        "  animation: glintpost-ann-slidein 0.4s cubic-bezier(0.16, 1, 0.3, 1);" +
-        "}" +
-        ".glintpost-announcement-close {" +
-        "  position: absolute; top: 12px; right: 12px; width: 32px; height: 32px;" +
-        "  border: none; background: rgba(0,0,0,0.08); border-radius: 50%;" +
-        "  cursor: pointer; display: flex; align-items: center; justify-content: center;" +
-        "  font-size: 18px; color: " + mutedColor + "; z-index: 1;" +
-        "  transition: background 0.2s;" +
-        "}" +
-        ".glintpost-announcement-close:hover { background: rgba(0,0,0,0.15); }" +
-        ".glintpost-announcement-media { width: 100%; max-height: 260px; object-fit: cover; border-radius: 16px 16px 0 0; display: block; }" +
-        ".glintpost-announcement-video { width: 100%; border-radius: 16px 16px 0 0; display: block; }" +
-        ".glintpost-announcement-body { padding: 24px 28px 28px; }" +
-        ".glintpost-announcement-title { font-size: 22px; font-weight: 700; margin: 0 0 12px; line-height: 1.3; }" +
-        ".glintpost-announcement-content { font-size: 15px; line-height: 1.6; color: " + mutedColor + "; margin: 0 0 20px; }" +
-        ".glintpost-announcement-content p { margin: 0 0 8px; }" +
-        ".glintpost-announcement-cta {" +
-        "  display: inline-block; padding: 10px 24px; border-radius: 8px; border: none;" +
-        "  background: " + primaryColor + "; color: white; font-size: 15px; font-weight: 600;" +
-        "  cursor: pointer; text-decoration: none; transition: opacity 0.2s;" +
-        "}" +
-        ".glintpost-announcement-cta:hover { opacity: 0.9; }";
-    } else {
-      style.innerHTML =
-        ".glintpost-announcement-banner {" +
-        "  position: fixed; top: 0; left: 0; width: 100%; z-index: 2147483647;" +
-        "  background: " + bgColor + "; color: " + textColor + ";" +
-        "  box-shadow: 0 2px 8px rgba(0,0,0,0.1);" +
-        "  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;" +
-        "  animation: glintpost-ann-banner-slide 0.4s cubic-bezier(0.16, 1, 0.3, 1);" +
-        "}" +
-        "@keyframes glintpost-ann-banner-slide { from { transform: translateY(-100%); } to { transform: translateY(0); } }" +
-        ".glintpost-announcement-banner-inner {" +
-        "  display: flex; align-items: center; justify-content: center; gap: 16px;" +
-        "  padding: 14px 48px 14px 24px; max-width: 1200px; margin: 0 auto;" +
-        "}" +
-        ".glintpost-announcement-banner-text {" +
-        "  font-size: 15px; font-weight: 500;" +
-        "}" +
-        ".glintpost-announcement-cta {" +
-        "  display: inline-block; padding: 7px 18px; border-radius: 6px; border: none;" +
-        "  background: " + primaryColor + "; color: white; font-size: 14px; font-weight: 600;" +
-        "  cursor: pointer; text-decoration: none; white-space: nowrap; transition: opacity 0.2s; flex-shrink: 0;" +
-        "}" +
-        ".glintpost-announcement-cta:hover { opacity: 0.9; }" +
-        ".glintpost-announcement-close {" +
-        "  position: absolute; top: 50%; right: 12px; transform: translateY(-50%);" +
-        "  width: 28px; height: 28px; border: none; background: transparent;" +
-        "  cursor: pointer; display: flex; align-items: center; justify-content: center;" +
-        "  font-size: 18px; color: " + mutedColor + "; transition: color 0.2s;" +
-        "}" +
-        ".glintpost-announcement-close:hover { color: " + textColor + "; }";
-    }
+    // Both rule sets are always emitted: a TOP_BANNER expands into the overlay
+    // card on click, so it needs the overlay styles too. The close button is
+    // scoped per container because the two variants position it differently.
+    style.innerHTML =
+      ".glintpost-announcement-overlay {" +
+      "  position: fixed; top: 0; left: 0; width: 100%; height: 100%;" +
+      "  background: rgba(0,0,0,0.6); z-index: 2147483647;" +
+      "  display: flex; align-items: center; justify-content: center;" +
+      "  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;" +
+      "  animation: glintpost-ann-fadein 0.3s ease;" +
+      "}" +
+      "@keyframes glintpost-ann-fadein { from { opacity: 0; } to { opacity: 1; } }" +
+      "@keyframes glintpost-ann-slidein { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }" +
+      ".glintpost-announcement-card {" +
+      "  background: " + bgColor + "; color: " + textColor + ";" +
+      "  border-radius: 16px; max-width: 520px; width: 90%; max-height: 85vh;" +
+      "  overflow-y: auto; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.25);" +
+      "  animation: glintpost-ann-slidein 0.4s cubic-bezier(0.16, 1, 0.3, 1);" +
+      "}" +
+      ".glintpost-announcement-card .glintpost-announcement-close {" +
+      "  position: absolute; top: 12px; right: 12px; width: 32px; height: 32px;" +
+      "  border: none; background: rgba(0,0,0,0.08); border-radius: 50%;" +
+      "  cursor: pointer; display: flex; align-items: center; justify-content: center;" +
+      "  font-size: 18px; color: " + mutedColor + "; z-index: 1;" +
+      "  transition: background 0.2s;" +
+      "}" +
+      ".glintpost-announcement-card .glintpost-announcement-close:hover { background: rgba(0,0,0,0.15); }" +
+      ".glintpost-announcement-body { padding: 24px 28px 28px; }" +
+      ".glintpost-announcement-title { font-size: 22px; font-weight: 700; margin: 0 0 12px; line-height: 1.3; }" +
+      ".glintpost-announcement-content { font-size: 15px; line-height: 1.6; color: " + mutedColor + "; margin: 0 0 20px; }" +
+      ".glintpost-announcement-content p { margin: 0 0 8px; }" +
+      // Editor media is inline in `content`. The customer's page has no Quill
+      // stylesheet, so size it here — otherwise images render at natural width
+      // (clipped by the card) and video iframes fall back to 300x150.
+      ".glintpost-announcement-content img { max-width: 100%; height: auto; display: block; border-radius: 8px; margin: 8px 0; }" +
+      ".glintpost-announcement-content iframe { width: 100%; aspect-ratio: 16 / 9; height: auto; display: block; border: 0; border-radius: 8px; margin: 8px 0; }" +
+      ".glintpost-announcement-card .glintpost-announcement-cta {" +
+      "  display: inline-block; padding: 10px 24px; border-radius: 8px; border: none;" +
+      "  background: " + primaryColor + "; color: white; font-size: 15px; font-weight: 600;" +
+      "  cursor: pointer; text-decoration: none; transition: opacity 0.2s;" +
+      "}" +
+      ".glintpost-announcement-banner {" +
+      "  position: fixed; top: 0; left: 0; width: 100%; z-index: 2147483647;" +
+      "  background: " + bgColor + "; color: " + textColor + ";" +
+      "  box-shadow: 0 2px 8px rgba(0,0,0,0.1);" +
+      "  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;" +
+      "  animation: glintpost-ann-banner-slide 0.4s cubic-bezier(0.16, 1, 0.3, 1);" +
+      "}" +
+      "@keyframes glintpost-ann-banner-slide { from { transform: translateY(-100%); } to { transform: translateY(0); } }" +
+      ".glintpost-announcement-banner-inner {" +
+      "  display: flex; align-items: center; justify-content: center; gap: 16px;" +
+      "  padding: 14px 48px 14px 24px; max-width: 1200px; margin: 0 auto;" +
+      "}" +
+      ".glintpost-announcement-banner-text {" +
+      "  font-size: 15px; font-weight: 500;" +
+      "}" +
+      // The banner is a teaser for the full announcement — the whole bar is a
+      // control that opens the overlay, so make it read as clickable.
+      ".glintpost-announcement-banner-expand {" +
+      "  cursor: pointer; display: flex; align-items: center; justify-content: center;" +
+      "  gap: 16px; flex: 1; min-width: 0; background: none; border: none; padding: 0;" +
+      "  color: inherit; font: inherit; text-align: left;" +
+      "}" +
+      ".glintpost-announcement-banner-expand:hover .glintpost-announcement-banner-text { text-decoration: underline; }" +
+      ".glintpost-announcement-banner-expand:focus-visible { outline: 2px solid " + primaryColor + "; outline-offset: 2px; }" +
+      ".glintpost-announcement-banner .glintpost-announcement-cta {" +
+      "  display: inline-block; padding: 7px 18px; border-radius: 6px; border: none;" +
+      "  background: " + primaryColor + "; color: white; font-size: 14px; font-weight: 600;" +
+      "  cursor: pointer; text-decoration: none; white-space: nowrap; transition: opacity 0.2s; flex-shrink: 0;" +
+      "}" +
+      ".glintpost-announcement-cta:hover { opacity: 0.9; }" +
+      ".glintpost-announcement-banner .glintpost-announcement-close {" +
+      "  position: absolute; top: 50%; right: 12px; transform: translateY(-50%);" +
+      "  width: 28px; height: 28px; border: none; background: transparent;" +
+      "  cursor: pointer; display: flex; align-items: center; justify-content: center;" +
+      "  font-size: 18px; color: " + mutedColor + "; transition: color 0.2s;" +
+      "}" +
+      ".glintpost-announcement-banner .glintpost-announcement-close:hover { color: " + textColor + "; }";
 
     document.head.appendChild(style);
 
     var wrapper;
+    // The overlay a TOP_BANNER expands into, while it is open.
+    var expandedOverlay = null;
 
-    if (isOverlay) {
-      wrapper = document.createElement("div");
-      wrapper.className = "glintpost-announcement-overlay";
+    // Builds the full-content overlay. Used directly for OVERLAY announcements,
+    // and on demand when a TOP_BANNER is clicked.
+    function buildOverlay() {
+      var overlay = document.createElement("div");
+      overlay.className = "glintpost-announcement-overlay";
 
       var card = document.createElement("div");
       card.className = "glintpost-announcement-card";
-
-      if (announcement.videoUrl) {
-        var video = document.createElement("video");
-        video.className = "glintpost-announcement-video";
-        video.src = announcement.videoUrl;
-        video.autoplay = true;
-        video.muted = true;
-        video.loop = true;
-        video.playsInline = true;
-        card.appendChild(video);
-      } else if (announcement.imageUrl) {
-        var img = document.createElement("img");
-        img.className = "glintpost-announcement-media";
-        img.src = announcement.imageUrl;
-        img.alt = announcement.title;
-        card.appendChild(img);
-      }
+      card.setAttribute("role", "dialog");
+      card.setAttribute("aria-modal", "true");
+      card.setAttribute("aria-label", announcement.title);
 
       var closeBtn = document.createElement("button");
       closeBtn.className = "glintpost-announcement-close";
@@ -292,12 +292,18 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
       }
 
       card.appendChild(body);
-      wrapper.appendChild(card);
+      overlay.appendChild(card);
 
       closeBtn.addEventListener("click", function () { dismiss(); });
-      wrapper.addEventListener("click", function (e) {
-        if (e.target === wrapper) dismiss();
+      overlay.addEventListener("click", function (e) {
+        if (e.target === overlay) dismiss();
       });
+
+      return overlay;
+    }
+
+    if (isOverlay) {
+      wrapper = buildOverlay();
     } else {
       wrapper = document.createElement("div");
       wrapper.className = "glintpost-announcement-banner";
@@ -305,10 +311,20 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
       var inner = document.createElement("div");
       inner.className = "glintpost-announcement-banner-inner";
 
+      // The title is a button so the banner can be opened by keyboard too. The
+      // CTA and close button sit outside it, so their clicks can't expand it.
+      var expand = document.createElement("button");
+      expand.type = "button";
+      expand.className = "glintpost-announcement-banner-expand";
+      expand.setAttribute("aria-label", "Read more: " + announcement.title);
+
       var text = document.createElement("span");
       text.className = "glintpost-announcement-banner-text";
       text.textContent = announcement.title;
-      inner.appendChild(text);
+      expand.appendChild(text);
+
+      expand.addEventListener("click", function () { openFromBanner(); });
+      inner.appendChild(expand);
 
       if (announcement.ctaText && announcement.ctaUrl) {
         var bannerCta = document.createElement("a");
@@ -334,6 +350,14 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
       wrapper.appendChild(bannerClose);
     }
 
+    // Expanding is deliberately not tracked as CLICK — that metric counts CTA
+    // clicks, and conflating the two would make it meaningless.
+    function openFromBanner() {
+      if (expandedOverlay) return;
+      expandedOverlay = buildOverlay();
+      document.body.appendChild(expandedOverlay);
+    }
+
     document.body.appendChild(wrapper);
     trackEvent("VIEW", announcement.id);
 
@@ -345,12 +369,26 @@ import { matchesTargeting as matchTargeting } from "../lib/attributes";
       document.body.style.paddingTop = bannerHeight + "px";
     }
 
+    // Escape closes whichever surface is showing.
+    function onKeydown(e) {
+      if (e.key === "Escape" || e.key === "Esc") dismiss();
+    }
+    document.addEventListener("keydown", onKeydown);
+
+    // Closing the expanded overlay dismisses the whole announcement rather than
+    // dropping back to the banner: the user has seen the full content, so
+    // leaving the teaser bar behind would just demand a second dismissal.
     function dismiss() {
       markSeen(announcement.id);
       markSessionShown();
       if (savedBodyPadding !== null) {
         document.body.style.paddingTop = savedBodyPadding;
       }
+      document.removeEventListener("keydown", onKeydown);
+      if (expandedOverlay && expandedOverlay.parentNode) {
+        expandedOverlay.parentNode.removeChild(expandedOverlay);
+      }
+      expandedOverlay = null;
       if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
       if (style.parentNode) style.parentNode.removeChild(style);
     }
