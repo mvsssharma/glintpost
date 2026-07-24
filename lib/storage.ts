@@ -2,6 +2,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { randomBytes } from "crypto";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
+import { getAppUrl } from "./app-url";
 
 // Extension used when the uploaded file has none — keyed by the (already
 // validated) content type from the upload route.
@@ -49,9 +50,12 @@ function getS3(): S3Client {
  * - **S3 driver** (cloud): stores under `uploads/<key>` and returns an absolute
  *   `${S3_PUBLIC_URL}/uploads/<key>`.
  * - **Local driver** (self-hosted): writes to `LOCAL_UPLOAD_DIR` and returns a
- *   root-relative `/uploads/<key>`. Post/announcement HTML is only ever rendered
- *   inside app-origin iframe pages, so the relative URL resolves correctly on any
- *   domain — no `APP_URL` coupling and portable across domain changes.
+ *   root-relative `/uploads/<key>`, so stored content carries no `APP_URL`
+ *   coupling and stays portable across domain changes.
+ *
+ * A root-relative URL only resolves for renderers on the app's own origin (the
+ * iframe pages). Content served to *external* renderers must be absolutized
+ * first — see `absolutizeUploadUrls`.
  */
 export async function uploadToStorage(
   buffer: Buffer,
@@ -76,4 +80,27 @@ export async function uploadToStorage(
   await mkdir(LOCAL_UPLOAD_DIR, { recursive: true });
   await writeFile(path.join(LOCAL_UPLOAD_DIR, key), buffer);
   return `/uploads/${key}`;
+}
+
+/**
+ * Rewrites root-relative `/uploads/...` URLs in stored HTML to absolute ones.
+ *
+ * Required for every surface that renders our content on someone *else's*
+ * origin, because a root-relative URL there resolves against the customer's
+ * domain and 404s:
+ *
+ * - the announcement widget, which injects content straight into the host page
+ *   (no iframe), and where the editor is now the only way to add an image;
+ * - headless API consumers, who fetch `content` and render their own UI.
+ *
+ * Only the local driver produces relative URLs — S3 already returns absolute
+ * ones, and this is a no-op for them. Applied at serve time rather than upload
+ * time so stored content keeps its portability across domain changes.
+ */
+export function absolutizeUploadUrls(html: string): string {
+  const base = getAppUrl().replace(/\/$/, "");
+  return html.replace(
+    /(\s(?:src|href)=)(["'])(\/uploads\/[^"']+)\2/g,
+    (_match, attr: string, quote: string, urlPath: string) => `${attr}${quote}${base}${urlPath}${quote}`
+  );
 }

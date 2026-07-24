@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sanitizeRichHtml } from "@/lib/sanitize-html";
+import { absolutizeUploadUrls } from "@/lib/storage";
 import { validateApiKey } from "@/lib/api-key";
 import { getOrgPrisma } from "@/lib/db";
 import { cacheGet, cacheSet } from "@/lib/cache";
@@ -53,7 +54,9 @@ async function fetchAndCacheAnnouncements(orgId: string): Promise<CachedAnnounce
   }) => ({
     id: a.id,
     title: a.title,
-    content: sanitizeRichHtml(a.content),
+    // The widget injects this into the customer's page, so relative upload
+    // URLs would resolve against their domain.
+    content: absolutizeUploadUrls(sanitizeRichHtml(a.content)),
     ctaText: a.ctaText,
     ctaUrl: a.ctaUrl,
     displayType: a.displayType,
