@@ -128,21 +128,27 @@ const visible = window.GlintPost.filterVisible(announcements, datalayer);
 // Typically show the first match once per session, then track it:
 const announcement = visible[0];
 
-// --- Track a view (and, on CTA click, a click) ---
-await fetch("${appUrl}/api/announcements/track", {
+// --- Track engagement ---
+// "APPEAR" = a banner was shown (a teaser, not yet read)
+// "VIEW"   = the content was opened
+// "CLICK"  = the CTA was clicked
+//
+// A banner starts as APPEAR and becomes a VIEW only once the visitor opens it,
+// so send this on render...
+const track = (type) => fetch("${appUrl}/api/announcements/track", {
   method: "POST",
   headers: {
     "x-api-key": "${apiKey}",
     "Content-Type": "application/json"
   },
-  body: JSON.stringify({
-    // "APPEAR" = banner shown, "VIEW" = content opened, "CLICK" = CTA clicked
-    type: "VIEW",
+  body: JSON.stringify({ type, announcementId: announcement.id, visitorId })
+});
 
-    announcementId: announcement.id,
-    visitorId
-  })
-});`;
+await track(announcement.displayType === "TOP_BANNER" ? "APPEAR" : "VIEW");
+
+// ...then a separate VIEW when a banner is expanded, and CLICK on the CTA:
+//   onExpand  -> track("VIEW")
+//   onCtaClick -> track("CLICK")`;
 }
 
 function getRoadmapHeadlessSnippet(appUrl: string, apiKey: string): string {

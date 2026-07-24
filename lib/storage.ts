@@ -99,8 +99,12 @@ export async function uploadToStorage(
  */
 export function absolutizeUploadUrls(html: string): string {
   const base = getAppUrl().replace(/\/$/, "");
+  // Attribute name and the `=` are matched case- and whitespace-tolerantly
+  // (`SRC = "…"` is valid HTML). The `/uploads/` path deliberately stays
+  // case-sensitive: keys are lowercase hex, and `app/uploads/[key]` only serves
+  // lowercase, so rewriting `/UPLOADS/` would just produce an absolute 404.
   return html.replace(
-    /(\s(?:src|href)=)(["'])(\/uploads\/[^"']+)\2/g,
+    /(\s(?:[sS][rR][cC]|[hH][rR][eE][fF])\s*=\s*)(["'])(\/uploads\/[^"']+)\2/g,
     (_match, attr: string, quote: string, urlPath: string) => `${attr}${quote}${base}${urlPath}${quote}`
   );
 }

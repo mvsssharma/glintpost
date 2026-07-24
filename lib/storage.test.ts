@@ -53,4 +53,17 @@ describe("absolutizeUploadUrls", () => {
     const html = "<p>Just text</p>";
     expect(absolutizeUploadUrls(html)).toBe(html);
   });
+
+  // Quill + sanitize-html normalize to lowercase, but the changelog route serves
+  // stored content unsanitized, so don't rely on that.
+  it("handles uppercase attributes and spacing around =", () => {
+    expect(absolutizeUploadUrls('<IMG SRC = "/uploads/a.png">')).toBe(
+      '<IMG SRC = "https://updates.acme.com/uploads/a.png">'
+    );
+  });
+
+  it("does not rewrite an uppercase /UPLOADS/ path that could not be served anyway", () => {
+    const html = '<img src="/UPLOADS/a.png">';
+    expect(absolutizeUploadUrls(html)).toBe(html);
+  });
 });
