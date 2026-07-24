@@ -102,6 +102,10 @@ Four widgets (changelog, roadmap, feedback, announcements) support multiple embe
 
 Widgets communicate via `postMessage` with origin validation. Allowed origins: org's `allowedDomain`, `app.glintpost.com`, `localhost`. Announcements widget injects DOM directly (no iframe) and uses localStorage for session/seen tracking.
 
+**Announcement widget rendering.** Both display types share one overlay card, built by `buildOverlay()` in `widgets/announcement-widget.js`. The card is three bands — a fixed header (title), a center that grows and scrolls on its own, and a fixed footer (CTA) — so title and CTA stay put at any content length. `min-height: 0` on the center is load-bearing: without it a flex child won't shrink below its content size, the center won't scroll, and the footer is pushed off the card. Sizing is a share of the viewport (65vw, pinned 70–80vh; 92vw with the floor removed below 640px, where the CTA also becomes centered and full-width). A `TOP_BANNER` renders only the title plus a fixed, non-configurable "Learn more" link that opens the same overlay; the configured `ctaText`/`ctaUrl` drive the overlay's footer button only, so the banner never shows a competing primary button.
+
+Because the widget is injected into the *customer's* page, it cannot use `app/globals.css` — all of its CSS is inlined into a `<style>` tag by the widget itself. This is the one place custom styling is expected rather than a smell. It also means editor media needs explicit sizing there: Quill's stylesheet is only loaded in the dashboard editor, so without rules for `.glintpost-announcement-content img/iframe` an image renders at natural width (clipped by the card) and a video embed falls back to the browser default 300×150.
+
 ## Targeting: Attributes & Audiences
 
 Customers pass their existing datalayer (GTM etc.) into the widget; posts and announcements are shown only to visitors who match their targeting. Three layers:
@@ -126,7 +130,8 @@ Customers pass their existing datalayer (GTM etc.) into the widget; posts and an
 - **ChangelogEvent:** Like/dislike/view tracking; legacy datalayer columns (plan/role/…) populated via `lib/datalayer.ts`
 - **RoadmapItem/Vote/Suggestion/View:** Feature voting + AI similarity matching. `RoadmapItem.importedUpvotes` / `importedDownvotes` hold migration carry-over counts; displayed totals = visitor votes + imported.
 - **FeedbackForm/Response:** Configurable survey (SELECT/NPS/TEXT, max 3 questions)
-- **Announcement/AnnouncementEvent:** Push notifications with overlay/banner display, scheduling, priority, and VIEW/CLICK tracking. Targeting via `audienceIds` + `audienceMatch`.
+- **Announcement/AnnouncementEvent:** Push notifications with overlay/banner display, scheduling, priority, and APPEAR/VIEW/CLICK tracking. Targeting via `audienceIds` + `audienceMatch`. Media lives inline in `content` (uploaded via the editor) — there are no `imageUrl`/`videoUrl` columns; the hero-media slot was dropped in `20260724000000_drop_announcement_hero_media`.
+  - **Event semantics** (`AnnouncementEventType`): `APPEAR` = a TOP_BANNER was shown; `VIEW` = the content was actually opened (an OVERLAY rendering, or a banner expanded into its overlay); `CLICK` = the overlay's CTA was clicked. A banner being shown is a teaser, not a read, which is why the two are distinct. OVERLAY announcements never record `APPEAR`. Events dedupe per visitor via `@@unique([announcementId, visitorId, type])`, so counts are unique-visitor, not raw impressions.
 - **Attribute:** Org-defined typed targeting variable (`key`, `label`, `type`, enum `values`) — the datalayer schema
 - **Audience:** Reusable named segment; `rules` JSON = flat AND/OR conditions over attributes
 - **ObservedAttribute:** Datalayer keys seen by widgets (`key` + `inferredType` only, never values) for the discovery suggestions

@@ -65,17 +65,27 @@ export default async function AnnouncementsPage({
   const showImport = announcementCount < 3;
 
   const annIds = announcements.map((a) => a.id);
-  const clickCounts = await db.announcementEvent.groupBy({
-    by: ["announcementId"],
-    where: { announcementId: { in: annIds }, type: "CLICK" },
+  // One pass for both remaining types; VIEW already comes from the _count above.
+  const eventCounts = await db.announcementEvent.groupBy({
+    by: ["announcementId", "type"],
+    where: { announcementId: { in: annIds }, type: { in: ["APPEAR", "CLICK"] } },
     _count: true,
   });
-  const clickMap = Object.fromEntries(
-    clickCounts.map((c: { announcementId: string; _count: number }) => [c.announcementId, c._count])
-  );
+  const countsByType = (wanted: string) =>
+    Object.fromEntries(
+      eventCounts
+        .filter((c: { type: string }) => c.type === wanted)
+        .map((c: { announcementId: string; _count: number }) => [c.announcementId, c._count])
+    );
+  const appearMap = countsByType("APPEAR");
+  const clickMap = countsByType("CLICK");
 
   const items = announcements.map((a) => ({
     ...a,
+    // Banners record APPEAR when shown and VIEW only once expanded, so the two
+    // are meaningfully different there. Overlays are shown as content outright
+    // and never record APPEAR.
+    appearances: (appearMap[a.id] as number) ?? 0,
     views: a._count.events,
     clicks: (clickMap[a.id] as number) ?? 0,
     isActive: a.status === "PUBLISHED" && a.startDate <= now && a.endDate >= now,
@@ -150,6 +160,9 @@ export default async function AnnouncementsPage({
                     {formatDate(item.startDate)} – {formatDate(item.endDate)}
                   </span>
                   <span className={styles.stats}>
+                    {/* Appearances only mean something for banners, which are
+                        shown as a teaser before the content is opened. */}
+                    {item.displayType === "TOP_BANNER" && `${item.appearances} appearances · `}
                     {item.views} views · {item.clicks} clicks
                   </span>
                 </div>

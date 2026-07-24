@@ -370,6 +370,7 @@ a.btn-secondary:hover {
 .field-hint {
   font-size: 0.75rem;
   color: hsl(var(--text-muted));
+  line-height: 1.4;
 }
 .form-error {
   font-size: 0.8125rem;

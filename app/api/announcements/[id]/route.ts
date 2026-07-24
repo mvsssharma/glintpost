@@ -25,12 +25,18 @@ export async function GET(_req: Request, context: Context) {
       throw new NotFoundError("Announcement not found");
     }
 
-    const [viewCount, clickCount] = await Promise.all([
+    const [appearCount, viewCount, clickCount] = await Promise.all([
+      db.announcementEvent.count({ where: { announcementId: id, type: "APPEAR" } }),
       db.announcementEvent.count({ where: { announcementId: id, type: "VIEW" } }),
       db.announcementEvent.count({ where: { announcementId: id, type: "CLICK" } }),
     ]);
 
-    return NextResponse.json({ ...announcement, views: viewCount, clicks: clickCount });
+    return NextResponse.json({
+      ...announcement,
+      appearances: appearCount,
+      views: viewCount,
+      clicks: clickCount,
+    });
   } catch (error) {
     logger.error({ err: error }, "Failed to fetch announcement");
     if (error instanceof ApiError) {

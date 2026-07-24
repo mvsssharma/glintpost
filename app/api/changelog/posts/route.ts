@@ -4,6 +4,7 @@ import { getOrgPrisma } from "@/lib/db";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { corsHeaders, handlePreflight } from "@/lib/cors";
 import { loadTargetingContext, resolveTargeting } from "@/lib/targeting-server";
+import { absolutizeUploadUrls } from "@/lib/storage";
 import { logger } from "@/lib/logger";
 import { UnauthorizedError, ApiError } from "@/lib/errors";
 import type { ResolvedTargeting } from "@/types/targeting";
@@ -60,7 +61,9 @@ async function fetchAndCachePosts(orgId: string): Promise<CachedChangelogPost[]>
   const result: CachedChangelogPost[] = posts.map((post) => ({
     id: post.id,
     title: post.translations[0]?.title ?? "Untitled",
-    content: post.translations[0]?.content ?? "",
+    // Headless consumers render this on their own origin, so relative upload
+    // URLs would resolve against their domain.
+    content: absolutizeUploadUrls(post.translations[0]?.content ?? ""),
     createdAt: (post.publishedAt ?? post.createdAt).toISOString(),
     likes: post._count.changelogEvents,
     dislikes: (dislikeMap[post.id] as number) ?? 0,

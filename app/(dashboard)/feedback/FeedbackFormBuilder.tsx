@@ -228,14 +228,14 @@ export function FeedbackFormBuilder({
               )}
 
               {q.type === "NPS" && (
-                <span className={styles.hint}>
+                <span className="field-hint">
                   Visitors will see a 0–10 scale with color-coded segments
                   (Detractors / Passives / Promoters).
                 </span>
               )}
 
               {q.type === "TEXT" && (
-                <span className={styles.hint}>
+                <span className="field-hint">
                   Visitors will see a free-text area to type their response.
                 </span>
               )}

@@ -448,7 +448,13 @@ enum AnnouncementDisplayType {
 }
 
 enum AnnouncementEventType {
+  // A TOP_BANNER was shown. The banner is only a teaser, so being shown is not
+  // the same as having read the announcement — that is what VIEW records.
+  APPEAR
+  // The announcement content was actually opened: an OVERLAY being shown, or a
+  // TOP_BANNER expanded into its overlay.
   VIEW
+  // The overlay's CTA button was clicked.
   CLICK
 }
 
