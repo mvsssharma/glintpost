@@ -84,27 +84,57 @@ export default function RichTextEditor({
     [imageHandler]
   );
 
-  // Intercept clipboard image paste — upload to R2 instead of embedding base64
+  // Intercept pasted screenshots and upload them, instead of letting Quill
+  // embed the bytes as a base64 data URI (which bloats the stored document and
+  // never reaches object storage).
+  //
+  // Two things this has to get right, both of which it previously got wrong:
+  //
+  // 1. It runs in the CAPTURE phase on `document`, not on `quill.root`. Quill
+  //    registers its own clipboard listener on `quill.root` when the editor is
+  //    constructed, and at the target listeners fire in registration order — so
+  //    a bubble-phase listener here would run only after Quill had already
+  //    converted the image to base64.
+  // 2. The editor is resolved inside the handler, not when the effect runs.
   useEffect(() => {
-    if (!mounted) return;
-    const quill = quillRef.current?.getEditor();
-    if (!quill) return;
-
     const handlePaste = (e: ClipboardEvent) => {
-      const items = Array.from(e.clipboardData?.items ?? []);
-      const imageItem = items.find((item) => item.type.startsWith("image/"));
-      if (!imageItem) return;
+      // Resolved lazily, per paste. Reading the ref when the effect runs gets
+      // null — ReactQuill has not attached it yet — and since nothing in the
+      // dependency list changes once the editor appears, an early return there
+      // means the listener is never attached at all.
+      const quill = quillRef.current?.getEditor();
+      if (!quill || !quill.root.contains(e.target as Node)) return;
+
+      const data = e.clipboardData;
+      if (!data) return;
+
+      // Only take over when the clipboard is image-only, as a screenshot is.
+      // When HTML is also present (copying an image out of a web page), Quill's
+      // normal handling keeps the remote URL and the surrounding formatting —
+      // better than replacing it all with a bare uploaded image.
+      if (Array.from(data.types).includes("text/html")) return;
+
+      const files = Array.from(data.items)
+        .filter((item) => item.kind === "file" && item.type.startsWith("image/"))
+        .map((item) => item.getAsFile())
+        .filter((f): f is File => f !== null);
+      if (files.length === 0) return;
+
       e.preventDefault();
-      const file = imageItem.getAsFile();
-      if (!file) return;
-      uploadFile(file).then((url) => {
-        if (url) insertImage(url);
-      });
+      e.stopPropagation();
+
+      // Sequential so multiple images keep their pasted order.
+      (async () => {
+        for (const file of files) {
+          const url = await uploadFile(file);
+          if (url) insertImage(url);
+        }
+      })();
     };
 
-    quill.root.addEventListener("paste", handlePaste);
-    return () => quill.root.removeEventListener("paste", handlePaste);
-  }, [mounted, uploadFile, insertImage]);
+    document.addEventListener("paste", handlePaste, true);
+    return () => document.removeEventListener("paste", handlePaste, true);
+  }, [uploadFile, insertImage]);
 
   if (!mounted)
     return (
