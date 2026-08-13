@@ -51,11 +51,14 @@
   "engines": {
     "node": "24.x"
   },
-  "//overrides": "Force patched versions of transitive deps flagged by Dependabot (they can't be bumped via a direct dependency).",
+  "//overrides": "Force patched versions of transitive deps flagged by Dependabot / npm audit (they can't be bumped via a direct dependency). undici/postcss/sharp/uuid close audit advisories; sharp>=0.35 also carries patched libvips. quill@2.0.3 (react-quill-new) has a known HTML-export XSS with no upstream fix yet — mitigated by render-time sanitization in lib/sanitize-html.ts.",
   "overrides": {
-    "undici": "^7.28.0",
+    "undici": "^7.29.0",
     "@babel/core": "^7.29.6",
     "js-yaml": "^4.2.0",
-    "hono": "^4.12.25"
+    "hono": "^4.12.25",
+    "postcss": "^8.5.25",
+    "sharp": "^0.35.3",
+    "uuid": "^11.1.1"
   }
 }
