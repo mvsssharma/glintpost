@@ -45,7 +45,7 @@
     "eslint-config-next": "16.3.0",
     "prisma": "^7.9.1",
     "typescript": "^5",
-    "vitest": "^4.1.10"
+    "vitest": "^5.0.0"
   },
   "//engines": "Node 24.x (current LTS). Kept in lockstep with Dockerfile (node:24-alpine) + CI (node 24). Historically also worked around a jsdom require(ESM) crash on Vercel's runtime; that dependency was since removed (server HTML sanitization now uses pure-CJS sanitize-html, see lib/sanitize-html.ts).",
   "engines": {
